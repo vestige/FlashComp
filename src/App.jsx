@@ -1,14 +1,17 @@
-import { useState } from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 
 function App() {
-  const [loggedIn, setLoggedIn] = useState(false);
-
-  return loggedIn ? (
-    <Dashboard onLogout={() => setLoggedIn(false)} />
-  ) : (
-    <Login onLogin={() => setLoggedIn(true)} />
+  return (
+    <Router basename="/FlashComp">
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+      </Routes>
+    </Router>
   );
 }
 
