@@ -1,6 +1,7 @@
 {
   "name": "flash-comp-app",
   "private": true,
+  "homepage": "https://vestige.github.io/FlashComp",
   "version": "0.0.0",
   "type": "module",
   "scripts": {
