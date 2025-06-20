@@ -15,18 +15,28 @@ const EditEvent = () => {
 
 	const fetchCategories = async () => {
 		try {
-			const querySnapshot = await getDocs(
-				collection(db, "events", eventId, "categories")
-			);
-			const data = querySnapshot.docs.map((doc) => ({
+			const snapshot = await getDocs(collection(db, "events", eventId, "categories"));
+			const data = snapshot.docs.map((doc) => ({
 				id: doc.id,
 				...doc.data(),
 			}));
 			setCategories(data);
 		} catch (err) {
-			console.error("カテゴリ取得に失敗:", err);
+			console.error("カテゴリの取得に失敗:", err);
 		}
 	};
+
+	const handleDeleteCategory = async (categoryId) => {
+		const confirmDelete = window.confirm("このカテゴリを削除してもよいですか？");
+		if (!confirmDelete) return;
+
+		try {
+			await deleteDoc(doc(db, "events", eventId, "categories", categoryId));
+			setCategories((prev) => prev.filter((c) => c.id !== categoryId));
+		} catch (err) {
+			console.error("削除に失敗:", err);
+		}
+	};	
 
   const handleAddCategory = async (e) => {
   	e.preventDefault();
@@ -149,12 +159,15 @@ const EditEvent = () => {
 				<button type="submit">カテゴリを追加</button>
 			</form>
 
-			<h3>📂 登録済みカテゴリ一覧</h3>
+			<h3>🏷 登録済みカテゴリ一覧</h3>
 			<ul>
-				{categories.map((cat) => (
-					<li key={cat.id}>{cat.name}</li>
+				{categories.map((category) => (
+					<li key={category.id}>
+						{category.name}
+						<button onClick={() => handleDeleteCategory(category.id)}>削除</button>
+					</li>
 				))}
-			</ul>			
+			</ul>
     </div>
   );
 };
