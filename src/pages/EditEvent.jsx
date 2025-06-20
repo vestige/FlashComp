@@ -10,6 +10,38 @@ const EditEvent = () => {
   const [endDate, setEndDate] = useState("");
   const [status, setStatus] = useState("");
   const [seasons, setSeasons] = useState([]);
+  const [categoryName, setCategoryName] = useState("");
+  const [categories, setCategories] = useState([]);
+
+	const fetchCategories = async () => {
+		try {
+			const querySnapshot = await getDocs(
+				collection(db, "events", eventId, "categories")
+			);
+			const data = querySnapshot.docs.map((doc) => ({
+				id: doc.id,
+				...doc.data(),
+			}));
+			setCategories(data);
+		} catch (err) {
+			console.error("カテゴリ取得に失敗:", err);
+		}
+	};
+
+  const handleAddCategory = async (e) => {
+  	e.preventDefault();
+    if (!categoryName) return;
+
+    try {
+    	await addDoc(collection(db, "events", eventId, "categories"), {
+      	name: categoryName,
+      });
+      setCategoryName("");
+      fetchCategories();
+   	} catch (err) {
+    	console.error("カテゴリ追加に失敗:", err);
+  	}
+	};
 
   const handleAddSeason = async (e) => {
     e.preventDefault();
@@ -59,6 +91,7 @@ const EditEvent = () => {
 
   useEffect(() => {
     fetchSeasons();
+		fetchCategories();
   }, [eventId]);
 
   return (
@@ -103,6 +136,25 @@ const EditEvent = () => {
           </li>
         ))}
       </ul>
+
+			<h3>🏷 カテゴリ追加</h3>
+			<form onSubmit={handleAddCategory}>
+				<input
+					type="text"
+					placeholder="カテゴリ名（例：U12男子）"
+					value={categoryName}
+					onChange={(e) => setCategoryName(e.target.value)}
+					required
+				/>
+				<button type="submit">カテゴリを追加</button>
+			</form>
+
+			<h3>📂 登録済みカテゴリ一覧</h3>
+			<ul>
+				{categories.map((cat) => (
+					<li key={cat.id}>{cat.name}</li>
+				))}
+			</ul>			
     </div>
   );
 };
