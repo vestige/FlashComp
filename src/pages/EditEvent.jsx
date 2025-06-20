@@ -12,6 +12,38 @@ const EditEvent = () => {
   const [seasons, setSeasons] = useState([]);
   const [categoryName, setCategoryName] = useState("");
   const [categories, setCategories] = useState([]);
+	const [participantName, setParticipantName] = useState("");
+	const [selectedCategory, setSelectedCategory] = useState("");	
+	const [participants, setParticipants] = useState([]);
+
+	const fetchParticipants = async () => {
+		try {
+			const snapshot = await getDocs(collection(db, "events", eventId, "participants"));
+			const data = snapshot.docs.map((doc) => ({
+				id: doc.id,
+				...doc.data(),
+			}));
+			setParticipants(data);
+		} catch (err) {
+			console.error("参加者の取得に失敗:", err);
+		}
+	};
+
+	const handleAddParticipant = async (e) => {
+		e.preventDefault();
+		try {
+			await addDoc(collection(db, "events", eventId, "participants"), {
+				name: participantName,
+				categoryId: selectedCategory,
+				createdAt: Timestamp.now(),
+			});
+			setParticipantName("");
+			setSelectedCategory("");
+			fetchParticipants(); // 登録後に再取得
+		} catch (err) {
+			console.error("参加者の登録に失敗:", err);
+		}
+	};
 
 	const fetchCategories = async () => {
 		try {
@@ -102,6 +134,7 @@ const EditEvent = () => {
   useEffect(() => {
     fetchSeasons();
 		fetchCategories();
+		fetchParticipants();
   }, [eventId]);
 
   return (
@@ -168,6 +201,43 @@ const EditEvent = () => {
 					</li>
 				))}
 			</ul>
+
+			<h3>👤 参加者登録</h3>
+			<form onSubmit={handleAddParticipant}>
+				<input
+					type="text"
+					placeholder="参加者名"
+					value={participantName}
+					onChange={(e) => setParticipantName(e.target.value)}
+					required
+				/>
+				<select
+					value={selectedCategory}
+					onChange={(e) => setSelectedCategory(e.target.value)}
+					required
+				>
+					<option value="">-- カテゴリ選択 --</option>
+					{categories.map((cat) => (
+						<option key={cat.id} value={cat.id}>
+							{cat.name}
+						</option>
+					))}
+				</select>
+				<button type="submit">追加</button>
+			</form>
+
+			<h3>📋 登録済み参加者</h3>
+			<ul>
+				{participants.map((p) => {
+					const category = categories.find((c) => c.id === p.categoryId)?.name || "未設定";
+					return (
+						<li key={p.id}>
+							{p.name}（カテゴリ: {category}）
+						</li>
+					);
+				})}
+			</ul>
+
     </div>
   );
 };
