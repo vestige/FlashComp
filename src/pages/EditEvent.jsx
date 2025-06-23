@@ -16,6 +16,18 @@ const EditEvent = () => {
 	const [selectedCategory, setSelectedCategory] = useState("");	
 	const [participants, setParticipants] = useState([]);
 
+	const handleDeleteParticipant = async (participantId) => {
+		const confirmDelete = window.confirm("この参加者を削除してもよいですか？");
+		if (!confirmDelete) return;
+
+		try {
+			await deleteDoc(doc(db, "events", eventId, "participants", participantId));
+			setParticipants((prev) => prev.filter((p) => p.id !== participantId));
+		} catch (err) {
+			console.error("参加者の削除に失敗:", err);
+		}
+	};
+
 	const fetchParticipants = async () => {
 		try {
 			const snapshot = await getDocs(collection(db, "events", eventId, "participants"));
@@ -233,6 +245,7 @@ const EditEvent = () => {
 					return (
 						<li key={p.id}>
 							{p.name}（カテゴリ: {category}）
+							<button onClick={() => handleDeleteParticipant(p.id)}>削除</button>
 						</li>
 					);
 				})}
