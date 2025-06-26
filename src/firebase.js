@@ -7,7 +7,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyBIfGyeHMc_0LPtX5qbeqQrabX6wXvs_kI",
   authDomain: "flashcompauth.firebaseapp.com",
   projectId: "flashcompauth",
-  storageBucket: "flashcompauth.firebasestorage.app",
+  storageBucket: "flashcompauth.appspot.com",
   messagingSenderId: "466092936876",
   appId: "1:466092936876:web:0ab1780cc4fc96327a5909"
 };
