@@ -3,60 +3,60 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { db } from "../firebase";
 import {
-  collection,
-  getDocs,
-  doc,
-  getDoc,
-  setDoc,
-  deleteDoc
+   collection,
+   getDocs,
+   doc,
+   getDoc,
+   setDoc,
+   deleteDoc
 } from "firebase/firestore";
 
 const RouteSetting = () => {
-  const { eventId, categoryId } = useParams();
-  const [eventName, setEventName] = useState("");
-  const [categoryName, setCategoryName] = useState("");
-  const [seasons, setSeasons] = useState([]);
-  const [selectedSeason, setSelectedSeason] = useState("");
-  const [routes, setRoutes] = useState([]);
-  const [status, setStatus] = useState("");
-  const [isSaving, setIsSaving] = useState(false);
+   const { eventId, categoryId } = useParams();
+   const [eventName, setEventName] = useState("");
+   const [categoryName, setCategoryName] = useState("");
+   const [seasons, setSeasons] = useState([]);
+   const [selectedSeason, setSelectedSeason] = useState("");
+   const [routes, setRoutes] = useState([]);
+   const [status, setStatus] = useState("");
+   const [isSaving, setIsSaving] = useState(false);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const eventSnap = await getDoc(doc(db, "events", eventId));
-        if (eventSnap.exists()) setEventName(eventSnap.data().name);
+   useEffect(() => {
+      const fetchData = async () => {
+         try {
+            const eventSnap = await getDoc(doc(db, "events", eventId));
+            if (eventSnap.exists()) setEventName(eventSnap.data().name);
 
-        const categorySnap = await getDoc(doc(db, "events", eventId, "categories", categoryId));
-        if (categorySnap.exists()) setCategoryName(categorySnap.data().name);
+            const categorySnap = await getDoc(doc(db, "events", eventId, "categories", categoryId));
+            if (categorySnap.exists()) setCategoryName(categorySnap.data().name);
 
-        const seasonSnap = await getDocs(collection(db, "events", eventId, "seasons"));
-        const seasonList = seasonSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-        setSeasons(seasonList);
-      } catch (err) {
-        console.error("データの取得に失敗:", err);
-      }
-    };
+            const seasonSnap = await getDocs(collection(db, "events", eventId, "seasons"));
+            const seasonList = seasonSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+            setSeasons(seasonList);
+         } catch (err) {
+            console.error("データの取得に失敗:", err);
+         }
+      };
 
-    fetchData();
-  }, [eventId, categoryId]);
+      fetchData();
+   }, [eventId, categoryId]);
 
-  useEffect(() => {
-    const fetchSavedRoutes = async () => {
-      if (!selectedSeason) return;
-      try {
-        const snapshot = await getDocs(
-          collection(db, "events", eventId, "seasons", selectedSeason, "categories", categoryId, "routes")
-        );
-        const savedRoutes = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
-          .sort((a, b) => a.name.localeCompare(b.name, "ja"));
-        setRoutes(savedRoutes.map(route => ({ ...route, isEditing: false })));
-      } catch (err) {
-        console.error("ルートの取得に失敗:", err);
-      }
-    };
-    fetchSavedRoutes();
-  }, [selectedSeason]);
+   useEffect(() => {
+      const fetchSavedRoutes = async () => {
+         if (!selectedSeason) return;
+         try {
+            const snapshot = await getDocs(
+               collection(db, "events", eventId, "seasons", selectedSeason, "categories", categoryId, "routes")
+            );
+            const savedRoutes = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+               .sort((a, b) => a.name.localeCompare(b.name, "ja"));
+            setRoutes(savedRoutes.map(route => ({ ...route, isEditing: false })));
+         } catch (err) {
+            console.error("ルートの取得に失敗:", err);
+         }
+      };
+      fetchSavedRoutes();
+   }, [selectedSeason]);
 
   const handleAddRoute = () => {
     if (!selectedSeason) {
@@ -84,31 +84,14 @@ const RouteSetting = () => {
     });
   };
 
-  const toggleEdit = (index) => {
-    setRoutes((prevRoutes) =>
-      prevRoutes.map((route, i) =>
-        i === index ? { ...route, isEditing: !route.isEditing } : route
-      )
-    );
-  };
-
-  const handleDuplicate = (index) => {
-    const original = routes[index];
-    const copy = {
-      ...original,
-      name: `No.${String(routes.length + 1).padStart(2, "0")}`,
-      isEditing: true,
-    };
-    const updated = [...routes];
-    updated.splice(index + 1, 0, copy);
-    setRoutes(updated);
-  };
-
-  const handleDelete = (index) => {
-    const updated = [...routes];
-    updated.splice(index, 1);
-    setRoutes(updated);
-  };
+   const toggleEdit = (index) => {
+      setRoutes((prev) =>
+         prev.map((route, i) => ({
+            ...route,
+            isEditing: i === index ? !route.isEditing : false,
+         }))
+      );
+   };
 
   const handleSaveRow = async (index) => {
     if (!selectedSeason) {
@@ -144,10 +127,7 @@ const RouteSetting = () => {
 
       setRoutes((prevRoutes) => {
         const updated = [...prevRoutes];
-        updated[index] = {
-          ...updated[index],
-          isEditing: false,
-        };
+        updated[index].isEditing = false;
         return updated;
       });
 
@@ -156,6 +136,47 @@ const RouteSetting = () => {
     } catch (err) {
       console.error("保存失敗:", err);
       setStatus("❌ 保存に失敗しました");
+    }
+  };
+
+  const handleDuplicate = async (index) => {
+    if (!selectedSeason) return;
+    const original = routes[index];
+    const newName = `No.${String(routes.length + 1).padStart(2, "0")}`;
+    const copy = {
+      ...original,
+      name: newName,
+      isEditing: false,
+    };
+    try {
+      const routeRef = doc(db, "events", eventId, "seasons", selectedSeason, "categories", categoryId, "routes", newName);
+      await setDoc(routeRef, {
+        name: newName,
+        grade: copy.grade,
+        isBonus: copy.isBonus,
+      });
+      const updated = [...routes];
+      updated.splice(index + 1, 0, copy);
+      setRoutes(updated);
+      setStatus("✅ 複製しました");
+      setTimeout(() => setStatus(""), 2000);
+    } catch (err) {
+      console.error("複製失敗:", err);
+    }
+  };
+
+  const handleDelete = async (index) => {
+    const route = routes[index];
+    try {
+      const routeRef = doc(db, "events", eventId, "seasons", selectedSeason, "categories", categoryId, "routes", route.name);
+      await deleteDoc(routeRef);
+      const updated = [...routes];
+      updated.splice(index, 1);
+      setRoutes(updated);
+      setStatus("🗑️ 削除しました");
+      setTimeout(() => setStatus(""), 2000);
+    } catch (err) {
+      console.error("削除失敗:", err);
     }
   };
 
