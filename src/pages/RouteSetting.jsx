@@ -1,211 +1,108 @@
-import { useState, useEffect } from "react";
+// src/pages/RouteSetting.jsx
+import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { db } from "../firebase";
 import {
-  collection,
-  getDocs,
   doc,
   getDoc,
-  setDoc
+  collection,
+  getDocs
 } from "firebase/firestore";
 
 const RouteSetting = () => {
   const { eventId, categoryId } = useParams();
-
   const [eventName, setEventName] = useState("");
   const [categoryName, setCategoryName] = useState("");
   const [seasons, setSeasons] = useState([]);
   const [selectedSeason, setSelectedSeason] = useState("");
-  const [routeCount, setRouteCount] = useState(5);
-  const [routes, setRoutes] = useState(
-    Array.from({ length: 5 }, (_, i) => ({
-      name: `課題${i + 1}`,
-      grade: "",
-      isBonus: false,
-    }))
-  );
+  const [routes, setRoutes] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState("");
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const eventSnap = await getDoc(doc(db, "events", eventId));
-        if (eventSnap.exists()) setEventName(eventSnap.data().name);
+    const fetchMeta = async () => {
+      const eventSnap = await getDoc(doc(db, "events", eventId));
+      if (eventSnap.exists()) setEventName(eventSnap.data().name);
 
-        const categorySnap = await getDoc(doc(db, "events", eventId, "categories", categoryId));
-        if (categorySnap.exists()) setCategoryName(categorySnap.data().name);
+      const catSnap = await getDoc(doc(db, "events", eventId, "categories", categoryId));
+      if (catSnap.exists()) setCategoryName(catSnap.data().name);
 
-        const seasonSnap = await getDocs(collection(db, "events", eventId, "seasons"));
-        const seasonList = seasonSnap.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setSeasons(seasonList);
-      } catch (err) {
-        console.error("データの取得に失敗:", err);
-      }
+      const seasonSnap = await getDocs(collection(db, "events", eventId, "seasons"));
+      setSeasons(seasonSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     };
-
-    fetchData();
+    fetchMeta();
   }, [eventId, categoryId]);
 
-   const handleCountChange = (e) => {
-      const count = parseInt(e.target.value, 10);
-      setRouteCount(count);
-      setRoutes((prev) => {
-         const updated = [...prev]; // 元の値をコピー
-         // 長さ調整（増減両方対応）
-         if (updated.length < count) {
-            for (let i = updated.length; i < count; i++) {
-            updated.push({
-               name: `課題${i + 1}`,
-               grade: "",
-               isBonus: false,
-            });
-            }
-         } else if (updated.length > count) {
-            updated.length = count;
-         }
-         return updated;
-      });
-   };
-
-  const handleRouteChange = (index, field, value) => {
-    setRoutes((prev) => {
-      const updated = [...prev];
-      updated[index] = {
-        ...updated[index],
-        [field]: field === "isBonus" ? value.target.checked : value,
-      };
-      return updated;
-    });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!selectedSeason) {
-      alert("シーズンを選択してください");
-      return;
-    }
-
+  const fetchRoutes = async (seasonId) => {
+    if (!seasonId) return;
+    setLoading(true);
     try {
-      for (let i = 0; i < routes.length; i++) {
-        const route = routes[i];
-        const routeRef = doc(
-          db,
-          "events",
-          eventId,
-          "seasons",
-          selectedSeason,
-          "categories",
-          categoryId,
-          "routes",
-          `route${i + 1}`
-        );
-        await setDoc(routeRef, {
-          name: route.name,
-          grade: route.grade,
-          isBonus: route.isBonus,
-        });
-      }
-      alert("ルート設定を保存しました！");
+      const snap = await getDocs(
+        collection(db, "events", eventId, "seasons", seasonId, "categories", categoryId, "routes")
+      );
+      const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      data.sort((a, b) => a.name.localeCompare(b.name, "ja"));
+      setRoutes(data);
+      setStatus(`✅ ${data.length}件の課題を読み込みました`);
     } catch (err) {
-      console.error("保存失敗:", err);
-      alert("保存に失敗しました");
+      console.error("読み込み失敗:", err);
+      setStatus("❌ 課題の読み込みに失敗しました");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div style={{ padding: "2em" }}>
       <h2>🧩 ルート設定</h2>
+      {status && <p>{status}</p>}
       <p>イベント: {eventName}</p>
       <p>カテゴリ: {categoryName}</p>
-
-      <p>
-        <Link to={`/event/${eventId}/edit`}>← イベント編集に</Link>
-      </p>
-      <p>
-        <Link to={`/event/${eventId}/edit`} state={{ tab: "categories" }}>
-          ← カテゴリ一覧に戻る
-        </Link>
-      </p>
+      <p><Link to={`/event/${eventId}/edit`} state={{ tab: "categories" }}>← カテゴリ一覧に戻る</Link></p>
 
       <div style={{ marginTop: "1em" }}>
-        <label>
-          シーズン選択:
-          <select
-            value={selectedSeason}
-            onChange={(e) => setSelectedSeason(e.target.value)}
-            required
-          >
+        <label>シーズン選択:{" "}
+          <select value={selectedSeason} onChange={(e) => {
+            setSelectedSeason(e.target.value);
+            fetchRoutes(e.target.value);
+          }}>
             <option value="">-- 選択してください --</option>
-            {seasons.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
+            {seasons.map(s => (
+              <option key={s.id} value={s.id}>{s.name}</option>
             ))}
           </select>
         </label>
       </div>
 
-      <div style={{ marginTop: "1em" }}>
-         <label>
-            課題数を選択:
-            <select value={routeCount} onChange={handleCountChange} style={{ marginLeft: "0.5em" }}>
-               {[...Array(20)].map((_, i) => (
-               <option key={i + 1} value={i + 1}>
-                  {i + 1} 課題
-               </option>
-               ))}
-            </select>
-         </label>
-      </div>
+      {loading && <p>読み込み中...</p>}
 
-      <form onSubmit={handleSubmit}>
-        <table style={{ marginTop: "1em", borderCollapse: "collapse" }}>
+      {routes.length > 0 ? (
+        <table style={{ marginTop: "1em", borderCollapse: "collapse", width: "100%" }}>
           <thead>
             <tr>
-              <th>課題名</th>
+              <th>No.</th>
               <th>グレード</th>
               <th>ボーナス</th>
+              <th>操作</th>
             </tr>
           </thead>
           <tbody>
-            {routes.map((route, i) => (
-              <tr key={i}>
+            {routes.map((route, index) => (
+              <tr key={route.id}>
                 <td>{route.name}</td>
+                <td>{route.grade}</td>
+                <td>{route.isBonus ? "✔" : ""}</td>
                 <td>
-                  <select
-                    value={route.grade}
-                    onChange={(e) =>
-                      handleRouteChange(i, "grade", e.target.value)
-                    }
-                  >
-                    <option value="">-- 選択 --</option>
-                    <option value="6級">6級</option>
-                    <option value="5級">5級</option>
-                    <option value="4級">4級</option>
-                    <option value="3級">3級</option>
-                    <option value="2級">2級</option>
-                    <option value="1級">1級</option>
-                    <option value="初段">初段</option>
-                    <option value="2段">2段</option>
-                  </select>
-                </td>
-                <td>
-                  <input
-                    type="checkbox"
-                    checked={route.isBonus}
-                    onChange={(e) => handleRouteChange(i, "isBonus", e)}
-                  />
+                  <button>編集</button>{" "}
+                  <button>削除</button> {/* 機能は後ほど追加 */}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
-        <button type="submit" style={{ marginTop: "1em" }}>
-          保存
-        </button>
-      </form>
+      ) : (
+        !loading && selectedSeason && <p>登録された課題はありません。</p>
+      )}
     </div>
   );
 };
