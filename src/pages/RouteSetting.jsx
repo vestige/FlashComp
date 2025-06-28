@@ -1,5 +1,5 @@
 // src/pages/RouteSetting.jsx
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { db } from "../firebase";
 import {
@@ -8,7 +8,7 @@ import {
   doc,
   getDoc,
   setDoc,
-  deleteDoc,
+  deleteDoc
 } from "firebase/firestore";
 
 const RouteSetting = () => {
@@ -19,19 +19,23 @@ const RouteSetting = () => {
   const [selectedSeason, setSelectedSeason] = useState("");
   const [routes, setRoutes] = useState([]);
   const [status, setStatus] = useState("");
-  const [editIndex, setEditIndex] = useState(null);
-  const [editedRoute, setEditedRoute] = useState({ grade: "", isBonus: false });
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
-      const eventSnap = await getDoc(doc(db, "events", eventId));
-      if (eventSnap.exists()) setEventName(eventSnap.data().name);
+      try {
+        const eventSnap = await getDoc(doc(db, "events", eventId));
+        if (eventSnap.exists()) setEventName(eventSnap.data().name);
 
-      const categorySnap = await getDoc(doc(db, "events", eventId, "categories", categoryId));
-      if (categorySnap.exists()) setCategoryName(categorySnap.data().name);
+        const categorySnap = await getDoc(doc(db, "events", eventId, "categories", categoryId));
+        if (categorySnap.exists()) setCategoryName(categorySnap.data().name);
 
-      const seasonSnap = await getDocs(collection(db, "events", eventId, "seasons"));
-      setSeasons(seasonSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+        const seasonSnap = await getDocs(collection(db, "events", eventId, "seasons"));
+        const seasonList = seasonSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        setSeasons(seasonList);
+      } catch (err) {
+        console.error("データの取得に失敗:", err);
+      }
     };
 
     fetchData();
@@ -44,10 +48,9 @@ const RouteSetting = () => {
         const snapshot = await getDocs(
           collection(db, "events", eventId, "seasons", selectedSeason, "categories", categoryId, "routes")
         );
-        const savedRoutes = snapshot.docs
-          .map((doc) => doc.data())
+        const savedRoutes = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
           .sort((a, b) => a.name.localeCompare(b.name, "ja"));
-        setRoutes(savedRoutes);
+        setRoutes(savedRoutes.map(route => ({ ...route, isEditing: false })));
       } catch (err) {
         console.error("ルートの取得に失敗:", err);
       }
@@ -55,59 +58,110 @@ const RouteSetting = () => {
     fetchSavedRoutes();
   }, [selectedSeason]);
 
-  const handleRouteEditChange = (field, value) => {
-    setEditedRoute((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleSaveEdit = async (index) => {
-    try {
-      const routeId = `route${String(index + 1).padStart(2, "0")}`;
-      const routeRef = doc(
-        db,
-        "events",
-        eventId,
-        "seasons",
-        selectedSeason,
-        "categories",
-        categoryId,
-        "routes",
-        routeId
-      );
-      const updated = {
-        ...routes[index],
-        grade: editedRoute.grade,
-        isBonus: editedRoute.isBonus,
-      };
-      await setDoc(routeRef, updated);
-      const updatedRoutes = [...routes];
-      updatedRoutes[index] = updated;
-      setRoutes(updatedRoutes);
-      setEditIndex(null);
-      setStatus("✅ 保存完了！");
-      setTimeout(() => setStatus(""), 3000);
-    } catch (err) {
-      console.error("保存エラー:", err);
+  const handleAddRoute = () => {
+    if (!selectedSeason) {
+      alert("シーズンを選択してください");
+      return;
     }
+    const nextIndex = routes.length + 1;
+    const newRoute = {
+      name: `No.${String(nextIndex).padStart(2, "0")}`,
+      grade: "",
+      isBonus: false,
+      isEditing: true,
+    };
+    setRoutes([...routes, newRoute]);
   };
 
-  const handleDelete = async (index) => {
-    const routeId = `route${String(index + 1).padStart(2, "0")}`;
+  const handleRouteChange = (index, field, value) => {
+    setRoutes((prev) => {
+      const updated = [...prev];
+      updated[index] = {
+        ...updated[index],
+        [field]: field === "isBonus" ? value.target.checked : value,
+      };
+      return updated;
+    });
+  };
+
+  const toggleEdit = (index) => {
+    setRoutes((prev) => {
+      const updated = [...prev];
+      updated[index].isEditing = !updated[index].isEditing;
+      return updated;
+    });
+  };
+
+  const handleDuplicate = (index) => {
+    const original = routes[index];
+    const copy = {
+      ...original,
+      name: `No.${String(routes.length + 1).padStart(2, "0")}`,
+      isEditing: true,
+    };
+    const updated = [...routes];
+    updated.splice(index + 1, 0, copy);
+    setRoutes(updated);
+  };
+
+  const handleDelete = (index) => {
+    const updated = [...routes];
+    updated.splice(index, 1);
+    setRoutes(updated);
+  };
+
+  const handleSave = async () => {
+    if (!selectedSeason) {
+      alert("シーズンを選択してください");
+      return;
+    }
+
+    for (let i = 0; i < routes.length; i++) {
+      const route = routes[i];
+      if (!route.grade) {
+        alert(`課題 ${route.name} のグレードが未設定です`);
+        return;
+      }
+    }
+
+    setIsSaving(true);
     try {
-      await deleteDoc(doc(
-        db,
-        "events",
-        eventId,
-        "seasons",
-        selectedSeason,
-        "categories",
-        categoryId,
-        "routes",
-        routeId
-      ));
-      const newRoutes = routes.filter((_, i) => i !== index);
-      setRoutes(newRoutes);
+      // 削除処理
+      const existingSnapshot = await getDocs(
+        collection(db, "events", eventId, "seasons", selectedSeason, "categories", categoryId, "routes")
+      );
+      for (const docSnap of existingSnapshot.docs) {
+        await deleteDoc(docSnap.ref);
+      }
+
+      // 保存処理
+      for (let i = 0; i < routes.length; i++) {
+        const route = routes[i];
+        const routeName = `No.${String(i + 1).padStart(2, "0")}`;
+        const routeRef = doc(db, "events", eventId, "seasons", selectedSeason, "categories", categoryId, "routes", routeName);
+        await setDoc(routeRef, {
+          name: routeName,
+          grade: route.grade,
+          isBonus: route.isBonus,
+        });
+      }
+
+      setStatus("✅ 保存完了！");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      setTimeout(() => setStatus(""), 3000);
+
+      // 最新を再取得
+      const refreshed = await getDocs(
+        collection(db, "events", eventId, "seasons", selectedSeason, "categories", categoryId, "routes")
+      );
+      const refreshedRoutes = refreshed.docs.map(doc => ({ id: doc.id, ...doc.data(), isEditing: false }))
+        .sort((a, b) => a.name.localeCompare(b.name, "ja"));
+      setRoutes(refreshedRoutes);
     } catch (err) {
-      console.error("削除失敗:", err);
+      console.error("保存失敗:", err);
+      setStatus("❌ 保存に失敗しました");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -115,25 +169,27 @@ const RouteSetting = () => {
     <div style={{ padding: "2em" }}>
       <h2>🧩 ルート設定</h2>
       {status && <p>{status}</p>}
+      {isSaving && <p>保存中...</p>}
       <p>イベント: {eventName}</p>
       <p>カテゴリ: {categoryName}</p>
       <p><Link to={`/event/${eventId}/edit`}>← イベント編集に</Link></p>
       <p><Link to={`/event/${eventId}/edit`} state={{ tab: "categories" }}>← カテゴリ一覧に戻る</Link></p>
 
+      <label>
+        シーズン選択:
+        <select
+          value={selectedSeason}
+          onChange={(e) => setSelectedSeason(e.target.value)}
+        >
+          <option value="">-- 選択してください --</option>
+          {seasons.map((s) => (
+            <option key={s.id} value={s.id}>{s.name}</option>
+          ))}
+        </select>
+      </label>
+
       <div style={{ marginTop: "1em" }}>
-        <label>
-          シーズン選択:
-          <select
-            value={selectedSeason}
-            onChange={(e) => setSelectedSeason(e.target.value)}
-            required
-          >
-            <option value="">-- 選択してください --</option>
-            {seasons.map((s) => (
-              <option key={s.id} value={s.id}>{s.name}</option>
-            ))}
-          </select>
-        </label>
+        <button onClick={handleAddRoute}>＋ 課題を追加</button>
       </div>
 
       <table style={{ marginTop: "1em", borderCollapse: "collapse" }}>
@@ -147,13 +203,13 @@ const RouteSetting = () => {
         </thead>
         <tbody>
           {routes.map((route, i) => (
-            editIndex === i ? (
-              <tr key={i}>
-                <td>{route.name}</td>
-                <td>
+            <tr key={i}>
+              <td>{`No.${String(i + 1).padStart(2, "0")}`}</td>
+              <td>
+                {route.isEditing ? (
                   <select
-                    value={editedRoute.grade}
-                    onChange={(e) => handleRouteEditChange("grade", e.target.value)}
+                    value={route.grade}
+                    onChange={(e) => handleRouteChange(i, "grade", e.target.value)}
                   >
                     <option value="">-- 選択 --</option>
                     <option value="6級">6級</option>
@@ -165,38 +221,34 @@ const RouteSetting = () => {
                     <option value="初段">初段</option>
                     <option value="2段">2段</option>
                   </select>
-                </td>
-                <td>
+                ) : (
+                  route.grade
+                )}
+              </td>
+              <td>
+                {route.isEditing ? (
                   <input
                     type="checkbox"
-                    checked={editedRoute.isBonus}
-                    onChange={(e) => handleRouteEditChange("isBonus", e.target.checked)}
+                    checked={route.isBonus}
+                    onChange={(e) => handleRouteChange(i, "isBonus", e)}
                   />
-                </td>
-                <td>
-                  <button onClick={() => handleSaveEdit(i)}>💾</button>
-                  <button onClick={() => setEditIndex(null)}>❌</button>
-                </td>
-              </tr>
-            ) : (
-              <tr key={i}>
-                <td>{route.name}</td>
-                <td>{route.grade || "未設定"}</td>
-                <td>{route.isBonus ? "✅" : "❌"}</td>
-                <td>
-                  <button
-                    onClick={() => {
-                      setEditIndex(i);
-                      setEditedRoute({ grade: route.grade, isBonus: route.isBonus });
-                    }}
-                  >✏️</button>
-                  <button onClick={() => handleDelete(i)}>🗑️</button>
-                </td>
-              </tr>
-            )
+                ) : (
+                  route.isBonus ? "✅" : "❌"
+                )}
+              </td>
+              <td>
+                <button onClick={() => toggleEdit(i)}>
+                  {route.isEditing ? "保存" : "編集"}
+                </button>
+                <button onClick={() => handleDuplicate(i)}>複製</button>
+                <button onClick={() => handleDelete(i)}>削除</button>
+              </td>
+            </tr>
           ))}
         </tbody>
       </table>
+
+      <button style={{ marginTop: "1em" }} onClick={handleSave}>💾 保存</button>
     </div>
   );
 };
