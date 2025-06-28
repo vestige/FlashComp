@@ -85,11 +85,11 @@ const RouteSetting = () => {
   };
 
   const toggleEdit = (index) => {
-    setRoutes((prev) => {
-      const updated = [...prev];
-      updated[index].isEditing = !updated[index].isEditing;
-      return updated;
-    });
+    setRoutes((prevRoutes) =>
+      prevRoutes.map((route, i) =>
+        i === index ? { ...route, isEditing: !route.isEditing } : route
+      )
+    );
   };
 
   const handleDuplicate = (index) => {
@@ -110,58 +110,52 @@ const RouteSetting = () => {
     setRoutes(updated);
   };
 
-  const handleSave = async () => {
+  const handleSaveRow = async (index) => {
     if (!selectedSeason) {
       alert("シーズンを選択してください");
       return;
     }
 
-    for (let i = 0; i < routes.length; i++) {
-      const route = routes[i];
-      if (!route.grade) {
-        alert(`課題 ${route.name} のグレードが未設定です`);
-        return;
-      }
+    const route = routes[index];
+
+    if (!route.grade || typeof route.grade !== "string") {
+      alert(`課題 ${route.name} のグレードが未設定です`);
+      return;
     }
 
-    setIsSaving(true);
     try {
-      // 削除処理
-      const existingSnapshot = await getDocs(
-        collection(db, "events", eventId, "seasons", selectedSeason, "categories", categoryId, "routes")
+      const routeRef = doc(
+        db,
+        "events",
+        eventId,
+        "seasons",
+        selectedSeason,
+        "categories",
+        categoryId,
+        "routes",
+        route.name
       );
-      for (const docSnap of existingSnapshot.docs) {
-        await deleteDoc(docSnap.ref);
-      }
 
-      // 保存処理
-      for (let i = 0; i < routes.length; i++) {
-        const route = routes[i];
-        const routeName = `No.${String(i + 1).padStart(2, "0")}`;
-        const routeRef = doc(db, "events", eventId, "seasons", selectedSeason, "categories", categoryId, "routes", routeName);
-        await setDoc(routeRef, {
-          name: routeName,
-          grade: route.grade,
-          isBonus: route.isBonus,
-        });
-      }
+      await setDoc(routeRef, {
+        name: route.name,
+        grade: route.grade,
+        isBonus: route.isBonus,
+      });
 
-      setStatus("✅ 保存完了！");
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      setRoutes((prevRoutes) => {
+        const updated = [...prevRoutes];
+        updated[index] = {
+          ...updated[index],
+          isEditing: false,
+        };
+        return updated;
+      });
+
+      setStatus(`✅ ${route.name} を保存しました！`);
       setTimeout(() => setStatus(""), 3000);
-
-      // 最新を再取得
-      const refreshed = await getDocs(
-        collection(db, "events", eventId, "seasons", selectedSeason, "categories", categoryId, "routes")
-      );
-      const refreshedRoutes = refreshed.docs.map(doc => ({ id: doc.id, ...doc.data(), isEditing: false }))
-        .sort((a, b) => a.name.localeCompare(b.name, "ja"));
-      setRoutes(refreshedRoutes);
     } catch (err) {
       console.error("保存失敗:", err);
       setStatus("❌ 保存に失敗しました");
-    } finally {
-      setIsSaving(false);
     }
   };
 
@@ -204,7 +198,7 @@ const RouteSetting = () => {
         <tbody>
           {routes.map((route, i) => (
             <tr key={i}>
-              <td>{`No.${String(i + 1).padStart(2, "0")}`}</td>
+              <td>{route.name}</td>
               <td>
                 {route.isEditing ? (
                   <select
@@ -237,18 +231,23 @@ const RouteSetting = () => {
                 )}
               </td>
               <td>
-                <button onClick={() => toggleEdit(i)}>
-                  {route.isEditing ? "保存" : "編集"}
-                </button>
-                <button onClick={() => handleDuplicate(i)}>複製</button>
-                <button onClick={() => handleDelete(i)}>削除</button>
+                {route.isEditing ? (
+                  <>
+                    <button onClick={() => handleSaveRow(i)}>保存</button>
+                    <button onClick={() => toggleEdit(i)}>キャンセル</button>
+                  </>
+                ) : (
+                  <>
+                    <button onClick={() => toggleEdit(i)}>編集</button>
+                    <button onClick={() => handleDuplicate(i)}>複製</button>
+                    <button onClick={() => handleDelete(i)}>削除</button>
+                  </>
+                )}
               </td>
             </tr>
           ))}
         </tbody>
       </table>
-
-      <button style={{ marginTop: "1em" }} onClick={handleSave}>💾 保存</button>
     </div>
   );
 };
