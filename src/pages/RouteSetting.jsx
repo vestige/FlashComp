@@ -248,7 +248,7 @@ const RouteSetting = () => {
                     onChange={(e) => handleRouteChange(i, "isBonus", e)}
                   />
                 ) : (
-                  route.isBonus ? "✅" : "❌"
+                  route.isBonus ? "✅" : "-"
                 )}
               </td>
               <td>
