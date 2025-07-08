@@ -4,7 +4,6 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import CreateEvent from "./pages/CreateEvent";
 import EditEvent from "./pages/EditEvent";
-import RouteSetting from "./pages/RouteSetting";
 
 
 function App() {
@@ -16,7 +15,6 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/create-event" element={<CreateEvent />} />
         <Route path="/event/:eventId/edit" element={<EditEvent />} />
-        <Route path="/events/:eventId/routesetting/:categoryId" element={<RouteSetting />} />
       </Routes>
     </Router>
   );

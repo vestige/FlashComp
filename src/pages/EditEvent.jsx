@@ -4,16 +4,15 @@ import { useState, useEffect } from "react";
 import { db } from "../firebase";
 import {
   collection,
-  addDoc,
   getDocs,
-  Timestamp,
-  deleteDoc,
   doc,
-  getDoc
+  getDoc,
 } from "firebase/firestore";
+
 import SeasonManager from "../components/SeasonManager";
 import CategoryManager from "../components/CategoryManager";
 import ParticipantManager from "../components/ParticipantManager";
+import RouteSelector from "../components/RouteSelector"; // ← 追加
 
 const EditEvent = () => {
   const { eventId } = useParams();
@@ -24,21 +23,21 @@ const EditEvent = () => {
   const [participants, setParticipants] = useState([]);
   const [participantName, setParticipantName] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
-  const [categories, setCategories] = useState([]); // ← 追加！
+  const [categories, setCategories] = useState([]);
 
-	useEffect(() => {
-		const fetchCategories = async () => {
-			try {
-				const snapshot = await getDocs(collection(db, "events", eventId, "categories"));
-				const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-				setCategories(data);
-			} catch (err) {
-				console.error("カテゴリの取得に失敗:", err);
-			}
-		};
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const snapshot = await getDocs(collection(db, "events", eventId, "categories"));
+        const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        setCategories(data);
+      } catch (err) {
+        console.error("カテゴリの取得に失敗:", err);
+      }
+    };
 
-		fetchCategories();
-	}, [eventId]);
+    fetchCategories();
+  }, [eventId]);
 
   useEffect(() => {
     const fetchEventName = async () => {
@@ -59,6 +58,7 @@ const EditEvent = () => {
       <div style={{ marginTop: "1em" }}>
         <button onClick={() => setActiveTab("seasons")}>📅 シーズン</button>
         <button onClick={() => setActiveTab("categories")}>🏷 カテゴリ</button>
+        <button onClick={() => setActiveTab("routes")}>🧩 ルート設定</button>
         <button onClick={() => setActiveTab("participants")}>👤 参加者</button>
       </div>
 
@@ -68,6 +68,12 @@ const EditEvent = () => {
           eventId={eventId}
           categories={categories}
           setCategories={setCategories}
+        />
+      )}
+      {activeTab === "routes" && (
+        <RouteSelector
+          eventId={eventId}
+          categories={categories}
         />
       )}
       {activeTab === "participants" && (

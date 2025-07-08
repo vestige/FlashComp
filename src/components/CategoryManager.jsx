@@ -1,19 +1,10 @@
 // src/components/CategoryManager.jsx
 import { useState, useEffect } from "react";
+import { collection, addDoc, getDocs, deleteDoc, doc } from "firebase/firestore";
 import { db } from "../firebase";
-import {
-  collection,
-  addDoc,
-  getDocs,
-  deleteDoc,
-  doc
-} from "firebase/firestore";
-import { Link, useParams } from "react-router-dom";
 
-const CategoryManager = () => {
-  const { eventId } = useParams();
+const CategoryManager = ({ eventId, categories, setCategories }) => {
   const [categoryName, setCategoryName] = useState("");
-  const [categories, setCategories] = useState([]);
 
   useEffect(() => {
     fetchCategories();
@@ -71,8 +62,7 @@ const CategoryManager = () => {
         {categories.map((c) => (
           <li key={c.id}>
             {c.name}
-            <button onClick={() => handleDeleteCategory(c.id)}>削除</button>{" "}
-            <Link to={`/events/${eventId}/routesetting/${c.id}`}>🧩 ルート設定</Link>
+            <button onClick={() => handleDeleteCategory(c.id)}>削除</button>
           </li>
         ))}
       </ul>
