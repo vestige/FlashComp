@@ -61,7 +61,7 @@ const EditEvent = () => {
         <button onClick={() => setActiveTab("categories")}>🏷 カテゴリ</button>
         <button onClick={() => setActiveTab("routes")}>🧩 ルート設定</button>
         <button onClick={() => setActiveTab("participants")}>👤 参加者</button>
-				<button onClick={() => setActiveTab("score")}>📋 スコア採点</button>
+				<button onClick={() => setActiveTab("scores")}>📋 スコア採点</button>
       </div>
 
       {activeTab === "seasons" && <SeasonManager eventId={eventId} />}
@@ -90,7 +90,7 @@ const EditEvent = () => {
           categories={categories}
         />
       )}
-			{activeTab === "score" && <ScoreManager eventId={eventId} />}
+			{activeTab === "scores" && <ScoreManager eventId={eventId} />}
     </div>
   );
 };
