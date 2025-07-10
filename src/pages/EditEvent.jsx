@@ -12,7 +12,8 @@ import {
 import SeasonManager from "../components/SeasonManager";
 import CategoryManager from "../components/CategoryManager";
 import ParticipantManager from "../components/ParticipantManager";
-import RouteSelector from "../components/RouteSelector"; // ← 追加
+import RouteSelector from "../components/RouteSelector";
+import ScoreManager from "../components/ScoreManager";
 
 const EditEvent = () => {
   const { eventId } = useParams();
@@ -60,6 +61,7 @@ const EditEvent = () => {
         <button onClick={() => setActiveTab("categories")}>🏷 カテゴリ</button>
         <button onClick={() => setActiveTab("routes")}>🧩 ルート設定</button>
         <button onClick={() => setActiveTab("participants")}>👤 参加者</button>
+				<button onClick={() => setActiveTab("score")}>📋 スコア採点</button>
       </div>
 
       {activeTab === "seasons" && <SeasonManager eventId={eventId} />}
@@ -88,6 +90,7 @@ const EditEvent = () => {
           categories={categories}
         />
       )}
+			{activeTab === "score" && <ScoreManager eventId={eventId} />}
     </div>
   );
 };
