@@ -59,7 +59,7 @@ const Dashboard = () => {
               ? new Date(event.endDate.seconds * 1000).toLocaleDateString()
               : event.endDate}
             ）
-            <Link to={`/event/${event.id}/edit`} style={{ marginLeft: "1em" }}>✏️ 編集</Link>
+            <Link to={`/events/${event.id}/edit`} style={{ marginLeft: "1em" }}>✏️ 編集</Link>
             <button onClick={() => handleDelete(event.id)}>🗑 削除</button>
           </li>
         ))}
