@@ -5,6 +5,7 @@ import Dashboard from "./pages/Dashboard";
 import CreateEvent from "./pages/CreateEvent";
 import EditEvent from "./pages/EditEvent";
 import ScoreInput from "./pages/ScoreInput";
+import ScoreSummary from "./pages/ScoreSummary";
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
         <Route path="/create-event" element={<CreateEvent />} />
         <Route path="/events/:eventId/edit" element={<EditEvent />} />
         <Route path="/events/:eventId/scoreinput/:seasonId/:categoryId/:participantId" element={<ScoreInput />} />
+        <Route path="/score-summary" element={<ScoreSummary />} />
       </Routes>
     </Router>
   );

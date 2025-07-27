@@ -9,6 +9,11 @@ const Home = () => {
           管理者ログインはこちら
         </Link>
       </p>
+      <p>
+        <Link to="/score-summary">
+          得点集計はこちら
+        </Link>
+      </p>
     </div>
   );
 };
