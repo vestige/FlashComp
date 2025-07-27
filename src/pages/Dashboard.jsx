@@ -66,6 +66,10 @@ const Dashboard = () => {
       </ul>
 
       <button onClick={handleLogout}>ログアウト</button>
+      <div style={{ marginTop: '2em' }}>
+        <Link to="/">← Homeに戻る</Link>
+      </div>
+      
     </div>
   );
 };
