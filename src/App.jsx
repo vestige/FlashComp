@@ -6,6 +6,7 @@ import CreateEvent from "./pages/CreateEvent";
 import EditEvent from "./pages/EditEvent";
 import ScoreInput from "./pages/ScoreInput";
 import ScoreSummary from "./pages/ScoreSummary";
+import EventSummary from "./pages/EventSummary"; // インポートを追加
 
 function App() {
   return (
@@ -18,6 +19,8 @@ function App() {
         <Route path="/events/:eventId/edit" element={<EditEvent />} />
         <Route path="/events/:eventId/scoreinput/:seasonId/:categoryId/:participantId" element={<ScoreInput />} />
         <Route path="/score-summary" element={<ScoreSummary />} />
+        {/* 新しいルートを追加 */}
+        <Route path="/score-summary/:eventId" element={<EventSummary />} /> 
       </Routes>
     </Router>
   );
