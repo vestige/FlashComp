@@ -166,6 +166,9 @@ const RouteSelector = () => {
                         {route.isEditing ? (
                           <select value={route.grade} onChange={(e) => handleRouteChange(i, "grade", e.target.value)}>
                             <option value="">-- 選択 --</option>
+                            <option value="9級">9級</option>
+                            <option value="8級">8級</option>
+                            <option value="7級">7級</option>
                             <option value="6級">6級</option>
                             <option value="5級">5級</option>
                             <option value="4級">4級</option>
