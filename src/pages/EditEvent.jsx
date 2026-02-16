@@ -21,9 +21,6 @@ const EditEvent = () => {
   const location = useLocation();
   const [activeTab, setActiveTab] = useState(location.state?.tab || "seasons");
 
-  const [participants, setParticipants] = useState([]);
-  const [participantName, setParticipantName] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
   const [categories, setCategories] = useState([]);
 
   useEffect(() => {
@@ -81,12 +78,6 @@ const EditEvent = () => {
       {activeTab === "participants" && (
         <ParticipantManager
           eventId={eventId}
-          participants={participants}
-          setParticipants={setParticipants}
-          participantName={participantName}
-          setParticipantName={setParticipantName}
-          selectedCategory={selectedCategory}
-          setSelectedCategory={setSelectedCategory}
           categories={categories}
         />
       )}
