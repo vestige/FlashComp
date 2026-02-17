@@ -2,19 +2,21 @@
 import { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase"; 
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogin = async () => {
+    const redirectPath = location.state?.from?.pathname || "/dashboard";
     try {
       await signInWithEmailAndPassword(auth, email, password);
       setStatus("✅ ログイン成功！管理ページに移動します...");
-      setTimeout(() => navigate("/dashboard"), 1000);
+      setTimeout(() => navigate(redirectPath, { replace: true }), 600);
     } catch (error) {
       setStatus("❌ ログイン失敗: " + error.message);
     }

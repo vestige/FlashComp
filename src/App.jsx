@@ -7,6 +7,7 @@ import EditEvent from "./pages/EditEvent";
 import ScoreInput from "./pages/ScoreInput";
 import ScoreSummary from "./pages/ScoreSummary";
 import EventSummary from "./pages/EventSummary"; // インポートを追加
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   return (
@@ -14,10 +15,38 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/create-event" element={<CreateEvent />} />
-        <Route path="/events/:eventId/edit" element={<EditEvent />} />
-        <Route path="/events/:eventId/scoreinput/:seasonId/:categoryId/:participantId" element={<ScoreInput />} />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/create-event"
+          element={
+            <ProtectedRoute>
+              <CreateEvent />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/events/:eventId/edit"
+          element={
+            <ProtectedRoute>
+              <EditEvent />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/events/:eventId/scoreinput/:seasonId/:categoryId/:participantId"
+          element={
+            <ProtectedRoute>
+              <ScoreInput />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/score-summary" element={<ScoreSummary />} />
         {/* 新しいルートを追加 */}
         <Route path="/score-summary/:eventId" element={<EventSummary />} /> 
