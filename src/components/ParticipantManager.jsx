@@ -17,7 +17,6 @@ const ParticipantManager = ({ eventId, categories }) => {
     memberNo: "",
     age: "",
     gender: "",
-    grade: "",
     categoryId: "",
   });
 
@@ -43,7 +42,6 @@ const ParticipantManager = ({ eventId, categories }) => {
         memberNo: form.memberNo.trim(),
         age: Number(form.age),
         gender: form.gender,
-        grade: form.grade,
         categoryId: form.categoryId,
         createdAt: serverTimestamp(),
       });
@@ -52,7 +50,6 @@ const ParticipantManager = ({ eventId, categories }) => {
         memberNo: "",
         age: "",
         gender: "",
-        grade: "",
         categoryId: "",
       });
       fetchParticipants();
@@ -110,24 +107,6 @@ const ParticipantManager = ({ eventId, categories }) => {
           <option value="other">その他</option>
         </select>
         <select
-          value={form.grade}
-          onChange={(e) => setForm((prev) => ({ ...prev, grade: e.target.value }))}
-          required
-        >
-          <option value="">-- 参加グレード --</option>
-          <option value="9級">9級</option>
-          <option value="8級">8級</option>
-          <option value="7級">7級</option>
-          <option value="6級">6級</option>
-          <option value="5級">5級</option>
-          <option value="4級">4級</option>
-          <option value="3級">3級</option>
-          <option value="2級">2級</option>
-          <option value="1級">1級</option>
-          <option value="初段">初段</option>
-          <option value="2段">2段</option>
-        </select>
-        <select
           value={form.categoryId}
           onChange={(e) => setForm((prev) => ({ ...prev, categoryId: e.target.value }))}
           required
@@ -156,7 +135,6 @@ const ParticipantManager = ({ eventId, categories }) => {
               {" / "}会員番号: {p.memberNo || "-"}
               {" / "}年齢: {p.age || "-"}
               {" / "}性別: {genderLabel}
-              {" / "}参加グレード: {p.grade || "-"}
               {" / "}カテゴリ: {catName}
               <button onClick={() => handleDeleteParticipant(p.id)}>削除</button>
             </li>
