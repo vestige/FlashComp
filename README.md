@@ -28,3 +28,6 @@ If you need to target another Firebase project, set these env vars before runnin
 - `npm install`
 - `npm run db:reset`
 - `npm run dev`
+
+### test
+- `npm run test:run`
