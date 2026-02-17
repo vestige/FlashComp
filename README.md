@@ -22,3 +22,9 @@ If you need to target another Firebase project, set these env vars before runnin
 - `FIREBASE_STORAGE_BUCKET`
 - `FIREBASE_MESSAGING_SENDER_ID`
 - `FIREBASE_APP_ID`
+
+## USE
+### local
+- `npm install`
+- `npm run db:reset`
+- `npm run dev`
