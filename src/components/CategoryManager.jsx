@@ -1,16 +1,21 @@
 // src/components/CategoryManager.jsx
-import { useState, useEffect } from "react";
-import { collection, addDoc, getDocs, deleteDoc, doc } from "firebase/firestore";
+import { useState, useEffect, useCallback } from "react";
+import {
+  collection,
+  addDoc,
+  getDocs,
+  deleteDoc,
+  updateDoc,
+  doc,
+} from "firebase/firestore";
 import { db } from "../firebase";
 
 const CategoryManager = ({ eventId, categories, setCategories }) => {
   const [categoryName, setCategoryName] = useState("");
+  const [editingCategoryId, setEditingCategoryId] = useState("");
+  const [editingCategoryName, setEditingCategoryName] = useState("");
 
-  useEffect(() => {
-    fetchCategories();
-  }, [eventId]);
-
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async () => {
     try {
       const snapshot = await getDocs(collection(db, "events", eventId, "categories"));
       const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
@@ -18,7 +23,11 @@ const CategoryManager = ({ eventId, categories, setCategories }) => {
     } catch (err) {
       console.error("カテゴリの取得に失敗:", err);
     }
-  };
+  }, [eventId, setCategories]);
+
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
 
   const handleAddCategory = async (e) => {
     e.preventDefault();
@@ -45,6 +54,39 @@ const CategoryManager = ({ eventId, categories, setCategories }) => {
     }
   };
 
+  const handleStartEdit = (category) => {
+    setEditingCategoryId(category.id);
+    setEditingCategoryName(category.name || "");
+  };
+
+  const handleCancelEdit = () => {
+    setEditingCategoryId("");
+    setEditingCategoryName("");
+  };
+
+  const handleSaveEdit = async (categoryId) => {
+    const trimmedName = editingCategoryName.trim();
+    if (!trimmedName) {
+      alert("カテゴリ名を入力してください。");
+      return;
+    }
+
+    try {
+      await updateDoc(doc(db, "events", eventId, "categories", categoryId), {
+        name: trimmedName,
+      });
+      setCategories((prev) =>
+        prev.map((category) =>
+          category.id === categoryId ? { ...category, name: trimmedName } : category
+        )
+      );
+      handleCancelEdit();
+    } catch (err) {
+      console.error("カテゴリ更新に失敗:", err);
+      alert("カテゴリの更新に失敗しました。");
+    }
+  };
+
   return (
     <div>
       <h3>🏷 カテゴリ追加</h3>
@@ -61,8 +103,23 @@ const CategoryManager = ({ eventId, categories, setCategories }) => {
       <ul>
         {categories.map((c) => (
           <li key={c.id}>
-            {c.name}
-            <button onClick={() => handleDeleteCategory(c.id)}>削除</button>
+            {editingCategoryId === c.id ? (
+              <>
+                <input
+                  type="text"
+                  value={editingCategoryName}
+                  onChange={(e) => setEditingCategoryName(e.target.value)}
+                />
+                <button type="button" onClick={() => handleSaveEdit(c.id)}>保存</button>
+                <button type="button" onClick={handleCancelEdit}>キャンセル</button>
+              </>
+            ) : (
+              <>
+                {c.name}
+                <button type="button" onClick={() => handleStartEdit(c)}>編集</button>
+                <button type="button" onClick={() => handleDeleteCategory(c.id)}>削除</button>
+              </>
+            )}
           </li>
         ))}
       </ul>

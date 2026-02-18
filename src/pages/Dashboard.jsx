@@ -8,6 +8,12 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [events, setEvents] = useState([]);
 
+  const formatDate = (value) => {
+    if (!value) return "-";
+    if (value.seconds) return new Date(value.seconds * 1000).toLocaleDateString();
+    return String(value);
+  };
+
   const handleLogout = () => {
     signOut(auth)
       .then(() => navigate("/login"))
@@ -42,34 +48,59 @@ const Dashboard = () => {
   };
 
   return (
-    <div style={{ padding: "2em" }}>
-      <h2>ダッシュボード</h2>
-      <Link to="/create-event">📝 イベント作成</Link>
+    <div style={{ padding: "2em", maxWidth: "980px", margin: "0 auto" }}>
+      <h2>ジムオーナー管理画面</h2>
+      <p>イベントの準備と開催時オペレーションをここから行います。</p>
 
-      <h3>📋 登録済みイベント一覧</h3>
-      <ul>
-        {events.map((event) => (
-          <li key={event.id}>
-            {event.name}（
-            {event.startDate?.seconds
-              ? new Date(event.startDate.seconds * 1000).toLocaleDateString()
-              : event.startDate}
-            〜
-            {event.endDate?.seconds
-              ? new Date(event.endDate.seconds * 1000).toLocaleDateString()
-              : event.endDate}
-            ）
-            <Link to={`/events/${event.id}/edit`} style={{ marginLeft: "1em" }}>✏️ 編集</Link>
-            <button onClick={() => handleDelete(event.id)}>🗑 削除</button>
-          </li>
-        ))}
-      </ul>
+      <section style={{ border: "1px solid #ddd", borderRadius: "10px", padding: "1em" }}>
+        <h3 style={{ marginTop: 0 }}>準備フェーズ</h3>
+        <p style={{ marginTop: 0 }}>
+          まずイベントを作成し、イベントごとにシーズン・カテゴリ・課題を設定します。
+        </p>
+        <Link to="/create-event">📝 新しいイベントを作成</Link>
+      </section>
 
-      <button onClick={handleLogout}>ログアウト</button>
-      <div style={{ marginTop: '2em' }}>
+      <h3 style={{ marginTop: "1.6em" }}>📋 登録済みイベント</h3>
+      {events.length === 0 ? (
+        <p>イベントがまだ登録されていません。</p>
+      ) : (
+        <div style={{ display: "grid", gap: "1em" }}>
+          {events.map((event) => (
+            <section
+              key={event.id}
+              style={{ border: "1px solid #ddd", borderRadius: "10px", padding: "1em" }}
+            >
+              <h4 style={{ marginTop: 0, marginBottom: "0.4em" }}>{event.name}</h4>
+              <p style={{ marginTop: 0 }}>
+                開催期間: {formatDate(event.startDate)} 〜 {formatDate(event.endDate)}
+              </p>
+
+              <div style={{ display: "flex", gap: "0.8em", flexWrap: "wrap" }}>
+                <Link to={`/events/${event.id}/edit`} state={{ tab: "seasons" }}>
+                  シーズン / カテゴリ / 課題設定
+                </Link>
+                <Link to={`/events/${event.id}/edit`} state={{ tab: "participants" }}>
+                  参加者登録
+                </Link>
+                <Link to={`/events/${event.id}/edit`} state={{ tab: "scores" }}>
+                  採点入力
+                </Link>
+                <Link to={`/score-summary/${event.id}`}>公開ランキング確認</Link>
+                <button type="button" onClick={() => handleDelete(event.id)}>
+                  🗑 イベント削除
+                </button>
+              </div>
+            </section>
+          ))}
+        </div>
+      )}
+
+      <div style={{ marginTop: "2em" }}>
+        <button type="button" onClick={handleLogout}>ログアウト</button>
+      </div>
+      <div style={{ marginTop: "1em" }}>
         <Link to="/">← Homeに戻る</Link>
       </div>
-      
     </div>
   );
 };

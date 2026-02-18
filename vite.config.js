@@ -9,5 +9,8 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: "./src/test/setup.js",
     globals: true,
+    pool: "threads",
+    maxWorkers: 1,
+    minWorkers: 1,
   },
 });
