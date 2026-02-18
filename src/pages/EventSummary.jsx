@@ -66,13 +66,16 @@ const EventSummary = () => {
   const initialSeasonId = searchParams.get("season") || "all";
   const initialCategoryId = searchParams.get("category") || "all";
   const initialKeyword = searchParams.get("q") || "";
+  const initialParticipantId = searchParams.get("pid") || "";
+  const initialSelfOnly = searchParams.get("self") === "1";
   const [event, setEvent] = useState(null);
   const [seasons, setSeasons] = useState([]);
   const [categories, setCategories] = useState([]);
   const [participants, setParticipants] = useState([]);
   const [selectedSeasonId, setSelectedSeasonId] = useState(initialSeasonId);
   const [selectedCategoryId, setSelectedCategoryId] = useState(initialCategoryId);
-  const [selectedParticipantId, setSelectedParticipantId] = useState("");
+  const [selectedParticipantId, setSelectedParticipantId] = useState(initialParticipantId);
+  const [showOnlySelected, setShowOnlySelected] = useState(initialSelfOnly);
   const [searchKeyword, setSearchKeyword] = useState(initialKeyword);
   const [rankings, setRankings] = useState({});
   const [loading, setLoading] = useState(true);
@@ -263,6 +266,12 @@ const EventSummary = () => {
   }, [participantsForQuickSelect, selectedParticipantId]);
 
   useEffect(() => {
+    if (showOnlySelected && !selectedParticipantId) {
+      setShowOnlySelected(false);
+    }
+  }, [showOnlySelected, selectedParticipantId]);
+
+  useEffect(() => {
     if (selectedSeasonId !== "all" && !seasons.some((season) => season.id === selectedSeasonId)) {
       setSelectedSeasonId("all");
     }
@@ -283,10 +292,63 @@ const EventSummary = () => {
     if (selectedCategoryId !== "all") params.set("category", selectedCategoryId);
     const normalized = searchKeyword.trim();
     if (normalized) params.set("q", normalized);
+    if (selectedParticipantId) params.set("pid", selectedParticipantId);
+    if (showOnlySelected && selectedParticipantId) params.set("self", "1");
     if (params.toString() !== searchParams.toString()) {
       setSearchParams(params, { replace: true });
     }
-  }, [selectedSeasonId, selectedCategoryId, searchKeyword, searchParams, setSearchParams]);
+  }, [
+    selectedSeasonId,
+    selectedCategoryId,
+    searchKeyword,
+    selectedParticipantId,
+    showOnlySelected,
+    searchParams,
+    setSearchParams,
+  ]);
+
+  const normalizedKeyword = searchKeyword.trim().toLowerCase();
+  const hasSearch = normalizedKeyword.length > 0;
+  const selectedParticipant = participants.find((participant) => participant.id === selectedParticipantId) || null;
+
+  const selectedParticipantRows = useMemo(() => {
+    if (!selectedParticipantId) return [];
+    const rows = [];
+    for (const category of visibleCategories) {
+      const row = (rankings[category.id] || []).find(
+        (item) => item.participantId === selectedParticipantId
+      );
+      if (row) {
+        rows.push({
+          ...row,
+          categoryName: category.name,
+        });
+      }
+    }
+    return rows;
+  }, [selectedParticipantId, visibleCategories, rankings]);
+
+  const buildDetailLink = (participantId) => {
+    const params = new URLSearchParams();
+    if (selectedSeasonId !== "all") params.set("season", selectedSeasonId);
+    if (selectedCategoryId !== "all") params.set("category", selectedCategoryId);
+    if (searchKeyword.trim()) params.set("q", searchKeyword.trim());
+    if (selectedParticipantId) params.set("pid", selectedParticipantId);
+    if (showOnlySelected && selectedParticipantId) params.set("self", "1");
+    const query = params.toString();
+    return `/score-summary/${eventId}/participants/${participantId}${query ? `?${query}` : ""}`;
+  };
+  const matchedCount = visibleCategories.reduce((count, category) => {
+    const rows = rankings[category.id] || [];
+    return (
+      count +
+      rows.filter((row) => {
+        const name = (row.name || "").toLowerCase();
+        const memberNo = (row.memberNo || "").toLowerCase();
+        return name.includes(normalizedKeyword) || memberNo.includes(normalizedKeyword);
+      }).length
+    );
+  }, 0);
 
   if (loading) {
     return <p>集計情報を読み込んでいます...</p>;
@@ -302,28 +364,6 @@ const EventSummary = () => {
       </div>
     );
   }
-
-  const normalizedKeyword = searchKeyword.trim().toLowerCase();
-  const hasSearch = normalizedKeyword.length > 0;
-  const buildDetailLink = (participantId) => {
-    const params = new URLSearchParams();
-    if (selectedSeasonId !== "all") params.set("season", selectedSeasonId);
-    if (selectedCategoryId !== "all") params.set("category", selectedCategoryId);
-    if (searchKeyword.trim()) params.set("q", searchKeyword.trim());
-    const query = params.toString();
-    return `/score-summary/${eventId}/participants/${participantId}${query ? `?${query}` : ""}`;
-  };
-  const matchedCount = visibleCategories.reduce((count, category) => {
-    const rows = rankings[category.id] || [];
-    return (
-      count +
-      rows.filter((row) => {
-        const name = (row.name || "").toLowerCase();
-        const memberNo = (row.memberNo || "").toLowerCase();
-        return name.includes(normalizedKeyword) || memberNo.includes(normalizedKeyword);
-      }).length
-    );
-  }, 0);
 
   return (
     <div style={{ padding: "2em" }}>
@@ -400,12 +440,47 @@ const EventSummary = () => {
             ))}
           </select>
         </label>
+        <label>
+          <input
+            type="checkbox"
+            checked={showOnlySelected}
+            onChange={(e) => setShowOnlySelected(e.target.checked)}
+            disabled={!selectedParticipantId}
+            style={{ marginLeft: "0.5em", marginRight: "0.3em" }}
+          />
+          自分だけ表示
+        </label>
         {selectedParticipantId && (
           <Link to={buildDetailLink(selectedParticipantId)}>
             詳細へ移動
           </Link>
         )}
       </div>
+      {selectedParticipant && (
+        <section
+          style={{
+            margin: "1em 0",
+            border: "1px solid #ddd",
+            borderRadius: "8px",
+            padding: "0.8em",
+          }}
+        >
+          <h3 style={{ marginTop: 0, marginBottom: "0.5em" }}>
+            選択中: {selectedParticipant.name} ({selectedParticipant.memberNo || "-"})
+          </h3>
+          {selectedParticipantRows.length === 0 ? (
+            <p style={{ marginBottom: 0 }}>この条件では順位データがありません。</p>
+          ) : (
+            <ul style={{ marginBottom: 0, paddingLeft: "1.2em" }}>
+              {selectedParticipantRows.map((row) => (
+                <li key={`${row.categoryName}-${row.participantId}`}>
+                  {row.categoryName}: {row.rank}位 / 得点 {row.totalPoints} / 完登 {row.clearCount}
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
 
       {calculating && <p>ランキングを計算中...</p>}
 
@@ -414,13 +489,15 @@ const EventSummary = () => {
       ) : (
         visibleCategories.map((category) => {
           const allRows = rankings[category.id] || [];
-          const rows = hasSearch
-            ? allRows.filter((row) => {
-                const name = (row.name || "").toLowerCase();
-                const memberNo = (row.memberNo || "").toLowerCase();
-                return name.includes(normalizedKeyword) || memberNo.includes(normalizedKeyword);
-              })
-            : allRows;
+          const rows = allRows.filter((row) => {
+            if (showOnlySelected && selectedParticipantId && row.participantId !== selectedParticipantId) {
+              return false;
+            }
+            if (!hasSearch) return true;
+            const name = (row.name || "").toLowerCase();
+            const memberNo = (row.memberNo || "").toLowerCase();
+            return name.includes(normalizedKeyword) || memberNo.includes(normalizedKeyword);
+          });
 
           return (
             <section key={category.id} style={{ marginBottom: "2em" }}>
@@ -443,7 +520,12 @@ const EventSummary = () => {
                     {rows.map((row) => (
                       <tr key={row.participantId}>
                         <td style={{ padding: "0.4em 0" }}>{row.rank}</td>
-                        <td>{row.name}</td>
+                        <td>
+                          {row.name}
+                          {selectedParticipantId === row.participantId && (
+                            <strong style={{ marginLeft: "0.4em" }}>(選択中)</strong>
+                          )}
+                        </td>
                         <td>{row.memberNo}</td>
                         <td style={{ textAlign: "right" }}>{row.totalPoints}</td>
                         <td style={{ textAlign: "right" }}>{row.clearCount}</td>
