@@ -85,12 +85,12 @@ describe("EventSummary", () => {
     vi.clearAllMocks();
   });
 
-  it("shows only selected participant in self mode", async () => {
+  it("shows selected participant only and resets quick filters", async () => {
     setupFirestore();
-    renderSummary("/score-summary/event-1?view=self&pid=p2&category=cat-1");
+    const user = userEvent.setup();
+    renderSummary("/score-summary/event-1?self=1&pid=p2&category=cat-1&q=M-1002");
 
     await screen.findByText(/FlashComp Spring 2026 - 集計結果/);
-    expect(screen.queryByText("名前/会員番号で検索:")).not.toBeInTheDocument();
     await screen.findByText(/選択中: Riku/);
 
     const table = screen.getByRole("table");
@@ -100,8 +100,18 @@ describe("EventSummary", () => {
     const detailLink = screen.getByRole("link", { name: "詳細へ移動" });
     expect(detailLink).toHaveAttribute(
       "href",
-      "/score-summary/event-1/participants/p2?category=cat-1&pid=p2&view=self"
+      "/score-summary/event-1/participants/p2?category=cat-1&q=M-1002&pid=p2&self=1"
     );
+
+    await user.click(screen.getByRole("button", { name: "フィルターをリセット" }));
+    await waitFor(() => {
+      expect(screen.getByLabelText(/カテゴリ:/)).toHaveValue("all");
+      expect(screen.getByLabelText(/参加者:/)).toHaveValue("");
+      expect(screen.getByPlaceholderText("例: 山田 / M-1001")).toHaveValue("");
+    });
+    expect(screen.queryByRole("link", { name: "詳細へ移動" })).not.toBeInTheDocument();
+    expect(within(table).getByText("Aoi")).toBeInTheDocument();
+    expect(within(table).getByText("Riku")).toBeInTheDocument();
   });
 
   it("filters rows by keyword in ranking mode", async () => {

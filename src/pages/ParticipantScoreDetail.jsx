@@ -401,11 +401,16 @@ const ParticipantScoreDetail = () => {
 
       <section style={{ border: "1px solid #ddd", borderRadius: "8px", padding: "1em" }}>
         <h3 style={{ marginTop: 0 }}>合計</h3>
-        <p style={{ marginBottom: 0 }}>
-          得点: <strong>{totalSummary.totalPoints}</strong> / 完登数: <strong>{totalSummary.totalClears}</strong>
-        </p>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.8em", alignItems: "center" }}>
+          <p style={{ margin: 0 }}>
+            得点: <strong>{totalSummary.totalPoints}</strong>
+          </p>
+          <p style={{ margin: 0 }}>
+            完登数: <strong>{totalSummary.totalClears}</strong>
+          </p>
+        </div>
         {overallRankInfo && (
-          <p style={{ marginBottom: 0 }}>
+          <p style={{ marginBottom: 0, marginTop: "0.6em" }}>
             順位（{overallRankInfo.categoryName}）:
             {" "}
             <strong>{overallRankInfo.rank}</strong>
@@ -475,24 +480,26 @@ const ParticipantScoreDetail = () => {
                     {category.clearedRoutes.length === 0 ? (
                       <p>完登課題はありません。</p>
                     ) : (
-                      <table style={{ borderCollapse: "collapse", width: "100%" }}>
-                        <thead>
-                          <tr>
-                            <th style={{ textAlign: "left", borderBottom: "1px solid #ccc" }}>課題</th>
-                            <th style={{ textAlign: "left", borderBottom: "1px solid #ccc" }}>グレード</th>
-                            <th style={{ textAlign: "right", borderBottom: "1px solid #ccc" }}>点数</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {category.clearedRoutes.map((route) => (
-                            <tr key={route.routeName}>
-                              <td style={{ padding: "0.35em 0" }}>{route.routeName}</td>
-                              <td>{route.grade}</td>
-                              <td style={{ textAlign: "right" }}>{route.points}</td>
+                      <div style={{ overflowX: "auto" }}>
+                        <table style={{ borderCollapse: "collapse", width: "100%", minWidth: "360px" }}>
+                          <thead>
+                            <tr>
+                              <th style={{ textAlign: "left", borderBottom: "1px solid #ccc" }}>課題</th>
+                              <th style={{ textAlign: "left", borderBottom: "1px solid #ccc" }}>グレード</th>
+                              <th style={{ textAlign: "right", borderBottom: "1px solid #ccc" }}>点数</th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                          </thead>
+                          <tbody>
+                            {category.clearedRoutes.map((route) => (
+                              <tr key={route.routeName}>
+                                <td style={{ padding: "0.35em 0" }}>{route.routeName}</td>
+                                <td>{route.grade}</td>
+                                <td style={{ textAlign: "right" }}>{route.points}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
                     )}
                   </div>
                 ))
