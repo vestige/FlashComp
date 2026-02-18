@@ -35,6 +35,8 @@ const addRankToRows = (rows) => {
 const ParticipantScoreDetail = () => {
   const { eventId, participantId } = useParams();
   const [searchParams] = useSearchParams();
+  const categoryQuery = searchParams.get("category") || "";
+  const keywordQuery = searchParams.get("q") || "";
 
   const [event, setEvent] = useState(null);
   const [participant, setParticipant] = useState(null);
@@ -48,6 +50,24 @@ const ParticipantScoreDetail = () => {
   const [loading, setLoading] = useState(true);
   const [calculating, setCalculating] = useState(false);
   const [error, setError] = useState("");
+
+  const buildParticipantDetailLink = (targetParticipantId) => {
+    const params = new URLSearchParams();
+    if (selectedSeasonId !== "all") params.set("season", selectedSeasonId);
+    if (categoryQuery) params.set("category", categoryQuery);
+    if (keywordQuery) params.set("q", keywordQuery);
+    const query = params.toString();
+    return `/score-summary/${eventId}/participants/${targetParticipantId}${query ? `?${query}` : ""}`;
+  };
+
+  const summaryLink = useMemo(() => {
+    const params = new URLSearchParams();
+    if (selectedSeasonId !== "all") params.set("season", selectedSeasonId);
+    if (categoryQuery) params.set("category", categoryQuery);
+    if (keywordQuery) params.set("q", keywordQuery);
+    const query = params.toString();
+    return `/score-summary/${eventId}${query ? `?${query}` : ""}`;
+  }, [eventId, selectedSeasonId, categoryQuery, keywordQuery]);
 
   useEffect(() => {
     let cancelled = false;
@@ -343,7 +363,7 @@ const ParticipantScoreDetail = () => {
       <div style={{ padding: "2em" }}>
         <p>{error}</p>
         <div style={{ marginTop: "1.5em" }}>
-          <Link to={`/score-summary/${eventId}`}>← 集計結果に戻る</Link>
+          <Link to={summaryLink}>← 集計結果に戻る</Link>
         </div>
       </div>
     );
@@ -408,18 +428,14 @@ const ParticipantScoreDetail = () => {
           <h3 style={{ marginTop: 0 }}>近い順位の参加者</h3>
           <div style={{ display: "flex", gap: "0.8em", flexWrap: "wrap" }}>
             {adjacentParticipants.prev ? (
-              <Link
-                to={`/score-summary/${eventId}/participants/${adjacentParticipants.prev.participantId}?season=${selectedSeasonId}`}
-              >
+              <Link to={buildParticipantDetailLink(adjacentParticipants.prev.participantId)}>
                 ↑ {adjacentParticipants.prev.rank}位 {adjacentParticipants.prev.name}
               </Link>
             ) : (
               <span>これより上位の参加者はいません</span>
             )}
             {adjacentParticipants.next ? (
-              <Link
-                to={`/score-summary/${eventId}/participants/${adjacentParticipants.next.participantId}?season=${selectedSeasonId}`}
-              >
+              <Link to={buildParticipantDetailLink(adjacentParticipants.next.participantId)}>
                 ↓ {adjacentParticipants.next.rank}位 {adjacentParticipants.next.name}
               </Link>
             ) : (
@@ -487,7 +503,7 @@ const ParticipantScoreDetail = () => {
       </div>
 
       <div style={{ marginTop: "1.5em" }}>
-        <Link to={`/score-summary/${eventId}`}>← 集計結果に戻る</Link>
+        <Link to={summaryLink}>← 集計結果に戻る</Link>
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { db } from "../firebase";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 
@@ -62,14 +62,18 @@ const buildRankings = (categoryMap) => {
 
 const EventSummary = () => {
   const { eventId } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialSeasonId = searchParams.get("season") || "all";
+  const initialCategoryId = searchParams.get("category") || "all";
+  const initialKeyword = searchParams.get("q") || "";
   const [event, setEvent] = useState(null);
   const [seasons, setSeasons] = useState([]);
   const [categories, setCategories] = useState([]);
   const [participants, setParticipants] = useState([]);
-  const [selectedSeasonId, setSelectedSeasonId] = useState("all");
-  const [selectedCategoryId, setSelectedCategoryId] = useState("all");
+  const [selectedSeasonId, setSelectedSeasonId] = useState(initialSeasonId);
+  const [selectedCategoryId, setSelectedCategoryId] = useState(initialCategoryId);
   const [selectedParticipantId, setSelectedParticipantId] = useState("");
-  const [searchKeyword, setSearchKeyword] = useState("");
+  const [searchKeyword, setSearchKeyword] = useState(initialKeyword);
   const [rankings, setRankings] = useState({});
   const [loading, setLoading] = useState(true);
   const [calculating, setCalculating] = useState(false);
@@ -258,6 +262,32 @@ const EventSummary = () => {
     if (!exists) setSelectedParticipantId("");
   }, [participantsForQuickSelect, selectedParticipantId]);
 
+  useEffect(() => {
+    if (selectedSeasonId !== "all" && !seasons.some((season) => season.id === selectedSeasonId)) {
+      setSelectedSeasonId("all");
+    }
+  }, [seasons, selectedSeasonId]);
+
+  useEffect(() => {
+    if (
+      selectedCategoryId !== "all" &&
+      !categories.some((category) => category.id === selectedCategoryId)
+    ) {
+      setSelectedCategoryId("all");
+    }
+  }, [categories, selectedCategoryId]);
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (selectedSeasonId !== "all") params.set("season", selectedSeasonId);
+    if (selectedCategoryId !== "all") params.set("category", selectedCategoryId);
+    const normalized = searchKeyword.trim();
+    if (normalized) params.set("q", normalized);
+    if (params.toString() !== searchParams.toString()) {
+      setSearchParams(params, { replace: true });
+    }
+  }, [selectedSeasonId, selectedCategoryId, searchKeyword, searchParams, setSearchParams]);
+
   if (loading) {
     return <p>集計情報を読み込んでいます...</p>;
   }
@@ -275,6 +305,14 @@ const EventSummary = () => {
 
   const normalizedKeyword = searchKeyword.trim().toLowerCase();
   const hasSearch = normalizedKeyword.length > 0;
+  const buildDetailLink = (participantId) => {
+    const params = new URLSearchParams();
+    if (selectedSeasonId !== "all") params.set("season", selectedSeasonId);
+    if (selectedCategoryId !== "all") params.set("category", selectedCategoryId);
+    if (searchKeyword.trim()) params.set("q", searchKeyword.trim());
+    const query = params.toString();
+    return `/score-summary/${eventId}/participants/${participantId}${query ? `?${query}` : ""}`;
+  };
   const matchedCount = visibleCategories.reduce((count, category) => {
     const rows = rankings[category.id] || [];
     return (
@@ -363,9 +401,7 @@ const EventSummary = () => {
           </select>
         </label>
         {selectedParticipantId && (
-          <Link
-            to={`/score-summary/${eventId}/participants/${selectedParticipantId}?season=${selectedSeasonId}`}
-          >
+          <Link to={buildDetailLink(selectedParticipantId)}>
             詳細へ移動
           </Link>
         )}
@@ -412,9 +448,7 @@ const EventSummary = () => {
                         <td style={{ textAlign: "right" }}>{row.totalPoints}</td>
                         <td style={{ textAlign: "right" }}>{row.clearCount}</td>
                         <td>
-                          <Link
-                            to={`/score-summary/${eventId}/participants/${row.participantId}?season=${selectedSeasonId}`}
-                          >
+                          <Link to={buildDetailLink(row.participantId)}>
                             詳細を見る
                           </Link>
                         </td>
