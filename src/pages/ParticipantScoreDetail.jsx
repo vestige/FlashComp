@@ -44,6 +44,7 @@ const ParticipantScoreDetail = () => {
   const [selectedSeasonId, setSelectedSeasonId] = useState(searchParams.get("season") || "all");
   const [seasonSummaries, setSeasonSummaries] = useState([]);
   const [overallRankInfo, setOverallRankInfo] = useState(null);
+  const [adjacentParticipants, setAdjacentParticipants] = useState({ prev: null, next: null });
   const [loading, setLoading] = useState(true);
   const [calculating, setCalculating] = useState(false);
   const [error, setError] = useState("");
@@ -295,6 +296,19 @@ const ParticipantScoreDetail = () => {
                 }
               : null
           );
+          if (myOverall) {
+            const myIndex = overallRankedRows.findIndex(
+              (row) => row.participantId === participant.id
+            );
+            const prev = myIndex > 0 ? overallRankedRows[myIndex - 1] : null;
+            const next =
+              myIndex >= 0 && myIndex < overallRankedRows.length - 1
+                ? overallRankedRows[myIndex + 1]
+                : null;
+            setAdjacentParticipants({ prev, next });
+          } else {
+            setAdjacentParticipants({ prev: null, next: null });
+          }
           setSeasonSummaries(seasonRows);
         }
       } catch (err) {
@@ -382,6 +396,38 @@ const ParticipantScoreDetail = () => {
           </p>
         )}
       </section>
+      {(adjacentParticipants.prev || adjacentParticipants.next) && (
+        <section
+          style={{
+            border: "1px solid #ddd",
+            borderRadius: "8px",
+            padding: "1em",
+            marginTop: "1em",
+          }}
+        >
+          <h3 style={{ marginTop: 0 }}>近い順位の参加者</h3>
+          <div style={{ display: "flex", gap: "0.8em", flexWrap: "wrap" }}>
+            {adjacentParticipants.prev ? (
+              <Link
+                to={`/score-summary/${eventId}/participants/${adjacentParticipants.prev.participantId}?season=${selectedSeasonId}`}
+              >
+                ↑ {adjacentParticipants.prev.rank}位 {adjacentParticipants.prev.name}
+              </Link>
+            ) : (
+              <span>これより上位の参加者はいません</span>
+            )}
+            {adjacentParticipants.next ? (
+              <Link
+                to={`/score-summary/${eventId}/participants/${adjacentParticipants.next.participantId}?season=${selectedSeasonId}`}
+              >
+                ↓ {adjacentParticipants.next.rank}位 {adjacentParticipants.next.name}
+              </Link>
+            ) : (
+              <span>これより下位の参加者はいません</span>
+            )}
+          </div>
+        </section>
+      )}
 
       {calculating && <p style={{ marginTop: "1em" }}>内訳を計算中...</p>}
 
