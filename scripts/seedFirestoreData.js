@@ -78,9 +78,11 @@ const events = [
     name: "FlashComp Autumn 2025",
     gymId: "gym-yokohama",
     startDate: "2025-09-01",
-    endDate: "2025-10-31",
+    endDate: "2025-11-30",
     seasons: [
-      { id: "season-01", name: "Main Season", startDate: "2025-09-01", endDate: "2025-10-31" },
+      { id: "season-01", name: "Qualifier", startDate: "2025-09-01", endDate: "2025-09-30" },
+      { id: "season-02", name: "Middle Round", startDate: "2025-10-01", endDate: "2025-10-31" },
+      { id: "season-03", name: "Final Round", startDate: "2025-11-01", endDate: "2025-11-30" },
     ],
     routesPerCategory: 10,
   },

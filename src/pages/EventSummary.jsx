@@ -327,6 +327,7 @@ const EventSummary = () => {
                       <th style={{ textAlign: "left", borderBottom: "1px solid #ccc" }}>会員番号</th>
                       <th style={{ textAlign: "right", borderBottom: "1px solid #ccc" }}>得点</th>
                       <th style={{ textAlign: "right", borderBottom: "1px solid #ccc" }}>完登数</th>
+                      <th style={{ textAlign: "left", borderBottom: "1px solid #ccc" }}>詳細</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -337,6 +338,13 @@ const EventSummary = () => {
                         <td>{row.memberNo}</td>
                         <td style={{ textAlign: "right" }}>{row.totalPoints}</td>
                         <td style={{ textAlign: "right" }}>{row.clearCount}</td>
+                        <td>
+                          <Link
+                            to={`/score-summary/${eventId}/participants/${row.participantId}?season=${selectedSeasonId}`}
+                          >
+                            詳細を見る
+                          </Link>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
