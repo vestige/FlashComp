@@ -67,7 +67,7 @@ const EventSummary = () => {
   const initialCategoryId = searchParams.get("category") || "all";
   const initialKeyword = searchParams.get("q") || "";
   const initialParticipantId = searchParams.get("pid") || "";
-  const initialSelfOnly = searchParams.get("self") === "1";
+  const initialViewMode = searchParams.get("view") === "self" ? "self" : "ranking";
   const [event, setEvent] = useState(null);
   const [seasons, setSeasons] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -75,7 +75,7 @@ const EventSummary = () => {
   const [selectedSeasonId, setSelectedSeasonId] = useState(initialSeasonId);
   const [selectedCategoryId, setSelectedCategoryId] = useState(initialCategoryId);
   const [selectedParticipantId, setSelectedParticipantId] = useState(initialParticipantId);
-  const [showOnlySelected, setShowOnlySelected] = useState(initialSelfOnly);
+  const [viewMode, setViewMode] = useState(initialViewMode);
   const [searchKeyword, setSearchKeyword] = useState(initialKeyword);
   const [rankings, setRankings] = useState({});
   const [loading, setLoading] = useState(true);
@@ -259,6 +259,7 @@ const EventSummary = () => {
 
   useEffect(() => {
     if (!selectedParticipantId) return;
+    if (participantsForQuickSelect.length === 0) return;
     const exists = participantsForQuickSelect.some(
       (participant) => participant.id === selectedParticipantId
     );
@@ -266,18 +267,21 @@ const EventSummary = () => {
   }, [participantsForQuickSelect, selectedParticipantId]);
 
   useEffect(() => {
-    if (showOnlySelected && !selectedParticipantId) {
-      setShowOnlySelected(false);
-    }
-  }, [showOnlySelected, selectedParticipantId]);
+    if (viewMode !== "self") return;
+    if (selectedParticipantId) return;
+    if (participantsForQuickSelect.length === 0) return;
+    setSelectedParticipantId(participantsForQuickSelect[0].id);
+  }, [viewMode, selectedParticipantId, participantsForQuickSelect]);
 
   useEffect(() => {
+    if (seasons.length === 0) return;
     if (selectedSeasonId !== "all" && !seasons.some((season) => season.id === selectedSeasonId)) {
       setSelectedSeasonId("all");
     }
   }, [seasons, selectedSeasonId]);
 
   useEffect(() => {
+    if (categories.length === 0) return;
     if (
       selectedCategoryId !== "all" &&
       !categories.some((category) => category.id === selectedCategoryId)
@@ -293,7 +297,7 @@ const EventSummary = () => {
     const normalized = searchKeyword.trim();
     if (normalized) params.set("q", normalized);
     if (selectedParticipantId) params.set("pid", selectedParticipantId);
-    if (showOnlySelected && selectedParticipantId) params.set("self", "1");
+    if (viewMode === "self") params.set("view", "self");
     if (params.toString() !== searchParams.toString()) {
       setSearchParams(params, { replace: true });
     }
@@ -302,7 +306,7 @@ const EventSummary = () => {
     selectedCategoryId,
     searchKeyword,
     selectedParticipantId,
-    showOnlySelected,
+    viewMode,
     searchParams,
     setSearchParams,
   ]);
@@ -334,7 +338,7 @@ const EventSummary = () => {
     if (selectedCategoryId !== "all") params.set("category", selectedCategoryId);
     if (searchKeyword.trim()) params.set("q", searchKeyword.trim());
     if (selectedParticipantId) params.set("pid", selectedParticipantId);
-    if (showOnlySelected && selectedParticipantId) params.set("self", "1");
+    if (viewMode === "self") params.set("view", "self");
     const query = params.toString();
     return `/score-summary/${eventId}/participants/${participantId}${query ? `?${query}` : ""}`;
   };
@@ -368,6 +372,34 @@ const EventSummary = () => {
   return (
     <div style={{ padding: "2em", maxWidth: "1100px", margin: "0 auto" }}>
       <h2>{event?.name} - 集計結果</h2>
+      <div style={{ marginTop: "0.8em", display: "flex", gap: "0.6em", flexWrap: "wrap" }}>
+        <button
+          type="button"
+          onClick={() => setViewMode("ranking")}
+          style={{
+            padding: "0.45em 0.8em",
+            borderRadius: "999px",
+            border: "1px solid #bbb",
+            backgroundColor: viewMode === "ranking" ? "#f2f2f2" : "#fff",
+            fontWeight: viewMode === "ranking" ? "bold" : "normal",
+          }}
+        >
+          全体ランキング
+        </button>
+        <button
+          type="button"
+          onClick={() => setViewMode("self")}
+          style={{
+            padding: "0.45em 0.8em",
+            borderRadius: "999px",
+            border: "1px solid #bbb",
+            backgroundColor: viewMode === "self" ? "#f2f2f2" : "#fff",
+            fontWeight: viewMode === "self" ? "bold" : "normal",
+          }}
+        >
+          自分のスコア
+        </button>
+      </div>
 
       <div style={{ margin: "1em 0", display: "flex", flexWrap: "wrap", gap: "0.8em" }}>
         <label>
@@ -386,21 +418,23 @@ const EventSummary = () => {
           </select>
         </label>
       </div>
-      <div style={{ margin: "1em 0" }}>
-        <label>
-          名前/会員番号で検索:
-          <input
-            type="text"
-            value={searchKeyword}
-            onChange={(e) => setSearchKeyword(e.target.value)}
-            placeholder="例: 山田 / M-1001"
-            style={{ marginLeft: "0.5em" }}
-          />
-        </label>
-        {hasSearch && (
-          <span style={{ marginLeft: "0.8em" }}>該当 {matchedCount} 件</span>
-        )}
-      </div>
+      {viewMode === "ranking" && (
+        <div style={{ margin: "1em 0" }}>
+          <label>
+            名前/会員番号で検索:
+            <input
+              type="text"
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              placeholder="例: 山田 / M-1001"
+              style={{ marginLeft: "0.5em" }}
+            />
+          </label>
+          {hasSearch && (
+            <span style={{ marginLeft: "0.8em" }}>該当 {matchedCount} 件</span>
+          )}
+        </div>
+      )}
       <div
         style={{
           margin: "1em 0",
@@ -441,16 +475,6 @@ const EventSummary = () => {
               ))}
             </select>
           </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={showOnlySelected}
-              onChange={(e) => setShowOnlySelected(e.target.checked)}
-              disabled={!selectedParticipantId}
-              style={{ marginLeft: "0.5em", marginRight: "0.3em" }}
-            />
-            自分だけ表示
-          </label>
           {selectedParticipantId && (
             <Link to={buildDetailLink(selectedParticipantId)}>
               詳細へ移動
@@ -488,13 +512,16 @@ const EventSummary = () => {
 
       {visibleCategories.length === 0 ? (
         <p>カテゴリが登録されていません。</p>
+      ) : viewMode === "self" && !selectedParticipantId ? (
+        <p>参加者を選択すると、自分の順位とスコアを表示します。</p>
       ) : (
         visibleCategories.map((category) => {
           const allRows = rankings[category.id] || [];
           const rows = allRows.filter((row) => {
-            if (showOnlySelected && selectedParticipantId && row.participantId !== selectedParticipantId) {
+            if (viewMode === "self" && selectedParticipantId && row.participantId !== selectedParticipantId) {
               return false;
             }
+            if (viewMode === "self") return true;
             if (!hasSearch) return true;
             const name = (row.name || "").toLowerCase();
             const memberNo = (row.memberNo || "").toLowerCase();
