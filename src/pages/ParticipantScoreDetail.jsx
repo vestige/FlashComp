@@ -10,16 +10,40 @@ const getTimestampText = (value) => {
   return "-";
 };
 
+const addRankToRows = (rows) => {
+  const sorted = [...rows].sort((a, b) => {
+    if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+    if (b.clearCount !== a.clearCount) return b.clearCount - a.clearCount;
+    return a.name.localeCompare(b.name, "ja");
+  });
+
+  let prevPoints = null;
+  let prevClears = null;
+  let rank = 0;
+
+  return sorted.map((row, index) => {
+    if (row.totalPoints !== prevPoints || row.clearCount !== prevClears) {
+      rank = index + 1;
+    }
+    prevPoints = row.totalPoints;
+    prevClears = row.clearCount;
+
+    return { ...row, rank };
+  });
+};
+
 const ParticipantScoreDetail = () => {
   const { eventId, participantId } = useParams();
   const [searchParams] = useSearchParams();
 
   const [event, setEvent] = useState(null);
   const [participant, setParticipant] = useState(null);
+  const [allParticipants, setAllParticipants] = useState([]);
   const [seasons, setSeasons] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedSeasonId, setSelectedSeasonId] = useState(searchParams.get("season") || "all");
   const [seasonSummaries, setSeasonSummaries] = useState([]);
+  const [overallRankInfo, setOverallRankInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [calculating, setCalculating] = useState(false);
   const [error, setError] = useState("");
@@ -31,9 +55,10 @@ const ParticipantScoreDetail = () => {
       setLoading(true);
       setError("");
       try {
-        const [eventDocSnap, participantDocSnap, seasonsSnap, categoriesSnap] = await Promise.all([
+        const [eventDocSnap, participantDocSnap, participantsSnap, seasonsSnap, categoriesSnap] = await Promise.all([
           getDoc(doc(db, "events", eventId)),
           getDoc(doc(db, "events", eventId, "participants", participantId)),
+          getDocs(collection(db, "events", eventId, "participants")),
           getDocs(collection(db, "events", eventId, "seasons")),
           getDocs(collection(db, "events", eventId, "categories")),
         ]);
@@ -64,6 +89,7 @@ const ParticipantScoreDetail = () => {
 
         setEvent({ id: eventDocSnap.id, ...eventDocSnap.data() });
         setParticipant({ id: participantDocSnap.id, ...participantDocSnap.data() });
+        setAllParticipants(participantsSnap.docs.map((p) => ({ id: p.id, ...p.data() })));
         setSeasons(seasonRows);
         setCategories(categoryRows);
         setSelectedSeasonId(initialSeason);
@@ -98,14 +124,17 @@ const ParticipantScoreDetail = () => {
           ? [participant.categoryId]
           : categories.map((category) => category.id);
         const categoryNameMap = new Map(categories.map((category) => [category.id, category.name]));
+        const participantNameMap = new Map(allParticipants.map((p) => [p.id, p.name || "名無し"]));
+        const participantMemberNoMap = new Map(allParticipants.map((p) => [p.id, p.memberNo || "-"]));
 
         const seasonRows = [];
+        const aggregateByCategory = {};
 
         for (const season of targetSeasons) {
           const categorySummaries = [];
 
           const categoryTasks = targetCategoryIds.map(async (categoryId) => {
-            const [routesSnap, scoreDocSnap] = await Promise.all([
+            const [routesSnap, scoresSnap] = await Promise.all([
               getDocs(
                 collection(
                   db,
@@ -118,8 +147,8 @@ const ParticipantScoreDetail = () => {
                   "routes"
                 )
               ),
-              getDoc(
-                doc(
+              getDocs(
+                collection(
                   db,
                   "events",
                   eventId,
@@ -127,13 +156,10 @@ const ParticipantScoreDetail = () => {
                   season.id,
                   "categories",
                   categoryId,
-                  "participants",
-                  participant.id
+                  "participants"
                 )
               ),
             ]);
-
-            if (!scoreDocSnap.exists()) return null;
 
             const routeMap = new Map(
               routesSnap.docs.map((routeDoc) => {
@@ -142,8 +168,76 @@ const ParticipantScoreDetail = () => {
               })
             );
 
-            const scoreData = scoreDocSnap.data();
-            const scores = scoreData.scores || {};
+            const rowsByParticipantId = new Map();
+            const categoryParticipants = allParticipants.filter((p) => p.categoryId === categoryId);
+            for (const p of categoryParticipants) {
+              rowsByParticipantId.set(p.id, {
+                participantId: p.id,
+                name: p.name || "名無し",
+                memberNo: p.memberNo || "-",
+                totalPoints: 0,
+                clearCount: 0,
+              });
+            }
+
+            let participantScoreData = null;
+            for (const scoreDoc of scoresSnap.docs) {
+              const scoreData = scoreDoc.data();
+              const scoreMap = scoreData.scores || {};
+              const currentParticipantId = scoreDoc.id;
+              if (currentParticipantId === participant.id) {
+                participantScoreData = scoreData;
+              }
+
+              const currentRow = rowsByParticipantId.get(currentParticipantId) || {
+                participantId: currentParticipantId,
+                name: participantNameMap.get(currentParticipantId) || `ID:${currentParticipantId}`,
+                memberNo: participantMemberNoMap.get(currentParticipantId) || "-",
+                totalPoints: 0,
+                clearCount: 0,
+              };
+
+              for (const [routeName, isCleared] of Object.entries(scoreMap)) {
+                if (!isCleared) continue;
+                const route = routeMap.get(routeName);
+                currentRow.totalPoints += Number(route?.points) || 1;
+                currentRow.clearCount += 1;
+              }
+
+              rowsByParticipantId.set(currentParticipantId, currentRow);
+            }
+
+            const rankedRows = addRankToRows(Array.from(rowsByParticipantId.values()));
+            const myRankRow = rankedRows.find((row) => row.participantId === participant.id);
+
+            if (!aggregateByCategory[categoryId]) {
+              aggregateByCategory[categoryId] = new Map(
+                rankedRows.map((row) => [
+                  row.participantId,
+                  {
+                    participantId: row.participantId,
+                    name: row.name,
+                    memberNo: row.memberNo,
+                    totalPoints: 0,
+                    clearCount: 0,
+                  },
+                ])
+              );
+            }
+            for (const row of rankedRows) {
+              const aggregateRow = aggregateByCategory[categoryId].get(row.participantId) || {
+                participantId: row.participantId,
+                name: row.name,
+                memberNo: row.memberNo,
+                totalPoints: 0,
+                clearCount: 0,
+              };
+              aggregateRow.totalPoints += row.totalPoints;
+              aggregateRow.clearCount += row.clearCount;
+              aggregateByCategory[categoryId].set(row.participantId, aggregateRow);
+            }
+
+            const scores = participantScoreData?.scores || {};
             const clearedRoutes = Object.entries(scores)
               .filter(([, isCleared]) => !!isCleared)
               .map(([routeName]) => {
@@ -163,7 +257,9 @@ const ParticipantScoreDetail = () => {
               categoryName: categoryNameMap.get(categoryId) || categoryId,
               clearCount: clearedRoutes.length,
               totalPoints,
-              updatedAtText: getTimestampText(scoreData.updatedAt),
+              rank: myRankRow?.rank || rankedRows.length,
+              totalParticipants: rankedRows.length,
+              updatedAtText: getTimestampText(participantScoreData?.updatedAt),
               clearedRoutes,
             };
           });
@@ -181,6 +277,24 @@ const ParticipantScoreDetail = () => {
         }
 
         if (!cancelled) {
+          const overallCategoryId = participant.categoryId || targetCategoryIds[0];
+          const aggregatedRows = overallCategoryId
+            ? Array.from((aggregateByCategory[overallCategoryId] || new Map()).values())
+            : [];
+          const overallRankedRows = addRankToRows(aggregatedRows);
+          const myOverall = overallRankedRows.find((row) => row.participantId === participant.id);
+
+          setOverallRankInfo(
+            myOverall
+              ? {
+                  categoryName: categoryNameMap.get(overallCategoryId) || "未設定",
+                  rank: myOverall.rank,
+                  totalParticipants: overallRankedRows.length,
+                  totalPoints: myOverall.totalPoints,
+                  totalClears: myOverall.clearCount,
+                }
+              : null
+          );
           setSeasonSummaries(seasonRows);
         }
       } catch (err) {
@@ -196,7 +310,7 @@ const ParticipantScoreDetail = () => {
     return () => {
       cancelled = true;
     };
-  }, [loading, participant, seasons, categories, selectedSeasonId, eventId]);
+  }, [loading, participant, allParticipants, seasons, categories, selectedSeasonId, eventId]);
 
   const totalSummary = useMemo(
     () => ({
@@ -256,6 +370,17 @@ const ParticipantScoreDetail = () => {
         <p style={{ marginBottom: 0 }}>
           得点: <strong>{totalSummary.totalPoints}</strong> / 完登数: <strong>{totalSummary.totalClears}</strong>
         </p>
+        {overallRankInfo && (
+          <p style={{ marginBottom: 0 }}>
+            順位（{overallRankInfo.categoryName}）:
+            {" "}
+            <strong>{overallRankInfo.rank}</strong>
+            {" / "}
+            {overallRankInfo.totalParticipants}
+            {" "}
+            （得点 {overallRankInfo.totalPoints} / 完登 {overallRankInfo.totalClears}）
+          </p>
+        )}
       </section>
 
       {calculating && <p style={{ marginTop: "1em" }}>内訳を計算中...</p>}
@@ -279,7 +404,8 @@ const ParticipantScoreDetail = () => {
                 season.categorySummaries.map((category) => (
                   <div key={`${season.seasonId}-${category.categoryId}`} style={{ marginTop: "1em" }}>
                     <h4 style={{ marginBottom: "0.4em" }}>
-                      カテゴリ: {category.categoryName} / 得点 {category.totalPoints} / 完登 {category.clearCount}
+                      カテゴリ: {category.categoryName} / 順位 {category.rank}/{category.totalParticipants}
+                      {" / "}得点 {category.totalPoints} / 完登 {category.clearCount}
                     </h4>
                     <p style={{ marginTop: 0, fontSize: "0.9em" }}>
                       最終更新: {category.updatedAtText}
