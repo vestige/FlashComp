@@ -67,6 +67,7 @@ const EventSummary = () => {
   const [categories, setCategories] = useState([]);
   const [participants, setParticipants] = useState([]);
   const [selectedSeasonId, setSelectedSeasonId] = useState("all");
+  const [searchKeyword, setSearchKeyword] = useState("");
   const [rankings, setRankings] = useState({});
   const [loading, setLoading] = useState(true);
   const [calculating, setCalculating] = useState(false);
@@ -246,6 +247,20 @@ const EventSummary = () => {
     );
   }
 
+  const normalizedKeyword = searchKeyword.trim().toLowerCase();
+  const hasSearch = normalizedKeyword.length > 0;
+  const matchedCount = categories.reduce((count, category) => {
+    const rows = rankings[category.id] || [];
+    return (
+      count +
+      rows.filter((row) => {
+        const name = (row.name || "").toLowerCase();
+        const memberNo = (row.memberNo || "").toLowerCase();
+        return name.includes(normalizedKeyword) || memberNo.includes(normalizedKeyword);
+      }).length
+    );
+  }, 0);
+
   return (
     <div style={{ padding: "2em" }}>
       <h2>{event?.name} - 集計結果</h2>
@@ -267,6 +282,21 @@ const EventSummary = () => {
           </select>
         </label>
       </div>
+      <div style={{ margin: "1em 0" }}>
+        <label>
+          名前/会員番号で検索:
+          <input
+            type="text"
+            value={searchKeyword}
+            onChange={(e) => setSearchKeyword(e.target.value)}
+            placeholder="例: 山田 / M-1001"
+            style={{ marginLeft: "0.5em" }}
+          />
+        </label>
+        {hasSearch && (
+          <span style={{ marginLeft: "0.8em" }}>該当 {matchedCount} 件</span>
+        )}
+      </div>
 
       {calculating && <p>ランキングを計算中...</p>}
 
@@ -274,13 +304,20 @@ const EventSummary = () => {
         <p>カテゴリが登録されていません。</p>
       ) : (
         categories.map((category) => {
-          const rows = rankings[category.id] || [];
+          const allRows = rankings[category.id] || [];
+          const rows = hasSearch
+            ? allRows.filter((row) => {
+                const name = (row.name || "").toLowerCase();
+                const memberNo = (row.memberNo || "").toLowerCase();
+                return name.includes(normalizedKeyword) || memberNo.includes(normalizedKeyword);
+              })
+            : allRows;
 
           return (
             <section key={category.id} style={{ marginBottom: "2em" }}>
               <h3>カテゴリ: {category.name}</h3>
               {rows.length === 0 ? (
-                <p>参加者データがありません。</p>
+                <p>{hasSearch ? "検索条件に一致する参加者がいません。" : "参加者データがありません。"}</p>
               ) : (
                 <table style={{ borderCollapse: "collapse", width: "100%" }}>
                   <thead>
