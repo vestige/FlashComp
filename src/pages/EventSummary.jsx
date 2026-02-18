@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { db } from "../firebase";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
@@ -67,6 +67,8 @@ const EventSummary = () => {
   const [categories, setCategories] = useState([]);
   const [participants, setParticipants] = useState([]);
   const [selectedSeasonId, setSelectedSeasonId] = useState("all");
+  const [selectedCategoryId, setSelectedCategoryId] = useState("all");
+  const [selectedParticipantId, setSelectedParticipantId] = useState("");
   const [searchKeyword, setSearchKeyword] = useState("");
   const [rankings, setRankings] = useState({});
   const [loading, setLoading] = useState(true);
@@ -232,6 +234,30 @@ const EventSummary = () => {
     };
   }, [loading, event, categories, participants, seasons, selectedSeasonId, eventId]);
 
+  const visibleCategories = useMemo(
+    () =>
+      selectedCategoryId === "all"
+        ? categories
+        : categories.filter((category) => category.id === selectedCategoryId),
+    [categories, selectedCategoryId]
+  );
+
+  const participantsForQuickSelect = useMemo(() => {
+    const filtered =
+      selectedCategoryId === "all"
+        ? participants
+        : participants.filter((participant) => participant.categoryId === selectedCategoryId);
+    return [...filtered].sort((a, b) => (a.name || "").localeCompare(b.name || "", "ja"));
+  }, [participants, selectedCategoryId]);
+
+  useEffect(() => {
+    if (!selectedParticipantId) return;
+    const exists = participantsForQuickSelect.some(
+      (participant) => participant.id === selectedParticipantId
+    );
+    if (!exists) setSelectedParticipantId("");
+  }, [participantsForQuickSelect, selectedParticipantId]);
+
   if (loading) {
     return <p>集計情報を読み込んでいます...</p>;
   }
@@ -249,7 +275,7 @@ const EventSummary = () => {
 
   const normalizedKeyword = searchKeyword.trim().toLowerCase();
   const hasSearch = normalizedKeyword.length > 0;
-  const matchedCount = categories.reduce((count, category) => {
+  const matchedCount = visibleCategories.reduce((count, category) => {
     const rows = rankings[category.id] || [];
     return (
       count +
@@ -297,13 +323,60 @@ const EventSummary = () => {
           <span style={{ marginLeft: "0.8em" }}>該当 {matchedCount} 件</span>
         )}
       </div>
+      <div
+        style={{
+          margin: "1em 0",
+          border: "1px solid #ddd",
+          borderRadius: "8px",
+          padding: "0.8em",
+        }}
+      >
+        <p style={{ marginTop: 0, marginBottom: "0.5em" }}>自分のスコアをすぐ確認</p>
+        <label>
+          カテゴリ:
+          <select
+            value={selectedCategoryId}
+            onChange={(e) => setSelectedCategoryId(e.target.value)}
+            style={{ marginLeft: "0.5em", marginRight: "0.8em" }}
+          >
+            <option value="all">すべて</option>
+            {categories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          参加者:
+          <select
+            value={selectedParticipantId}
+            onChange={(e) => setSelectedParticipantId(e.target.value)}
+            style={{ marginLeft: "0.5em", marginRight: "0.8em" }}
+          >
+            <option value="">-- 選択 --</option>
+            {participantsForQuickSelect.map((participant) => (
+              <option key={participant.id} value={participant.id}>
+                {participant.name} ({participant.memberNo || "-"})
+              </option>
+            ))}
+          </select>
+        </label>
+        {selectedParticipantId && (
+          <Link
+            to={`/score-summary/${eventId}/participants/${selectedParticipantId}?season=${selectedSeasonId}`}
+          >
+            詳細へ移動
+          </Link>
+        )}
+      </div>
 
       {calculating && <p>ランキングを計算中...</p>}
 
-      {categories.length === 0 ? (
+      {visibleCategories.length === 0 ? (
         <p>カテゴリが登録されていません。</p>
       ) : (
-        categories.map((category) => {
+        visibleCategories.map((category) => {
           const allRows = rankings[category.id] || [];
           const rows = hasSearch
             ? allRows.filter((row) => {
