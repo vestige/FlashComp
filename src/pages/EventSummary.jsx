@@ -366,10 +366,10 @@ const EventSummary = () => {
   }
 
   return (
-    <div style={{ padding: "2em" }}>
+    <div style={{ padding: "2em", maxWidth: "1100px", margin: "0 auto" }}>
       <h2>{event?.name} - 集計結果</h2>
 
-      <div style={{ margin: "1em 0" }}>
+      <div style={{ margin: "1em 0", display: "flex", flexWrap: "wrap", gap: "0.8em" }}>
         <label>
           表示対象:
           <select
@@ -410,51 +410,53 @@ const EventSummary = () => {
         }}
       >
         <p style={{ marginTop: 0, marginBottom: "0.5em" }}>自分のスコアをすぐ確認</p>
-        <label>
-          カテゴリ:
-          <select
-            value={selectedCategoryId}
-            onChange={(e) => setSelectedCategoryId(e.target.value)}
-            style={{ marginLeft: "0.5em", marginRight: "0.8em" }}
-          >
-            <option value="all">すべて</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          参加者:
-          <select
-            value={selectedParticipantId}
-            onChange={(e) => setSelectedParticipantId(e.target.value)}
-            style={{ marginLeft: "0.5em", marginRight: "0.8em" }}
-          >
-            <option value="">-- 選択 --</option>
-            {participantsForQuickSelect.map((participant) => (
-              <option key={participant.id} value={participant.id}>
-                {participant.name} ({participant.memberNo || "-"})
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          <input
-            type="checkbox"
-            checked={showOnlySelected}
-            onChange={(e) => setShowOnlySelected(e.target.checked)}
-            disabled={!selectedParticipantId}
-            style={{ marginLeft: "0.5em", marginRight: "0.3em" }}
-          />
-          自分だけ表示
-        </label>
-        {selectedParticipantId && (
-          <Link to={buildDetailLink(selectedParticipantId)}>
-            詳細へ移動
-          </Link>
-        )}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.8em", alignItems: "center" }}>
+          <label>
+            カテゴリ:
+            <select
+              value={selectedCategoryId}
+              onChange={(e) => setSelectedCategoryId(e.target.value)}
+              style={{ marginLeft: "0.5em", marginRight: "0.8em" }}
+            >
+              <option value="all">すべて</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            参加者:
+            <select
+              value={selectedParticipantId}
+              onChange={(e) => setSelectedParticipantId(e.target.value)}
+              style={{ marginLeft: "0.5em", marginRight: "0.8em" }}
+            >
+              <option value="">-- 選択 --</option>
+              {participantsForQuickSelect.map((participant) => (
+                <option key={participant.id} value={participant.id}>
+                  {participant.name} ({participant.memberNo || "-"})
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={showOnlySelected}
+              onChange={(e) => setShowOnlySelected(e.target.checked)}
+              disabled={!selectedParticipantId}
+              style={{ marginLeft: "0.5em", marginRight: "0.3em" }}
+            />
+            自分だけ表示
+          </label>
+          {selectedParticipantId && (
+            <Link to={buildDetailLink(selectedParticipantId)}>
+              詳細へ移動
+            </Link>
+          )}
+        </div>
       </div>
       {selectedParticipant && (
         <section
@@ -505,39 +507,41 @@ const EventSummary = () => {
               {rows.length === 0 ? (
                 <p>{hasSearch ? "検索条件に一致する参加者がいません。" : "参加者データがありません。"}</p>
               ) : (
-                <table style={{ borderCollapse: "collapse", width: "100%" }}>
-                  <thead>
-                    <tr>
-                      <th style={{ textAlign: "left", borderBottom: "1px solid #ccc" }}>順位</th>
-                      <th style={{ textAlign: "left", borderBottom: "1px solid #ccc" }}>名前</th>
-                      <th style={{ textAlign: "left", borderBottom: "1px solid #ccc" }}>会員番号</th>
-                      <th style={{ textAlign: "right", borderBottom: "1px solid #ccc" }}>得点</th>
-                      <th style={{ textAlign: "right", borderBottom: "1px solid #ccc" }}>完登数</th>
-                      <th style={{ textAlign: "left", borderBottom: "1px solid #ccc" }}>詳細</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rows.map((row) => (
-                      <tr key={row.participantId}>
-                        <td style={{ padding: "0.4em 0" }}>{row.rank}</td>
-                        <td>
-                          {row.name}
-                          {selectedParticipantId === row.participantId && (
-                            <strong style={{ marginLeft: "0.4em" }}>(選択中)</strong>
-                          )}
-                        </td>
-                        <td>{row.memberNo}</td>
-                        <td style={{ textAlign: "right" }}>{row.totalPoints}</td>
-                        <td style={{ textAlign: "right" }}>{row.clearCount}</td>
-                        <td>
-                          <Link to={buildDetailLink(row.participantId)}>
-                            詳細を見る
-                          </Link>
-                        </td>
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{ borderCollapse: "collapse", width: "100%", minWidth: "650px" }}>
+                    <thead>
+                      <tr>
+                        <th style={{ textAlign: "left", borderBottom: "1px solid #ccc" }}>順位</th>
+                        <th style={{ textAlign: "left", borderBottom: "1px solid #ccc" }}>名前</th>
+                        <th style={{ textAlign: "left", borderBottom: "1px solid #ccc" }}>会員番号</th>
+                        <th style={{ textAlign: "right", borderBottom: "1px solid #ccc" }}>得点</th>
+                        <th style={{ textAlign: "right", borderBottom: "1px solid #ccc" }}>完登数</th>
+                        <th style={{ textAlign: "left", borderBottom: "1px solid #ccc" }}>詳細</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {rows.map((row) => (
+                        <tr key={row.participantId}>
+                          <td style={{ padding: "0.4em 0" }}>{row.rank}</td>
+                          <td>
+                            {row.name}
+                            {selectedParticipantId === row.participantId && (
+                              <strong style={{ marginLeft: "0.4em" }}>(選択中)</strong>
+                            )}
+                          </td>
+                          <td>{row.memberNo}</td>
+                          <td style={{ textAlign: "right" }}>{row.totalPoints}</td>
+                          <td style={{ textAlign: "right" }}>{row.clearCount}</td>
+                          <td>
+                            <Link to={buildDetailLink(row.participantId)}>
+                              詳細を見る
+                            </Link>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </section>
           );
