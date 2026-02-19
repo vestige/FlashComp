@@ -11,6 +11,22 @@ The following commands are available:
   - Destructive. Deletes test data from Firestore (`events`, `gyms`, and known subcollections).
 - `npm run db:seed`
   - Seeds realistic sample data for local testing (events, seasons, categories, routes, participants, scores).
+  - Includes one ongoing event (`event-live-now`) and participants who join from mid seasons (`entrySeasonId`).
+  - Participant docs include `participatingSeasonIds`, and season score docs include:
+    - `participated: true/false`
+    - `seasonStatus: active/absent`
+    - `scores` (absent seasons are recorded as all `false`, i.e. 0 points)
+
+Mid-season / skipped-season sample participants:
+- `event-spring-2026`
+  - `p004` Ren Kato: `["season-02","season-03"]`
+  - `p103` Nagi Watanabe: `["season-02","season-03"]`
+  - `p204` Rin Nakajima: `["season-03"]`
+  - `p002` Riku Tanaka: `["season-01","season-03"]` (skips season 2)
+- `event-live-now`
+  - `p003` Mio Yamamoto: `["season-02","season-03"]`
+  - `p104` Daichi Mori: `["season-02","season-03"]`
+  - `p203` Sei Kobayashi: `["season-01","season-03"]` (skips phase 2)
 - `npm run db:reset`
   - Runs purge + seed in sequence.
 

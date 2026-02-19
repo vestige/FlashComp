@@ -13,6 +13,19 @@ function toTimestamp(dateText) {
   return Timestamp.fromDate(new Date(`${dateText}T00:00:00`));
 }
 
+function toDateText(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function addDays(baseDate, days) {
+  const next = new Date(baseDate);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+
 function routeName(routeNo) {
   return `No.${String(routeNo).padStart(2, "0")}`;
 }
@@ -59,6 +72,47 @@ const participantsByCategory = {
   ],
 };
 
+function buildLiveEvent() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const season1Start = addDays(today, -30);
+  const season1End = addDays(today, -11);
+  const season2Start = addDays(today, -10);
+  const season2End = addDays(today, 20);
+  const season3Start = addDays(today, 21);
+  const season3End = addDays(today, 50);
+
+  return {
+    id: "event-live-now",
+    name: "FlashComp Live Now",
+    gymId: "gym-shibuya",
+    startDate: toDateText(season1Start),
+    endDate: toDateText(season3End),
+    seasons: [
+      {
+        id: "season-01",
+        name: "Phase 1",
+        startDate: toDateText(season1Start),
+        endDate: toDateText(season1End),
+      },
+      {
+        id: "season-02",
+        name: "Phase 2",
+        startDate: toDateText(season2Start),
+        endDate: toDateText(season2End),
+      },
+      {
+        id: "season-03",
+        name: "Phase 3",
+        startDate: toDateText(season3Start),
+        endDate: toDateText(season3End),
+      },
+    ],
+    routesPerCategory: 10,
+  };
+}
+
 const events = [
   {
     id: "event-spring-2026",
@@ -86,7 +140,39 @@ const events = [
     ],
     routesPerCategory: 10,
   },
+  buildLiveEvent(),
 ];
+
+const seasonParticipationByEvent = {
+  "event-spring-2026": {
+    p004: ["season-02", "season-03"], // joins from Season 2
+    p103: ["season-02", "season-03"], // joins from Season 2
+    p204: ["season-03"], // joins only Season 3
+    p002: ["season-01", "season-03"], // skips Season 2
+  },
+  "event-live-now": {
+    p003: ["season-02", "season-03"], // joins from Phase 2
+    p104: ["season-02", "season-03"], // joins from Phase 2
+    p203: ["season-01", "season-03"], // skips Phase 2
+  },
+};
+
+function resolveParticipatingSeasonIds(event, seasonIndexById, participantId) {
+  const configured = seasonParticipationByEvent[event.id]?.[participantId];
+  if (!Array.isArray(configured) || configured.length === 0) {
+    return event.seasons.map((season) => season.id);
+  }
+
+  const valid = configured
+    .filter((seasonId) => seasonIndexById.has(seasonId))
+    .sort((a, b) => seasonIndexById.get(a) - seasonIndexById.get(b));
+
+  if (valid.length === 0) {
+    return event.seasons.map((season) => season.id);
+  }
+
+  return valid;
+}
 
 async function seed() {
   const random = createRandom();
@@ -115,6 +201,9 @@ async function seed() {
   }
 
   for (const event of events) {
+    const seasonIndexById = new Map(event.seasons.map((season, index) => [season.id, index]));
+    const participantSeasonIdsById = new Map();
+
     await queueSet(["events", event.id], {
       name: event.name,
       gymId: event.gymId,
@@ -141,6 +230,14 @@ async function seed() {
       const participants = participantsByCategory[category.id];
 
       for (const participant of participants) {
+        const participatingSeasonIds = resolveParticipatingSeasonIds(
+          event,
+          seasonIndexById,
+          participant.id
+        );
+        const entrySeasonId = participatingSeasonIds[0];
+        participantSeasonIdsById.set(participant.id, participatingSeasonIds);
+
         await queueSet(["events", event.id, "participants", participant.id], {
           name: participant.name,
           memberNo: participant.memberNo,
@@ -148,6 +245,8 @@ async function seed() {
           gender: participant.gender,
           grade: participant.grade,
           categoryId: category.id,
+          entrySeasonId,
+          participatingSeasonIds,
           createdAt: Timestamp.now(),
         });
       }
@@ -173,11 +272,14 @@ async function seed() {
 
         const participants = participantsByCategory[category.id];
         for (const participant of participants) {
+          const participatingSeasonIds = participantSeasonIdsById.get(participant.id) || [];
+          const isParticipating = participatingSeasonIds.includes(season.id);
+
           const scores = {};
           const clearRate = Math.min(0.92, Math.max(0.18, category.clearRate + participant.skill));
 
           for (const route of routes) {
-            const clear = random() < clearRate;
+            const clear = isParticipating ? random() < clearRate : false;
             scores[route.name] = clear;
           }
 
@@ -186,8 +288,10 @@ async function seed() {
             {
               participantName: participant.name,
               participantGrade: participant.grade,
+              participated: isParticipating,
+              seasonStatus: isParticipating ? "active" : "absent",
               scores,
-              updatedAt: Timestamp.now(),
+              updatedAt: isParticipating ? Timestamp.now() : null,
             }
           );
         }
