@@ -37,6 +37,7 @@ Owner access control fields used by app:
 - `users/{uid}` (or fallback by matching `email`)
 - `role` (currently expected: `owner`)
 - `gymIds` (array of gyms the owner can manage/view)
+- If `users/{uid}` is missing but matching `email` doc exists, app migrates profile to `users/{uid}` on login.
 
 ## Firestore security rules
 
