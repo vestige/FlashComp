@@ -72,9 +72,12 @@ const ScoreSummary = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialKeyword = searchParams.get("q") || "";
   const initialStatus = searchParams.get("status") || "all";
+  const initialGymId = searchParams.get("gym") || "all";
   const [events, setEvents] = useState([]);
+  const [gyms, setGyms] = useState([]);
   const [keyword, setKeyword] = useState(initialKeyword);
   const [statusFilter, setStatusFilter] = useState(initialStatus);
+  const [gymFilter, setGymFilter] = useState(initialGymId);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -82,9 +85,16 @@ const ScoreSummary = () => {
     const fetchEvents = async () => {
       try {
         setError("");
-        const snapshot = await getDocs(collection(db, "events"));
-        const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-        setEvents(data);
+        const [eventSnap, gymSnap] = await Promise.all([
+          getDocs(collection(db, "events")),
+          getDocs(collection(db, "gyms")),
+        ]);
+        const eventRows = eventSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        const gymRows = gymSnap.docs
+          .map((doc) => ({ id: doc.id, ...doc.data() }))
+          .sort((a, b) => (a.name || "").localeCompare(b.name || "", "ja"));
+        setEvents(eventRows);
+        setGyms(gymRows);
       } catch (err) {
         console.error("イベントの取得に失敗:", err);
         setError("イベントの読み込みに失敗しました。");
@@ -101,10 +111,18 @@ const ScoreSummary = () => {
     const normalizedKeyword = keyword.trim();
     if (normalizedKeyword) params.set("q", normalizedKeyword);
     if (statusFilter !== "all") params.set("status", statusFilter);
+    if (gymFilter !== "all") params.set("gym", gymFilter);
     if (params.toString() !== searchParams.toString()) {
       setSearchParams(params, { replace: true });
     }
-  }, [keyword, statusFilter, searchParams, setSearchParams]);
+  }, [keyword, statusFilter, gymFilter, searchParams, setSearchParams]);
+
+  useEffect(() => {
+    if (gymFilter === "all") return;
+    if (gyms.length === 0) return;
+    const exists = gyms.some((gym) => gym.id === gymFilter);
+    if (!exists) setGymFilter("all");
+  }, [gymFilter, gyms]);
 
   const filteredEvents = useMemo(() => {
     const nowMs = Date.now();
@@ -119,13 +137,20 @@ const ScoreSummary = () => {
           ? eventName.includes(normalizedKeyword)
           : true;
         const matchesStatus = statusFilter === "all" ? true : eventStatus === statusFilter;
-        return matchesKeyword && matchesStatus;
+        const matchesGym = gymFilter === "all" ? true : event.gymId === gymFilter;
+        return matchesKeyword && matchesStatus && matchesGym;
       });
-  }, [events, keyword, statusFilter]);
+  }, [events, keyword, statusFilter, gymFilter]);
+
+  const gymNameById = useMemo(
+    () => new Map(gyms.map((gym) => [gym.id, gym.name || gym.id])),
+    [gyms]
+  );
 
   const resetFilters = () => {
     setKeyword("");
     setStatusFilter("all");
+    setGymFilter("all");
   };
 
   if (loading) {
@@ -187,6 +212,21 @@ const ScoreSummary = () => {
             <option value="ended">終了</option>
           </select>
         </label>
+        <label>
+          ジム:
+          <select
+            value={gymFilter}
+            onChange={(e) => setGymFilter(e.target.value)}
+            style={{ marginLeft: "0.5em" }}
+          >
+            <option value="all">すべて</option>
+            {gyms.map((gym) => (
+              <option key={gym.id} value={gym.id}>
+                {gym.name}
+              </option>
+            ))}
+          </select>
+        </label>
         <button type="button" onClick={resetFilters}>
           フィルターをリセット
         </button>
@@ -224,6 +264,9 @@ const ScoreSummary = () => {
                 </h3>
                 <p style={{ marginTop: 0 }}>
                   開催期間: {toDateText(event.startDate)} 〜 {toDateText(event.endDate)}
+                </p>
+                <p style={{ marginTop: 0 }}>
+                  ジム: {gymNameById.get(event.gymId) || "未設定"}
                 </p>
                 <Link to={`/score-summary/${event.id}`}>このイベントのランキングを見る</Link>
               </section>
