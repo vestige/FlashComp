@@ -51,6 +51,16 @@ Important:
 - For production auth users, create `users/{uid}` docs keyed by Firebase Auth `uid`.
 - Required fields: `role`, `gymIds`.
 - If `users/{uid}` is missing, owner writes will be denied by rules.
+
+Deploy rules:
+- `npx firebase-tools login`
+- `npx firebase-tools deploy --only firestore:rules --project flashcompauth`
+
+Owner access verification (after login + rules deploy):
+- Set env vars and run:
+  - `$env:OWNER_EMAIL='owner.shibuya@example.com'`
+  - `$env:OWNER_PASSWORD='YOUR_PASSWORD'`
+  - `npm run verify:owner-access`
 - `npm run db:reset`
   - Runs purge + seed in sequence.
 

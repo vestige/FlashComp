@@ -15,7 +15,8 @@
     "db:purge": "node scripts/purgeFirestoreData.js",
     "db:purge:yes": "node scripts/purgeFirestoreData.js --yes",
     "db:seed": "node scripts/seedFirestoreData.js",
-    "db:reset": "node scripts/purgeFirestoreData.js --yes && node scripts/seedFirestoreData.js"
+    "db:reset": "node scripts/purgeFirestoreData.js --yes && node scripts/seedFirestoreData.js",
+    "verify:owner-access": "node scripts/verifyOwnerAccess.js"
   },
   "dependencies": {
     "firebase": "^11.9.1",
