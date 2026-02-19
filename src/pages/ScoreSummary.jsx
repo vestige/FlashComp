@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 const toDateText = (value) => {
   if (!value) return "-";
@@ -32,6 +33,8 @@ const statusLabelMap = {
 };
 
 const ScoreSummary = () => {
+  usePageTitle("クライマー向けイベント一覧");
+
   const [searchParams, setSearchParams] = useSearchParams();
   const initialKeyword = searchParams.get("q") || "";
   const initialStatus = searchParams.get("status") || "all";

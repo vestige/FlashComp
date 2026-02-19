@@ -3,8 +3,11 @@ import { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase"; 
 import { useLocation, useNavigate } from "react-router-dom";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 const Login = () => {
+  usePageTitle("管理者ログイン");
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState("");

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 const getTimestampText = (value) => {
   if (!value) return "-";
@@ -50,6 +51,7 @@ const ParticipantScoreDetail = () => {
   const [loading, setLoading] = useState(true);
   const [calculating, setCalculating] = useState(false);
   const [error, setError] = useState("");
+  usePageTitle(participant?.name ? `参加者詳細: ${participant.name}` : "参加者詳細");
 
   const buildParticipantDetailLink = (targetParticipantId) => {
     const params = new URLSearchParams();

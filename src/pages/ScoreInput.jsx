@@ -10,6 +10,7 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { db } from "../firebase";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 const ScoreInput = () => {
   const { eventId, seasonId, categoryId, participantId } = useParams();
@@ -18,6 +19,7 @@ const ScoreInput = () => {
   const [scores, setScores] = useState({});
   const [status, setStatus] = useState("");
   const [updatedAt, setUpdatedAt] = useState(null);
+  usePageTitle(participantName ? `スコア入力: ${participantName}` : "スコア入力");
 
   useEffect(() => {
     const fetchData = async () => {

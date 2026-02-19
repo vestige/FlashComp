@@ -3,8 +3,11 @@ import { signOut } from "firebase/auth";
 import { auth, db } from "../firebase";
 import { useNavigate, Link } from "react-router-dom";
 import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 const Dashboard = () => {
+  usePageTitle("ジムオーナー管理");
+
   const navigate = useNavigate();
   const [events, setEvents] = useState([]);
 

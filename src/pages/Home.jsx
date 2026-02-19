@@ -1,6 +1,9 @@
 import { Link } from "react-router-dom";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 const Home = () => {
+  usePageTitle("Home");
+
   return (
     <div style={{ padding: "2em", maxWidth: "960px", margin: "0 auto" }}>
       <h1>🧗 FLASH FLASH コンペサイト</h1>

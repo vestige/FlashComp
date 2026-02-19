@@ -3,8 +3,11 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 const ScoreEventSelector = () => {
+  usePageTitle("スコア採点イベント選択");
+
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
 

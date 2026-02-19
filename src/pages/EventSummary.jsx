@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { db } from "../firebase";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 const getTimestampMs = (value) => {
   if (!value) return 0;
@@ -82,6 +83,7 @@ const EventSummary = () => {
   const [loading, setLoading] = useState(true);
   const [calculating, setCalculating] = useState(false);
   const [error, setError] = useState("");
+  usePageTitle(event?.name ? `ランキング: ${event.name}` : "イベントランキング");
 
   useEffect(() => {
     let cancelled = false;

@@ -2,8 +2,11 @@ import { useState } from "react";
 import { db } from "../firebase";
 import { useNavigate, Link } from "react-router-dom";
 import { collection, addDoc, serverTimestamp, Timestamp } from "firebase/firestore";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 function CreateEvent() {
+  usePageTitle("イベント作成");
+
   const [name, setName] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");

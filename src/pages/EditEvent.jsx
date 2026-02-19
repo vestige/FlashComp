@@ -14,6 +14,7 @@ import CategoryManager from "../components/CategoryManager";
 import ParticipantManager from "../components/ParticipantManager";
 import RouteSelector from "../components/RouteSelector";
 import ScoreManager from "../components/ScoreManager";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 const EditEvent = () => {
   const { eventId } = useParams();
@@ -22,6 +23,7 @@ const EditEvent = () => {
   const [activeTab, setActiveTab] = useState(location.state?.tab || "seasons");
 
   const [categories, setCategories] = useState([]);
+  usePageTitle(eventName ? `イベント編集: ${eventName}` : "イベント編集");
 
   useEffect(() => {
     const fetchCategories = async () => {
