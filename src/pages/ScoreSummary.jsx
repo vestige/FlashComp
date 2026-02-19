@@ -31,6 +31,40 @@ const statusLabelMap = {
   upcoming: "開催予定",
   ended: "終了",
 };
+const statusOrderMap = {
+  ongoing: 0,
+  upcoming: 1,
+  ended: 2,
+};
+
+const compareEventsForDisplay = (a, b, nowMs) => {
+  const aStatus = getEventStatus(a, nowMs);
+  const bStatus = getEventStatus(b, nowMs);
+  const aOrder = statusOrderMap[aStatus] ?? 99;
+  const bOrder = statusOrderMap[bStatus] ?? 99;
+  if (aOrder !== bOrder) return aOrder - bOrder;
+
+  const aStartMs = toTimestampMs(a.startDate);
+  const bStartMs = toTimestampMs(b.startDate);
+  const aEndMs = toTimestampMs(a.endDate);
+  const bEndMs = toTimestampMs(b.endDate);
+
+  if (aStatus === "ongoing") {
+    if (aEndMs !== bEndMs) return aEndMs - bEndMs;
+    if (aStartMs !== bStartMs) return bStartMs - aStartMs;
+    return (a.name || "").localeCompare(b.name || "", "ja");
+  }
+
+  if (aStatus === "upcoming") {
+    if (aStartMs !== bStartMs) return aStartMs - bStartMs;
+    if (aEndMs !== bEndMs) return aEndMs - bEndMs;
+    return (a.name || "").localeCompare(b.name || "", "ja");
+  }
+
+  if (aEndMs !== bEndMs) return bEndMs - aEndMs;
+  if (aStartMs !== bStartMs) return bStartMs - aStartMs;
+  return (a.name || "").localeCompare(b.name || "", "ja");
+};
 
 const ScoreSummary = () => {
   usePageTitle("クライマー向けイベント一覧");
@@ -49,13 +83,7 @@ const ScoreSummary = () => {
       try {
         setError("");
         const snapshot = await getDocs(collection(db, "events"));
-        const data = snapshot.docs
-          .map((doc) => ({ id: doc.id, ...doc.data() }))
-          .sort((a, b) => {
-            const aMs = a.endDate?.seconds ? a.endDate.seconds * 1000 : 0;
-            const bMs = b.endDate?.seconds ? b.endDate.seconds * 1000 : 0;
-            return bMs - aMs;
-          });
+        const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
         setEvents(data);
       } catch (err) {
         console.error("イベントの取得に失敗:", err);
@@ -82,15 +110,17 @@ const ScoreSummary = () => {
     const nowMs = Date.now();
     const normalizedKeyword = keyword.trim().toLowerCase();
 
-    return events.filter((event) => {
-      const eventName = (event.name || "").toLowerCase();
-      const eventStatus = getEventStatus(event, nowMs);
-      const matchesKeyword = normalizedKeyword
-        ? eventName.includes(normalizedKeyword)
-        : true;
-      const matchesStatus = statusFilter === "all" ? true : eventStatus === statusFilter;
-      return matchesKeyword && matchesStatus;
-    });
+    return [...events]
+      .sort((a, b) => compareEventsForDisplay(a, b, nowMs))
+      .filter((event) => {
+        const eventName = (event.name || "").toLowerCase();
+        const eventStatus = getEventStatus(event, nowMs);
+        const matchesKeyword = normalizedKeyword
+          ? eventName.includes(normalizedKeyword)
+          : true;
+        const matchesStatus = statusFilter === "all" ? true : eventStatus === statusFilter;
+        return matchesKeyword && matchesStatus;
+      });
   }, [events, keyword, statusFilter]);
 
   const resetFilters = () => {

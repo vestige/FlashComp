@@ -33,12 +33,6 @@ const setupFirestore = () => {
   firestoreMocks.getDocs.mockResolvedValueOnce(
     makeSnapshot([
       {
-        id: "event-ongoing",
-        name: "Spring Flash",
-        startDate: { seconds: Math.floor((nowMs - dayMs) / 1000) },
-        endDate: { seconds: Math.floor((nowMs + dayMs) / 1000) },
-      },
-      {
         id: "event-upcoming",
         name: "Summer Practice",
         startDate: { seconds: Math.floor((nowMs + 5 * dayMs) / 1000) },
@@ -49,6 +43,12 @@ const setupFirestore = () => {
         name: "Winter Flash",
         startDate: { seconds: Math.floor((nowMs - 10 * dayMs) / 1000) },
         endDate: { seconds: Math.floor((nowMs - 5 * dayMs) / 1000) },
+      },
+      {
+        id: "event-ongoing",
+        name: "Spring Flash",
+        startDate: { seconds: Math.floor((nowMs - dayMs) / 1000) },
+        endDate: { seconds: Math.floor((nowMs + dayMs) / 1000) },
       },
     ])
   );
@@ -100,5 +100,17 @@ describe("ScoreSummary", () => {
     expect(screen.getByText("Spring Flash")).toBeInTheDocument();
     expect(screen.getByText("Summer Practice")).toBeInTheDocument();
     expect(screen.getByText("Winter Flash")).toBeInTheDocument();
+  });
+
+  it("sorts events by status priority: ongoing, upcoming, ended", async () => {
+    setupFirestore();
+    renderSummary("/score-summary");
+
+    await screen.findByText("🏆 クライマー向け結果ページ");
+
+    const nameNodes = screen
+      .getAllByRole("heading", { level: 3 })
+      .map((node) => node.firstChild?.textContent?.trim());
+    expect(nameNodes).toEqual(["Spring Flash", "Summer Practice", "Winter Flash"]);
   });
 });
