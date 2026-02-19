@@ -1,0 +1,75 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function userDocPath() {
+      return /databases/$(database)/documents/users/$(request.auth.uid);
+    }
+
+    function hasUserProfile() {
+      return isSignedIn() && exists(userDocPath());
+    }
+
+    function userProfile() {
+      return get(userDocPath()).data;
+    }
+
+    function isOwner() {
+      return hasUserProfile() && userProfile().role == "owner";
+    }
+
+    function ownerGymIds() {
+      return isOwner() ? userProfile().gymIds : [];
+    }
+
+    function hasGymAccess(gymId) {
+      return isOwner() && gymId is string && gymId in ownerGymIds();
+    }
+
+    function eventDocPath(eventId) {
+      return /databases/$(database)/documents/events/$(eventId);
+    }
+
+    function canManageEvent(eventId) {
+      return isOwner()
+        && exists(eventDocPath(eventId))
+        && get(eventDocPath(eventId)).data.gymId in ownerGymIds();
+    }
+
+    // Public event browsing for climbers.
+    match /events/{eventId} {
+      allow read: if true;
+      allow create: if hasGymAccess(request.resource.data.gymId);
+      allow update: if canManageEvent(eventId)
+        && request.resource.data.gymId == resource.data.gymId;
+      allow delete: if canManageEvent(eventId);
+    }
+
+    // Event subcollections (seasons/categories/routes/participants/scores).
+    match /events/{eventId}/{document=**} {
+      allow read: if true;
+      allow write: if canManageEvent(eventId);
+    }
+
+    // Public gym metadata for event browsing filters.
+    match /gyms/{gymId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Owner profile. Writes are self only.
+    // Note: To satisfy write checks above, users/{uid} must exist and include role/gymIds.
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+

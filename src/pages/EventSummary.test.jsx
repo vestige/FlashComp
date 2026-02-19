@@ -92,8 +92,9 @@ describe("EventSummary", () => {
 
     await screen.findByText(/FlashComp Spring 2026 - 集計結果/);
     await screen.findByText(/選択中: Riku/);
+    await screen.findByText("該当 1 件");
 
-    const table = screen.getByRole("table");
+    let table = screen.getByRole("table");
     expect(within(table).getByText("Riku")).toBeInTheDocument();
     expect(within(table).queryByText("Aoi")).not.toBeInTheDocument();
 
@@ -110,6 +111,7 @@ describe("EventSummary", () => {
       expect(screen.getByPlaceholderText("例: 山田 / M-1001")).toHaveValue("");
     });
     expect(screen.queryByRole("link", { name: "詳細へ移動" })).not.toBeInTheDocument();
+    table = screen.getByRole("table");
     expect(within(table).getByText("Aoi")).toBeInTheDocument();
     expect(within(table).getByText("Riku")).toBeInTheDocument();
   });

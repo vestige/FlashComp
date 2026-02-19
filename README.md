@@ -37,6 +37,19 @@ Owner access control fields used by app:
 - `users/{uid}` (or fallback by matching `email`)
 - `role` (currently expected: `owner`)
 - `gymIds` (array of gyms the owner can manage/view)
+
+## Firestore security rules
+
+- Rule file: `firestore.rules`
+- Current policy:
+  - Climber pages: public read (`events`, event subcollections, `gyms`)
+  - Owner write: only if `users/{uid}.role == "owner"` and target `gymId` is in `users/{uid}.gymIds`
+  - Event subcollections (`seasons/categories/routes/participants/...`) writes are restricted by parent event's `gymId`
+
+Important:
+- For production auth users, create `users/{uid}` docs keyed by Firebase Auth `uid`.
+- Required fields: `role`, `gymIds`.
+- If `users/{uid}` is missing, owner writes will be denied by rules.
 - `npm run db:reset`
   - Runs purge + seed in sequence.
 
