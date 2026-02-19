@@ -45,6 +45,30 @@ const gyms = [
   },
 ];
 
+const ownerProfiles = [
+  {
+    id: "owner-shibuya",
+    email: "owner.shibuya@example.com",
+    name: "Shibuya Owner",
+    role: "owner",
+    gymIds: ["gym-shibuya"],
+  },
+  {
+    id: "owner-yokohama",
+    email: "owner.yokohama@example.com",
+    name: "Yokohama Owner",
+    role: "owner",
+    gymIds: ["gym-yokohama"],
+  },
+  {
+    id: "owner-multi",
+    email: "owner.multi@example.com",
+    name: "Multi Gym Owner",
+    role: "owner",
+    gymIds: ["gym-shibuya", "gym-yokohama"],
+  },
+];
+
 const categoryTemplates = [
   { id: "cat-beginner", name: "Beginner", grades: ["8Q", "7Q", "6Q"], basePoints: 80, clearRate: 0.68 },
   { id: "cat-middle", name: "Middle", grades: ["6Q", "5Q", "4Q"], basePoints: 100, clearRate: 0.55 },
@@ -196,6 +220,17 @@ async function seed() {
       name: gym.name,
       city: gym.city,
       prefecture: gym.prefecture,
+      createdAt: Timestamp.now(),
+    });
+  }
+
+  for (const owner of ownerProfiles) {
+    await queueSet(["users", owner.id], {
+      uid: owner.id,
+      email: owner.email,
+      name: owner.name,
+      role: owner.role,
+      gymIds: owner.gymIds,
       createdAt: Timestamp.now(),
     });
   }

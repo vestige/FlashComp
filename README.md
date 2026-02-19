@@ -27,6 +27,16 @@ Mid-season / skipped-season sample participants:
   - `p003` Mio Yamamoto: `["season-02","season-03"]`
   - `p104` Daichi Mori: `["season-02","season-03"]`
   - `p203` Sei Kobayashi: `["season-01","season-03"]` (skips phase 2)
+
+Owner profile samples (`users` collection):
+- `owner-shibuya` (`owner.shibuya@example.com`) -> `gymIds: ["gym-shibuya"]`
+- `owner-yokohama` (`owner.yokohama@example.com`) -> `gymIds: ["gym-yokohama"]`
+- `owner-multi` (`owner.multi@example.com`) -> `gymIds: ["gym-shibuya","gym-yokohama"]`
+
+Owner access control fields used by app:
+- `users/{uid}` (or fallback by matching `email`)
+- `role` (currently expected: `owner`)
+- `gymIds` (array of gyms the owner can manage/view)
 - `npm run db:reset`
   - Runs purge + seed in sequence.
 

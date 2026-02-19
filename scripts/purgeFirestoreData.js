@@ -53,7 +53,7 @@ async function run() {
   console.log("Start purging Firestore test data...");
 
   const groupOrder = ["routes", "participants", "categories", "seasons", "scores"];
-  const topLevelCollections = ["events", "gyms"];
+  const topLevelCollections = ["events", "gyms", "users"];
 
   let totalDeleted = 0;
 

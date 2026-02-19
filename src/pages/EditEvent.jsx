@@ -15,6 +15,7 @@ import ParticipantManager from "../components/ParticipantManager";
 import RouteSelector from "../components/RouteSelector";
 import ScoreManager from "../components/ScoreManager";
 import { usePageTitle } from "../hooks/usePageTitle";
+import { useOwnerProfile } from "../hooks/useOwnerProfile";
 
 const EditEvent = () => {
   const { eventId } = useParams();
@@ -23,32 +24,77 @@ const EditEvent = () => {
   const [activeTab, setActiveTab] = useState(location.state?.tab || "seasons");
 
   const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [accessDenied, setAccessDenied] = useState(false);
+  const { gymIds, loading: profileLoading, error: profileError } = useOwnerProfile();
   usePageTitle(eventName ? `イベント編集: ${eventName}` : "イベント編集");
 
   useEffect(() => {
-    const fetchCategories = async () => {
+    if (profileLoading) return;
+    if (profileError) {
+      setError(profileError);
+      setLoading(false);
+      return;
+    }
+
+    const fetchEventData = async () => {
+      setLoading(true);
+      setError("");
+      setAccessDenied(false);
       try {
+        const eventDocRef = doc(db, "events", eventId);
+        const eventDocSnap = await getDoc(eventDocRef);
+        if (!eventDocSnap.exists()) {
+          setError("イベントが見つかりません。");
+          return;
+        }
+
+        const eventData = eventDocSnap.data();
+        setEventName(eventData.name || "");
+        if (!gymIds.includes(eventData.gymId)) {
+          setAccessDenied(true);
+          return;
+        }
+
         const snapshot = await getDocs(collection(db, "events", eventId, "categories"));
-        const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        const data = snapshot.docs.map((categoryDoc) => ({
+          id: categoryDoc.id,
+          ...categoryDoc.data(),
+        }));
         setCategories(data);
       } catch (err) {
-        console.error("カテゴリの取得に失敗:", err);
+        console.error("イベント編集データの取得に失敗:", err);
+        setError("イベント編集データの取得に失敗しました。");
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchCategories();
-  }, [eventId]);
+    fetchEventData();
+  }, [eventId, gymIds, profileLoading, profileError]);
 
-  useEffect(() => {
-    const fetchEventName = async () => {
-      const docRef = doc(db, "events", eventId);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        setEventName(docSnap.data().name);
-      }
-    };
-    fetchEventName();
-  }, [eventId]);
+  if (loading || profileLoading) {
+    return <p style={{ padding: "2em" }}>イベント編集データを読み込んでいます...</p>;
+  }
+
+  if (error || profileError) {
+    return (
+      <div style={{ padding: "2em" }}>
+        <p>{error || profileError}</p>
+        <Link to="/dashboard">← ダッシュボードに戻る</Link>
+      </div>
+    );
+  }
+
+  if (accessDenied) {
+    return (
+      <div style={{ padding: "2em" }}>
+        <p>このイベントを編集する権限がありません。</p>
+        <Link to="/dashboard">← ダッシュボードに戻る</Link>
+      </div>
+    );
+  }
 
   return (
     <div style={{ padding: "2em" }}>
