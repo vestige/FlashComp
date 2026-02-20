@@ -26,7 +26,12 @@ const ScoreInput = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [accessDenied, setAccessDenied] = useState(false);
-  const { gymIds, loading: profileLoading, error: profileError } = useOwnerProfile();
+  const {
+    gymIds,
+    hasAllGymAccess,
+    loading: profileLoading,
+    error: profileError,
+  } = useOwnerProfile();
   usePageTitle(participantName ? `スコア入力: ${participantName}` : "スコア入力");
 
   useEffect(() => {
@@ -47,7 +52,7 @@ const ScoreInput = () => {
           setError("イベントが見つかりません。");
           return;
         }
-        if (!gymIds.includes(eventSnap.data().gymId)) {
+        if (!hasAllGymAccess && !gymIds.includes(eventSnap.data().gymId)) {
           setAccessDenied(true);
           return;
         }
@@ -103,7 +108,16 @@ const ScoreInput = () => {
     };
 
     fetchData();
-  }, [eventId, seasonId, categoryId, participantId, gymIds, profileLoading, profileError]);
+  }, [
+    eventId,
+    seasonId,
+    categoryId,
+    participantId,
+    gymIds,
+    hasAllGymAccess,
+    profileLoading,
+    profileError,
+  ]);
 
   const handleToggleScore = (routeName) => {
     setScores((prev) => ({

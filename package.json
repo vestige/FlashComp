@@ -14,7 +14,9 @@
     "deploy": "gh-pages -d dist",
     "db:purge": "node scripts/purgeFirestoreData.js",
     "db:purge:yes": "node scripts/purgeFirestoreData.js --yes",
+    "db:purge:yes:system": "node scripts/purgeFirestoreData.js --yes --include-system",
     "db:seed": "node scripts/seedFirestoreData.js",
+    "db:seed:system": "node scripts/seedFirestoreData.js --include-system",
     "db:reset": "node scripts/purgeFirestoreData.js --yes && node scripts/seedFirestoreData.js",
     "verify:owner-access": "node scripts/verifyOwnerAccess.js"
   },

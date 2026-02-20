@@ -1,5 +1,5 @@
-import { Timestamp, doc, writeBatch } from "firebase/firestore";
-import { db } from "./firestoreClient.js";
+import { Timestamp, doc, getDoc, writeBatch } from "firebase/firestore";
+import { cleanupScriptFirebase, db, signInForScripts } from "./firestoreClient.js";
 
 function createRandom(seed = 20260216) {
   let state = seed >>> 0;
@@ -64,8 +64,15 @@ const ownerProfiles = [
     id: "owner-multi",
     email: "owner.multi@example.com",
     name: "Multi Gym Owner",
-    role: "owner",
-    gymIds: ["gym-shibuya", "gym-yokohama"],
+    role: "admin",
+    gymIds: ["*"],
+  },
+  {
+    id: "vestige-sync",
+    email: "vestige_sync@me.com",
+    name: "Vestige Sync",
+    role: "admin",
+    gymIds: ["*"],
   },
 ];
 
@@ -199,9 +206,38 @@ function resolveParticipatingSeasonIds(event, seasonIndexById, participantId) {
 }
 
 async function seed() {
+  const signedInUser = await signInForScripts();
+  if (!signedInUser) {
+    console.error("Authentication is required for seed under current Firestore rules.");
+    console.error("Set env vars and run again:");
+    console.error(
+      "$env:SCRIPT_AUTH_EMAIL='owner.multi@example.com'; $env:SCRIPT_AUTH_PASSWORD='YOUR_PASSWORD'; npm run db:seed"
+    );
+    process.exit(1);
+  }
+
+  const includeSystem = process.argv.includes("--include-system");
+  const ownerProfileSnap = await getDoc(doc(db, "users", signedInUser.uid));
+  const ownerProfile = ownerProfileSnap.exists() ? ownerProfileSnap.data() : {};
+  const allowedGymIds = Array.isArray(ownerProfile.gymIds)
+    ? ownerProfile.gymIds.filter((id) => typeof id === "string" && id.trim().length > 0)
+    : [];
+  const hasAllGymAccess = ownerProfile.role === "admin" || allowedGymIds.includes("*");
+
+  if (!hasAllGymAccess && allowedGymIds.length === 0) {
+    console.error(`No gymIds found in users/${signedInUser.uid}. Cannot seed events.`);
+    process.exit(1);
+  }
+
+  console.log(`[auth] signed in as: ${signedInUser.email || signedInUser.uid}`);
+  console.log(`[mode] include system collections: ${includeSystem ? "yes" : "no"}`);
+  console.log(`[mode] allowed gyms: ${hasAllGymAccess ? "ALL" : JSON.stringify(allowedGymIds)}`);
+
   const random = createRandom();
   let batch = writeBatch(db);
   let opCount = 0;
+  let seededEventCount = 0;
+  let skippedEventCount = 0;
 
   async function queueSet(pathSegments, data) {
     const ref = doc(db, ...pathSegments);
@@ -215,30 +251,43 @@ async function seed() {
     }
   }
 
-  for (const gym of gyms) {
-    await queueSet(["gyms", gym.id], {
-      name: gym.name,
-      city: gym.city,
-      prefecture: gym.prefecture,
-      createdAt: Timestamp.now(),
-    });
+  async function flushBatch() {
+    if (opCount > 0) {
+      await batch.commit();
+      batch = writeBatch(db);
+      opCount = 0;
+    }
   }
 
-  for (const owner of ownerProfiles) {
-    await queueSet(["users", owner.id], {
-      uid: owner.id,
-      email: owner.email,
-      name: owner.name,
-      role: owner.role,
-      gymIds: owner.gymIds,
-      createdAt: Timestamp.now(),
-    });
+  if (includeSystem) {
+    for (const gym of gyms) {
+      await queueSet(["gyms", gym.id], {
+        name: gym.name,
+        city: gym.city,
+        prefecture: gym.prefecture,
+        createdAt: Timestamp.now(),
+      });
+    }
+
+    for (const owner of ownerProfiles) {
+      await queueSet(["users", owner.id], {
+        uid: owner.id,
+        email: owner.email,
+        name: owner.name,
+        role: owner.role,
+        gymIds: owner.gymIds,
+        createdAt: Timestamp.now(),
+      });
+    }
   }
 
-  for (const event of events) {
-    const seasonIndexById = new Map(event.seasons.map((season, index) => [season.id, index]));
-    const participantSeasonIdsById = new Map();
+  const manageableEvents = hasAllGymAccess
+    ? events
+    : events.filter((event) => allowedGymIds.includes(event.gymId));
+  skippedEventCount = events.length - manageableEvents.length;
 
+  // Create parent event docs first so subcollection writes pass canManageEvent(eventId) rules.
+  for (const event of manageableEvents) {
     await queueSet(["events", event.id], {
       name: event.name,
       gymId: event.gymId,
@@ -246,6 +295,13 @@ async function seed() {
       endDate: toTimestamp(event.endDate),
       createdAt: Timestamp.now(),
     });
+  }
+  await flushBatch();
+
+  for (const event of manageableEvents) {
+    seededEventCount += 1;
+    const seasonIndexById = new Map(event.seasons.map((season, index) => [season.id, index]));
+    const participantSeasonIdsById = new Map();
 
     for (const season of event.seasons) {
       await queueSet(["events", event.id, "seasons", season.id], {
@@ -334,17 +390,25 @@ async function seed() {
     }
   }
 
-  if (opCount > 0) {
-    await batch.commit();
-  }
+  await flushBatch();
+
+  return { seededEventCount, skippedEventCount, includeSystem };
 }
 
 seed()
-  .then(() => {
+  .then((result) => {
     console.log("Seed completed.");
-    console.log("Created: gyms, events, seasons, categories, routes, participants, scores.");
+    console.log("Created: events, seasons, categories, routes, participants, scores.");
+    console.log(`Seeded events: ${result.seededEventCount}, skipped by gym scope: ${result.skippedEventCount}`);
+    if (!result.includeSystem) {
+      console.log("System collections (gyms/users): --include-system not used by default.");
+    }
   })
   .catch((error) => {
     console.error("Seed failed:", error);
-    process.exit(1);
+    process.exitCode = 1;
+  })
+  .finally(async () => {
+    await cleanupScriptFirebase();
+    process.exit(process.exitCode ?? 0);
   });

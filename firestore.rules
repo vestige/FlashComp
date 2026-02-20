@@ -18,15 +18,22 @@ service cloud.firestore {
     }
 
     function isOwner() {
-      return hasUserProfile() && userProfile().role == "owner";
+      return hasUserProfile()
+        && (userProfile().role == "owner" || userProfile().role == "admin");
     }
 
     function ownerGymIds() {
       return isOwner() ? userProfile().gymIds : [];
     }
 
+    function hasAllGymAccess() {
+      return isOwner() && (userProfile().role == "admin" || "*" in ownerGymIds());
+    }
+
     function hasGymAccess(gymId) {
-      return isOwner() && gymId is string && gymId in ownerGymIds();
+      return isOwner()
+        && gymId is string
+        && (hasAllGymAccess() || gymId in ownerGymIds());
     }
 
     function eventDocPath(eventId) {
@@ -36,7 +43,7 @@ service cloud.firestore {
     function canManageEvent(eventId) {
       return isOwner()
         && exists(eventDocPath(eventId))
-        && get(eventDocPath(eventId)).data.gymId in ownerGymIds();
+        && (hasAllGymAccess() || get(eventDocPath(eventId)).data.gymId in ownerGymIds());
     }
 
     // Public event browsing for climbers.
@@ -72,4 +79,3 @@ service cloud.firestore {
     }
   }
 }
-

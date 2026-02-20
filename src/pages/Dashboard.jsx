@@ -14,7 +14,12 @@ const Dashboard = () => {
   const [gyms, setGyms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const { gymIds, loading: profileLoading, error: profileError } = useOwnerProfile();
+  const {
+    gymIds,
+    hasAllGymAccess,
+    loading: profileLoading,
+    error: profileError,
+  } = useOwnerProfile();
 
   const formatDate = (value) => {
     if (!value) return "-";
@@ -46,10 +51,10 @@ const Dashboard = () => {
         ]);
         const eventRows = eventSnap.docs
           .map((eventDoc) => ({ id: eventDoc.id, ...eventDoc.data() }))
-          .filter((event) => gymIds.includes(event.gymId));
+          .filter((event) => hasAllGymAccess || gymIds.includes(event.gymId));
         const gymRows = gymSnap.docs
           .map((gymDoc) => ({ id: gymDoc.id, ...gymDoc.data() }))
-          .filter((gym) => gymIds.includes(gym.id))
+          .filter((gym) => hasAllGymAccess || gymIds.includes(gym.id))
           .sort((a, b) => (a.name || "").localeCompare(b.name || "", "ja"));
         setEvents(eventRows);
         setGyms(gymRows);
@@ -62,12 +67,12 @@ const Dashboard = () => {
     };
 
     fetchEvents();
-  }, [profileLoading, profileError, gymIds]);
+  }, [profileLoading, profileError, gymIds, hasAllGymAccess]);
 
   const handleDelete = async (id) => {
     if (!window.confirm("このイベントを削除してもよろしいですか？")) return;
     const target = events.find((event) => event.id === id);
-    if (!target || !gymIds.includes(target.gymId)) {
+    if (!target || (!hasAllGymAccess && !gymIds.includes(target.gymId))) {
       window.alert("このイベントを削除する権限がありません。");
       return;
     }
@@ -103,7 +108,11 @@ const Dashboard = () => {
       <p>イベントの準備と開催時オペレーションをここから行います。</p>
       <p>
         担当ジム:{" "}
-        {gyms.length > 0 ? gyms.map((gym) => gym.name || gym.id).join(" / ") : "未割り当て"}
+        {hasAllGymAccess
+          ? "すべてのジム"
+          : gyms.length > 0
+            ? gyms.map((gym) => gym.name || gym.id).join(" / ")
+            : "未割り当て"}
       </p>
 
       <section style={{ border: "1px solid #ddd", borderRadius: "10px", padding: "1em" }}>
@@ -111,7 +120,7 @@ const Dashboard = () => {
         <p style={{ marginTop: 0 }}>
           まずイベントを作成し、イベントごとにシーズン・カテゴリ・課題を設定します。
         </p>
-        {gymIds.length > 0 ? (
+        {hasAllGymAccess || gymIds.length > 0 ? (
           <Link to="/create-event">📝 新しいイベントを作成</Link>
         ) : (
           <p style={{ marginBottom: 0 }}>
@@ -121,7 +130,7 @@ const Dashboard = () => {
       </section>
 
       <h3 style={{ marginTop: "1.6em" }}>📋 登録済みイベント</h3>
-      {gymIds.length === 0 ? (
+      {!hasAllGymAccess && gymIds.length === 0 ? (
         <p>担当ジムが未設定です。</p>
       ) : events.length === 0 ? (
         <p>イベントがまだ登録されていません。</p>

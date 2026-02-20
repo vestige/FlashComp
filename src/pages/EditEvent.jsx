@@ -45,7 +45,12 @@ const EditEvent = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [accessDenied, setAccessDenied] = useState(false);
-  const { gymIds, loading: profileLoading, error: profileError } = useOwnerProfile();
+  const {
+    gymIds,
+    hasAllGymAccess,
+    loading: profileLoading,
+    error: profileError,
+  } = useOwnerProfile();
   usePageTitle(eventName ? `イベント編集: ${eventName}` : "イベント編集");
 
   useEffect(() => {
@@ -70,7 +75,7 @@ const EditEvent = () => {
 
         const eventData = eventDocSnap.data();
         setEventName(eventData.name || "");
-        if (!gymIds.includes(eventData.gymId)) {
+        if (!hasAllGymAccess && !gymIds.includes(eventData.gymId)) {
           setAccessDenied(true);
           return;
         }
@@ -96,7 +101,7 @@ const EditEvent = () => {
     };
 
     fetchEventData();
-  }, [eventId, gymIds, profileLoading, profileError]);
+  }, [eventId, gymIds, hasAllGymAccess, profileLoading, profileError]);
 
   useEffect(() => {
     const tabParam = normalizeTab(searchParams.get("tab"));

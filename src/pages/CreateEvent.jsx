@@ -17,7 +17,13 @@ function CreateEvent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const navigate = useNavigate();
-  const { authUser, gymIds, loading: profileLoading, error: profileError } = useOwnerProfile();
+  const {
+    authUser,
+    gymIds,
+    hasAllGymAccess,
+    loading: profileLoading,
+    error: profileError,
+  } = useOwnerProfile();
 
   useEffect(() => {
     if (profileLoading) return;
@@ -34,7 +40,7 @@ function CreateEvent() {
         const gymSnap = await getDocs(collection(db, "gyms"));
         const gymRows = gymSnap.docs
           .map((gymDoc) => ({ id: gymDoc.id, ...gymDoc.data() }))
-          .filter((gym) => gymIds.includes(gym.id))
+          .filter((gym) => hasAllGymAccess || gymIds.includes(gym.id))
           .sort((a, b) => (a.name || "").localeCompare(b.name || "", "ja"));
         setGyms(gymRows);
         if (gymRows.length > 0) {
@@ -51,7 +57,7 @@ function CreateEvent() {
     };
 
     fetchGyms();
-  }, [profileLoading, profileError, gymIds]);
+  }, [profileLoading, profileError, gymIds, hasAllGymAccess]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

@@ -8,9 +8,13 @@ The following commands are available:
 - `npm run db:purge`
   - Safety mode. Does not delete anything unless `--yes` is provided.
 - `npm run db:purge:yes`
-  - Destructive. Deletes test data from Firestore (`events`, `gyms`, and known subcollections).
+  - Destructive. Deletes test data from Firestore for events the signed-in owner can manage.
+- `npm run db:purge:yes:system`
+  - Tries to delete top-level `events`, `gyms`, `users` as well. Use only with privileged account/rules.
 - `npm run db:seed`
-  - Seeds realistic sample data for local testing (events, seasons, categories, routes, participants, scores).
+  - Seeds realistic sample data for local testing (events, seasons, categories, routes, participants, scores) within owner gym scope.
+- `npm run db:seed:system`
+  - Also tries to write `gyms` and sample `users` docs.
   - Includes one ongoing event (`event-live-now`) and participants who join from mid seasons (`entrySeasonId`).
   - Participant docs include `participatingSeasonIds`, and season score docs include:
     - `participated: true/false`
@@ -31,12 +35,13 @@ Mid-season / skipped-season sample participants:
 Owner profile samples (`users` collection):
 - `owner-shibuya` (`owner.shibuya@example.com`) -> `gymIds: ["gym-shibuya"]`
 - `owner-yokohama` (`owner.yokohama@example.com`) -> `gymIds: ["gym-yokohama"]`
-- `owner-multi` (`owner.multi@example.com`) -> `gymIds: ["gym-shibuya","gym-yokohama"]`
+- `owner-multi` (`owner.multi@example.com`) -> `role: "admin", gymIds: ["*"]` (all gyms)
+
 
 Owner access control fields used by app:
 - `users/{uid}` (or fallback by matching `email`)
-- `role` (currently expected: `owner`)
-- `gymIds` (array of gyms the owner can manage/view)
+- `role` (`owner` or `admin`)
+- `gymIds` (array of gyms the owner can manage/view, `["*"]` means all gyms)
 - If `users/{uid}` is missing but matching `email` doc exists, app migrates profile to `users/{uid}` on login.
 
 ## Firestore security rules
@@ -44,13 +49,15 @@ Owner access control fields used by app:
 - Rule file: `firestore.rules`
 - Current policy:
   - Climber pages: public read (`events`, event subcollections, `gyms`)
-  - Owner write: only if `users/{uid}.role == "owner"` and target `gymId` is in `users/{uid}.gymIds`
+  - Owner write: if `users/{uid}.role` is `owner`/`admin` and target `gymId` is allowed
+  - `admin` or `gymIds` including `*` can manage all gyms/events
   - Event subcollections (`seasons/categories/routes/participants/...`) writes are restricted by parent event's `gymId`
 
 Important:
 - For production auth users, create `users/{uid}` docs keyed by Firebase Auth `uid`.
 - Required fields: `role`, `gymIds`.
 - If `users/{uid}` is missing, owner writes will be denied by rules.
+- For full access test accounts, use `role: "admin"` and `gymIds: ["*"]`.
 
 Deploy rules:
 - `npx firebase-tools login`
@@ -61,8 +68,14 @@ Owner access verification (after login + rules deploy):
   - `$env:OWNER_EMAIL='owner.shibuya@example.com'`
   - `$env:OWNER_PASSWORD='YOUR_PASSWORD'`
   - `npm run verify:owner-access`
-- `npm run db:reset`
-  - Runs purge + seed in sequence.
+
+Reset/seed/purge auth:
+- Set script auth env vars before running db scripts:
+  - `$env:SCRIPT_AUTH_EMAIL='owner.multi@example.com'`
+  - `$env:SCRIPT_AUTH_PASSWORD='YOUR_PASSWORD'`
+- Then run:
+  - `npm run db:reset`
+  - (`db:reset` runs purge + seed with current owner's gym scope)
 
 If you need to target another Firebase project, set these env vars before running:
 
@@ -76,6 +89,8 @@ If you need to target another Firebase project, set these env vars before runnin
 ## USE
 ### local
 - `npm install`
+- `$env:SCRIPT_AUTH_EMAIL='owner.multi@example.com'`
+- `$env:SCRIPT_AUTH_PASSWORD='YOUR_PASSWORD'`
 - `npm run db:reset`
 - `npm run dev`
 

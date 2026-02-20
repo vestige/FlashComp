@@ -1,5 +1,6 @@
-import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import { deleteApp, initializeApp } from "firebase/app";
+import { getAuth, signInWithEmailAndPassword, signOut } from "firebase/auth";
+import { getFirestore, terminate } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: process.env.FIREBASE_API_KEY || "AIzaSyBIfGyeHMc_0LPtX5qbeqQrabX6wXvs_kI",
@@ -13,3 +14,38 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 export const db = getFirestore(app);
+export const auth = getAuth(app);
+
+export async function signInForScripts() {
+  const email = process.env.SCRIPT_AUTH_EMAIL || process.env.OWNER_EMAIL || "";
+  const password = process.env.SCRIPT_AUTH_PASSWORD || process.env.OWNER_PASSWORD || "";
+
+  if (!email || !password) {
+    return null;
+  }
+
+  const credential = await signInWithEmailAndPassword(auth, email, password);
+  return credential.user;
+}
+
+export async function cleanupScriptFirebase() {
+  try {
+    if (auth.currentUser) {
+      await signOut(auth);
+    }
+  } catch {
+    // Best effort cleanup.
+  }
+
+  try {
+    await terminate(db);
+  } catch {
+    // Best effort cleanup.
+  }
+
+  try {
+    await deleteApp(app);
+  } catch {
+    // Best effort cleanup.
+  }
+}

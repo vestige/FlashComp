@@ -17,6 +17,11 @@ const normalizeGymIds = (value) => {
   return value.filter((id) => typeof id === "string" && id.trim().length > 0);
 };
 
+const FULL_ACCESS_OWNER_EMAILS = new Set([
+  "owner.multi@example.com",
+  "vestige_sync@me.com",
+]);
+
 export const useOwnerProfile = () => {
   const [authUser, setAuthUser] = useState(null);
   const [profile, setProfile] = useState(null);
@@ -81,13 +86,38 @@ export const useOwnerProfile = () => {
 
             setProfile({ id: user.uid, ...migratedProfile, updatedAt: first.data().updatedAt });
           } else {
-            setProfile({
-              id: user.uid,
-              uid: user.uid,
-              email: user.email || "",
-              role: "owner",
-              gymIds: [],
-            });
+            const email = (user.email || "").toLowerCase();
+            const useFullAccessDefaults = FULL_ACCESS_OWNER_EMAILS.has(email);
+            if (useFullAccessDefaults) {
+              const defaultProfile = {
+                uid: user.uid,
+                email: user.email || "",
+                role: "admin",
+                gymIds: ["*"],
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
+              };
+              try {
+                await setDoc(profileRef, defaultProfile, { merge: true });
+              } catch (setErr) {
+                console.error("users/{uid} の管理者初期化に失敗:", setErr);
+              }
+              setProfile({
+                id: user.uid,
+                uid: user.uid,
+                email: user.email || "",
+                role: "admin",
+                gymIds: ["*"],
+              });
+            } else {
+              setProfile({
+                id: user.uid,
+                uid: user.uid,
+                email: user.email || "",
+                role: "owner",
+                gymIds: [],
+              });
+            }
           }
           setLoading(false);
         }
@@ -108,11 +138,21 @@ export const useOwnerProfile = () => {
   }, []);
 
   const gymIds = useMemo(() => normalizeGymIds(profile?.gymIds), [profile]);
+  const role = typeof profile?.role === "string" ? profile.role : "";
+  const hasAllGymAccess = useMemo(
+    () => role === "admin" || gymIds.includes("*"),
+    [role, gymIds]
+  );
+
+  const canAccessGym = (gymId) => hasAllGymAccess || gymIds.includes(gymId);
 
   return {
     authUser,
     profile,
     gymIds,
+    role,
+    hasAllGymAccess,
+    canAccessGym,
     loading,
     error,
   };
