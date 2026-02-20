@@ -56,8 +56,11 @@ const Home = () => {
           marginTop: "1.2em",
         }}
       >
-        <h3 style={{ marginTop: 0 }}>システム管理者向け（準備中）</h3>
-        <p style={{ marginBottom: 0 }}>ジム登録などの管理機能は今後追加予定です。</p>
+        <h3 style={{ marginTop: 0 }}>システム管理者向け</h3>
+        <p style={{ marginTop: 0 }}>ジム登録・オーナープロファイル管理を行います（admin権限が必要）。</p>
+        <p style={{ marginBottom: 0 }}>
+          <Link to="/system-admin">システム管理画面へ</Link>
+        </p>
       </section>
     </div>
   );

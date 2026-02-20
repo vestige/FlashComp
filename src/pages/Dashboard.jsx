@@ -16,6 +16,7 @@ const Dashboard = () => {
   const [error, setError] = useState("");
   const {
     gymIds,
+    role,
     hasAllGymAccess,
     loading: profileLoading,
     error: profileError,
@@ -128,6 +129,16 @@ const Dashboard = () => {
           </p>
         )}
       </section>
+
+      {role === "admin" && (
+        <section style={{ border: "1px solid #ddd", borderRadius: "10px", padding: "1em", marginTop: "1em" }}>
+          <h3 style={{ marginTop: 0 }}>システム管理者メニュー</h3>
+          <p style={{ marginTop: 0 }}>
+            ジム管理とオーナー管理を行う場合は、管理者専用ページを利用してください。
+          </p>
+          <Link to="/system-admin">システム管理画面へ</Link>
+        </section>
+      )}
 
       <h3 style={{ marginTop: "1.6em" }}>📋 登録済みイベント</h3>
       {!hasAllGymAccess && gymIds.length === 0 ? (

@@ -22,12 +22,16 @@ service cloud.firestore {
         && (userProfile().role == "owner" || userProfile().role == "admin");
     }
 
+    function isAdmin() {
+      return hasUserProfile() && userProfile().role == "admin";
+    }
+
     function ownerGymIds() {
       return isOwner() ? userProfile().gymIds : [];
     }
 
     function hasAllGymAccess() {
-      return isOwner() && (userProfile().role == "admin" || "*" in ownerGymIds());
+      return isOwner() && (isAdmin() || "*" in ownerGymIds());
     }
 
     function hasGymAccess(gymId) {
@@ -64,14 +68,15 @@ service cloud.firestore {
     // Public gym metadata for event browsing filters.
     match /gyms/{gymId} {
       allow read: if true;
-      allow write: if false;
+      allow write: if isAdmin();
     }
 
-    // Owner profile. Writes are self only.
-    // Note: To satisfy write checks above, users/{uid} must exist and include role/gymIds.
+    // Owner/admin profile.
+    // Note: To satisfy event write checks, users/{uid} should include role/gymIds.
     match /users/{userId} {
       allow read: if isSignedIn();
-      allow create, update, delete: if isSignedIn() && request.auth.uid == userId;
+      allow create, update, delete: if isSignedIn()
+        && (request.auth.uid == userId || isAdmin());
     }
 
     match /{document=**} {

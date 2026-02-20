@@ -44,6 +44,16 @@ Owner access control fields used by app:
 - `gymIds` (array of gyms the owner can manage/view, `["*"]` means all gyms)
 - If `users/{uid}` is missing but matching `email` doc exists, app migrates profile to `users/{uid}` on login.
 
+## System admin screen
+
+- Route: `/system-admin`
+- Access: authenticated user with `users/{uid}.role == "admin"`
+- Capabilities:
+  - Gym CRUD (`gyms` collection)
+  - Owner/admin profile CRUD (`users` collection, `role` + `gymIds` assignment)
+  - `owner` requires explicit `gymIds`
+  - `admin` is saved as full access (`gymIds: ["*"]`)
+
 ## Firestore security rules
 
 - Rule file: `firestore.rules`
@@ -52,6 +62,8 @@ Owner access control fields used by app:
   - Owner write: if `users/{uid}.role` is `owner`/`admin` and target `gymId` is allowed
   - `admin` or `gymIds` including `*` can manage all gyms/events
   - Event subcollections (`seasons/categories/routes/participants/...`) writes are restricted by parent event's `gymId`
+  - `gyms` write is allowed for `admin` only
+  - `users` write is allowed for self or `admin`
 
 Important:
 - For production auth users, create `users/{uid}` docs keyed by Firebase Auth `uid`.
