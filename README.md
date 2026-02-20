@@ -54,6 +54,16 @@ Owner access control fields used by app:
   - `owner` requires explicit `gymIds`
   - `admin` is saved as full access (`gymIds: ["*"]`)
 
+## CSV data IO (owner operation)
+
+- Route: `/events/:eventId/data-io`
+- Access: event writable owner/admin
+- Available operations:
+  - Participant CSV export/import
+    - Required import columns: `name,memberNo,age,gender,categoryId`
+  - Ranking CSV export (all seasons or single season)
+  - Gender ratio CSV export (overall + category breakdown)
+
 ## Firestore security rules
 
 - Rule file: `firestore.rules`

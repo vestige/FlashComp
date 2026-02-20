@@ -168,6 +168,7 @@ const Dashboard = () => {
                 <Link to={`/events/${event.id}/edit`} state={{ tab: "scores" }}>
                   採点入力
                 </Link>
+                <Link to={`/events/${event.id}/data-io`}>CSV入出力</Link>
                 <Link to={`/score-summary/${event.id}`}>公開ランキング確認</Link>
                 <button type="button" onClick={() => handleDelete(event.id)}>
                   🗑 イベント削除

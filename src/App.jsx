@@ -5,6 +5,7 @@ import Dashboard from "./pages/Dashboard";
 import CreateEvent from "./pages/CreateEvent";
 import EditEvent from "./pages/EditEvent";
 import ScoreInput from "./pages/ScoreInput";
+import EventDataIO from "./pages/EventDataIO";
 import ScoreSummary from "./pages/ScoreSummary";
 import EventSummary from "./pages/EventSummary"; // インポートを追加
 import ParticipantScoreDetail from "./pages/ParticipantScoreDetail";
@@ -46,6 +47,14 @@ function App() {
           element={
             <ProtectedRoute>
               <ScoreInput />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/events/:eventId/data-io"
+          element={
+            <ProtectedRoute>
+              <EventDataIO />
             </ProtectedRoute>
           }
         />
