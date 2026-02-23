@@ -124,7 +124,6 @@ const SystemAdmin = () => {
       return;
     }
     loadAdminData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profileLoading, profileError, role]);
 
   const resetOwnerForm = () => {

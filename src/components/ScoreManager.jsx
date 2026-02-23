@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { db } from "../firebase";
 import { collection, getDocs } from "firebase/firestore";
 //import { Link } from "react-router-dom";
-import { Link, useParams, useNavigate, useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 const ScoreManager = ({ eventId }) => {
   const [seasons, setSeasons] = useState([]);

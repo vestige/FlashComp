@@ -32,7 +32,7 @@ const RouteSelector = () => {
     fetchCategories();
     setSelectedCategory(""); // リセット
     setRoutes([]); // リセット
-  }, [selectedSeason]);
+  }, [eventId, selectedSeason]);
 
   // カテゴリ選択時にルート取得
   useEffect(() => {
@@ -44,7 +44,7 @@ const RouteSelector = () => {
       setRoutes(data);
     };
     fetchRoutes();
-  }, [selectedCategory]);
+  }, [eventId, selectedSeason, selectedCategory]);
 
   const handleAddRoute = () => {
     const name = `No.${String(routes.length + 1).padStart(2, "0")}`;
