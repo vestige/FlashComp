@@ -3,6 +3,30 @@
 - [] データ入出力・運用: スケール面の見積もりと改善（Firestore読み取り最適化）
 - [] デザイン変更。tailwindcssを利用する
 
+## 明日の実装計画（別マシン再開用）
+1. 事前準備
+   - `git pull origin main`
+   - `npm ci`
+   - 必要なら `npm run db:reset`（READMEの認証環境変数を設定）
+2. データモデル移行の本実装
+   - [ ] 採点画面を `tasks + categoryTaskMap(assignments)` 直接参照に変更
+   - [ ] ランキング画面を `tasks + assignments` 参照に変更
+   - [ ] CSV出力（順位系）を新モデル参照へ変更
+   - [ ] 旧 `routes` 依存箇所を洗い出し（`rg "routes"`）し、段階的に撤去
+3. 命名整理（可読性）
+   - [ ] UI文言を `participants` -> `climbers` 相当に統一
+   - [ ] ドキュメント表記を `users(=gymOwners)` として統一
+4. 管理画面の導線（3入口）
+   - [ ] 初期設定（シーズン/カテゴリ/課題）
+   - [ ] 参加者登録
+   - [ ] スコア（採点/CSV/公開ランキング）
+   - [ ] Dashboard と EditEvent のリンク整理
+5. 受け入れ確認
+   - [ ] `npm run lint`
+   - [ ] `npm run test:run`
+   - [ ] `npm run build`
+   - [ ] SPEC.md/README.md/TODO.md の更新反映を確認
+
 # spec
 ## 目的
 * 運営側の負担を減らす（点数設定、集計、公開）

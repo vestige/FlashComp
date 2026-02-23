@@ -11,25 +11,32 @@
 - 互換レイヤー（既存採点・集計用）: `seasons/{seasonId}/categories/{categoryId}/routes`
 - スコア: `seasons/{seasonId}/categories/{categoryId}/participants/{participantId}`
 
+## 用語（呼び名）
+- `participants` = `climbers`（参加者）
+- `users` = `gymOwners`（運営ユーザー。role が `owner` または `admin`）
+- `tasks` = シーズン共通の課題マスタ
+- `categoryTaskMap/.../assignments` = カテゴリごとの課題セット（採用リスト）
+- `routes` = 旧構造の互換データ（将来廃止予定）
+
 ## Firestore構造図
 ```mermaid
 graph TD
-  ROOT[(Firestore)] --> EVENTS[events/{eventId}]
-  ROOT --> GYMS[gyms/{gymId}]
-  ROOT --> USERS[users/{uid}]
+  ROOT["Firestore"] --> EVENTS["events/{eventId}"]
+  ROOT --> GYMS["gyms/{gymId}"]
+  ROOT --> USERS["users/{uid}"]
 
-  EVENTS --> ECAT[categories/{categoryId}]
-  EVENTS --> EPART[participants/{participantId}]
-  EVENTS --> SEASON[seasons/{seasonId}]
+  EVENTS --> ECAT["categories/{categoryId}"]
+  EVENTS --> EPART["participants/{participantId}"]
+  EVENTS --> SEASON["seasons/{seasonId}"]
 
-  SEASON --> TASKS[tasks/{taskId}]
-  SEASON --> CTM[categoryTaskMap/{categoryId}]
-  CTM --> ASSIGN[assignments/{taskId}]
+  SEASON --> TASKS["tasks/{taskId}"]
+  SEASON --> CTM["categoryTaskMap/{categoryId}"]
+  CTM --> ASSIGN["assignments/{taskId}"]
 
   %% backward compatibility
-  SEASON --> SCAT[categories/{categoryId}]
-  SCAT --> ROUTES[routes/{taskId}]
-  SCAT --> SCORES[participants/{participantId}]
+  SEASON --> SCAT["categories/{categoryId}"]
+  SCAT --> ROUTES["routes/{taskId}"]
+  SCAT --> SCORES["participants/{participantId}"]
 ```
 
 ## ドキュメント定義
@@ -106,6 +113,12 @@ graph TD
 - `updatedAt`
 - `participated`（seed由来）
 - `seasonStatus`（seed由来）
+
+## Seasons配下の見方
+- `tasks`: そのシーズンの「全課題」30-40件
+- `categoryTaskMap/{categoryId}/assignments`: そのカテゴリで使う課題IDの集合
+- `categories/{categoryId}/routes`: 旧採点ロジック互換のために同期している複製
+- `categories/{categoryId}/participants`: 参加者の採点結果（scores）
 
 ## 現在の運用上の注意
 - 課題の正規データは `tasks` + `categoryTaskMap` 側。
