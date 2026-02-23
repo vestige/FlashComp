@@ -20,7 +20,7 @@ import { useOwnerProfile } from "../hooks/useOwnerProfile";
 const TAB_CONFIG = [
   { id: "seasons", label: "📅 シーズン", hint: "開催期間の分割を設定" },
   { id: "categories", label: "🏷 カテゴリ", hint: "参加カテゴリを設定" },
-  { id: "routes", label: "🧩 ルート設定", hint: "カテゴリ別の課題を設定" },
+  { id: "routes", label: "🧩 課題設定", hint: "シーズン課題とカテゴリ採用を設定" },
   { id: "participants", label: "👤 参加者", hint: "参加者情報を登録" },
   { id: "scores", label: "📋 スコア採点", hint: "完登課題を入力" },
 ];

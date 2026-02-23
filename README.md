@@ -1,6 +1,9 @@
 Flash用のコンペ登録サイトを作ってみる
 https://vestige.github.io/FlashComp/
 
+## Spec
+- データ構造と関連図: `SPEC.md`
+
 ## Firestore test data scripts
 
 The following commands are available:
