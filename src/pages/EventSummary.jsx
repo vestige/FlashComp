@@ -145,6 +145,14 @@ const EventSummary = () => {
     const calculateRankings = async () => {
       if (loading || !event || categories.length === 0) return;
       setError("");
+      const targetCategories =
+        selectedCategoryId === "all"
+          ? categories
+          : categories.filter((category) => category.id === selectedCategoryId);
+      if (targetCategories.length === 0) {
+        setRankings({});
+        return;
+      }
 
       const targetSeasonIds =
         selectedSeasonId === "all"
@@ -152,13 +160,13 @@ const EventSummary = () => {
           : [selectedSeasonId].filter(Boolean);
 
       if (targetSeasonIds.length === 0) {
-        setRankings(buildRankings(buildInitialCategoryMap(categories, participants)));
+        setRankings(buildRankings(buildInitialCategoryMap(targetCategories, participants)));
         return;
       }
 
       setCalculating(true);
       try {
-        const categoryMap = buildInitialCategoryMap(categories, participants);
+        const categoryMap = buildInitialCategoryMap(targetCategories, participants);
         const participantById = new Map(participants.map((p) => [p.id, p]));
 
         const seasonTasksBySeasonId = new Map(
@@ -168,7 +176,7 @@ const EventSummary = () => {
         );
 
         const fetchTasks = targetSeasonIds.flatMap((seasonId) =>
-          categories.map(async (category) => {
+          targetCategories.map(async (category) => {
             const [assignments, scoreSnap] = await Promise.all([
               fetchCategoryAssignments(eventId, seasonId, category.id),
               getDocs(
@@ -252,7 +260,7 @@ const EventSummary = () => {
     return () => {
       cancelled = true;
     };
-  }, [loading, event, categories, participants, seasons, selectedSeasonId, eventId]);
+  }, [loading, event, categories, participants, seasons, selectedSeasonId, selectedCategoryId, eventId]);
 
   const visibleCategories = useMemo(
     () =>

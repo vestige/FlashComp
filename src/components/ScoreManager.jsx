@@ -1,7 +1,7 @@
 // src/components/ScoreManager.jsx
 import { useState, useEffect } from "react";
 import { db } from "../firebase";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, query, where } from "firebase/firestore";
 //import { Link } from "react-router-dom";
 import { Link, useLocation } from "react-router-dom";
 
@@ -43,11 +43,19 @@ const ScoreManager = ({ eventId }) => {
 
   useEffect(() => {
     const fetchParticipants = async () => {
-      if (!selectedCategory) return;
+      if (!selectedCategory) {
+        setParticipants([]);
+        return;
+      }
       try {
-        const snapshot = await getDocs(collection(db, "events", eventId, "participants"));
-        const all = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-        const filtered = all.filter((p) => p.categoryId === selectedCategory);
+        const participantsQuery = query(
+          collection(db, "events", eventId, "participants"),
+          where("categoryId", "==", selectedCategory)
+        );
+        const snapshot = await getDocs(participantsQuery);
+        const filtered = snapshot.docs
+          .map((doc) => ({ id: doc.id, ...doc.data() }))
+          .sort((a, b) => (a.name || "").localeCompare(b.name || "", "ja"));
         setParticipants(filtered);
       } catch (err) {
         console.error("クライマーの取得に失敗:", err);
