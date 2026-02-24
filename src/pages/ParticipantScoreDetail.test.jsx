@@ -39,9 +39,9 @@ const mockFirestoreForDetail = ({ participantId }) => {
     { id: "p3", name: "Mio", memberNo: "M-1003", categoryId: "cat-1" },
   ];
 
-  const routes = [
-    { id: "No.01", name: "No.01", points: 100, grade: "7Q" },
-    { id: "No.02", name: "No.02", points: 80, grade: "6Q" },
+  const tasks = [
+    { id: "task-01", name: "No.01", points: 100, grade: "7Q", taskNo: 1 },
+    { id: "task-02", name: "No.02", points: 80, grade: "6Q", taskNo: 2 },
   ];
 
   const scoreRows = [
@@ -79,7 +79,11 @@ const mockFirestoreForDetail = ({ participantId }) => {
       "events/event-1/participants": makeSnapshot(participants),
       "events/event-1/seasons": makeSnapshot([{ id: "season-1", name: "Season 1" }]),
       "events/event-1/categories": makeSnapshot([{ id: "cat-1", name: "Beginner" }]),
-      "events/event-1/seasons/season-1/categories/cat-1/routes": makeSnapshot(routes),
+      "events/event-1/seasons/season-1/tasks": makeSnapshot(tasks),
+      "events/event-1/seasons/season-1/categoryTaskMap/cat-1/assignments": makeSnapshot([
+        { id: "task-01", enabled: true, taskNo: 1 },
+        { id: "task-02", enabled: true, taskNo: 2 },
+      ]),
       "events/event-1/seasons/season-1/categories/cat-1/participants": makeSnapshot(scoreRows),
     };
     return map[ref.path] || makeSnapshot([]);
@@ -108,7 +112,7 @@ describe("ParticipantScoreDetail", () => {
     mockFirestoreForDetail({ participantId: "p2" });
     renderDetail("/score-summary/event-1/participants/p2?season=season-1&category=cat-1&q=M-1002");
 
-    await screen.findByText(/FlashComp Spring 2026 - 参加者詳細/);
+    await screen.findByText(/FlashComp Spring 2026 - クライマー詳細/);
     await screen.findByText(/順位（Beginner）:/);
 
     const rankRow = screen.getByText(/順位（Beginner）:/);
@@ -143,10 +147,10 @@ describe("ParticipantScoreDetail", () => {
     mockFirestoreForDetail({ participantId: "p1" });
     renderDetail("/score-summary/event-1/participants/p1?season=season-1");
 
-    await screen.findByText(/FlashComp Spring 2026 - 参加者詳細/);
+    await screen.findByText(/FlashComp Spring 2026 - クライマー詳細/);
 
     await waitFor(() =>
-      expect(screen.getByText("これより上位の参加者はいません")).toBeInTheDocument()
+      expect(screen.getByText("これより上位のクライマーはいません")).toBeInTheDocument()
     );
     expect(screen.getByRole("link", { name: /↓ 2位 Riku/ })).toBeInTheDocument();
   });

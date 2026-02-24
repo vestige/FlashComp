@@ -4,6 +4,8 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import CreateEvent from "./pages/CreateEvent";
 import EditEvent from "./pages/EditEvent";
+import EventClimbers from "./pages/EventClimbers";
+import EventScores from "./pages/EventScores";
 import ScoreInput from "./pages/ScoreInput";
 import EventDataIO from "./pages/EventDataIO";
 import ScoreSummary from "./pages/ScoreSummary";
@@ -39,6 +41,22 @@ function App() {
           element={
             <ProtectedRoute>
               <EditEvent />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/events/:eventId/climbers"
+          element={
+            <ProtectedRoute>
+              <EventClimbers />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/events/:eventId/scores"
+          element={
+            <ProtectedRoute>
+              <EventScores />
             </ProtectedRoute>
           }
         />

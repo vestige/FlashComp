@@ -1,6 +1,6 @@
 # FlashComp Data Spec
 
-最終更新: 2026-02-23
+最終更新: 2026-02-24
 
 ## 概要
 現行実装では、イベント配下に以下の構造を持ちます。
@@ -12,7 +12,7 @@
 - スコア: `seasons/{seasonId}/categories/{categoryId}/participants/{participantId}`
 
 ## 用語（呼び名）
-- `participants` = `climbers`（参加者）
+- `participants` = `climbers`（クライマー）
 - `users` = `gymOwners`（運営ユーザー。role が `owner` または `admin`）
 - `tasks` = シーズン共通の課題マスタ
 - `categoryTaskMap/.../assignments` = カテゴリごとの課題セット（採用リスト）
@@ -57,7 +57,7 @@ graph TD
 - `name`
 
 ### 3) `events/{eventId}/participants/{participantId}`
-イベント共通参加者。
+イベント共通クライマー。
 
 主なフィールド（例）:
 - `name`
@@ -106,7 +106,7 @@ graph TD
 - `isBonus`
 
 ### 8) `events/{eventId}/seasons/{seasonId}/categories/{categoryId}/participants/{participantId}`
-シーズン x カテゴリ x 参加者のスコア。
+シーズン x カテゴリ x クライマーのスコア。
 
 主なフィールド（例）:
 - `scores`: `{ [taskNameOrTaskId]: boolean }`
@@ -118,9 +118,58 @@ graph TD
 - `tasks`: そのシーズンの「全課題」30-40件
 - `categoryTaskMap/{categoryId}/assignments`: そのカテゴリで使う課題IDの集合
 - `categories/{categoryId}/routes`: 旧採点ロジック互換のために同期している複製
-- `categories/{categoryId}/participants`: 参加者の採点結果（scores）
+- `categories/{categoryId}/participants`: クライマーの採点結果（scores）
 
 ## 現在の運用上の注意
 - 課題の正規データは `tasks` + `categoryTaskMap` 側。
-- ただし既存画面互換のため、`routes` へ同期書き込みを行っている。
-- いずれ採点・ランキング側を `tasks` + `assignments` 直接参照へ移行できれば、`routes` は廃止可能。
+- 採点・ランキング・CSV は `tasks` + `assignments` を直接参照する。
+- `routes` は旧データ互換レイヤーとして残っているが、新規同期は行っていない。
+
+## 画面導線仕様（2026-02-24時点）
+運営側の導線は「入口を絞る」方針で以下に整理する。
+
+- ダッシュボード（`/dashboard`）のイベント別入口:
+  - `設定` -> `/events/{eventId}/edit`
+  - `クライマー` -> `/events/{eventId}/climbers`
+  - `スコア` -> `/events/{eventId}/scores`
+- 設定画面（`/events/{eventId}/edit`）内のナビ:
+  - `シーズン`
+  - `カテゴリ`
+  - `課題`
+  - `戻る`（ダッシュボード）
+- クライマー画面（`/events/{eventId}/climbers`）:
+  - クライマー登録・編集・削除
+  - `戻る`（ダッシュボード）
+- スコア画面（`/events/{eventId}/scores`）:
+  - 採点対象の選択と採点画面遷移
+  - `CSV入出力`（`/events/{eventId}/data-io`）
+  - `公開ランキング`（`/score-summary/{eventId}`）
+  - `戻る`（ダッシュボード）
+
+## ユーザーシナリオ（TODO反映）
+### 目的
+- 運営側の負担を減らす（点数設定、集計、公開）
+- クライマーのモチベーションを上げる（すぐに結果が見られる）
+
+### システム管理者
+- ジムのオーナー登録
+- ジムの登録・削除・編集
+- すべてのジムのイベント編集や採点を実施
+
+### 運営側（ジムオーナー）
+#### イベント開催前
+- イベントの登録・削除・編集（イベント名、シーズン数、カテゴリ）
+- シーズンの登録・削除・編集（シーズン名）
+- シーズンごとの課題の登録・削除・編集（番号、級、点数）
+- カテゴリの登録・削除・編集（カテゴリ名）
+
+#### イベント開催後
+- クライマー登録（名前、会員番号、年齢、性別、参加カテゴリ）
+- CSV形式でのデータ入出力（参加情報、男女比率、シーズン別順位など）
+- クライマーごとの得点入力（完登課題をチェック）
+
+### クライマー側
+- スマートフォンで閲覧
+- ログイン不要
+- 自分のスコア確認
+- カテゴリごとの集計結果確認

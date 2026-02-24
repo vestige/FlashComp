@@ -40,7 +40,7 @@ const ScoreEventSelector = () => {
         <ul>
           {events.map((event) => (
             <li key={event.id}>
-              <Link to={`/events/${event.id}/edit`} state={{ tab: "scores" }}>
+              <Link to={`/events/${event.id}/scores`}>
                 {event.name}
               </Link>
             </li>

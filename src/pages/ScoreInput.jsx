@@ -1,26 +1,28 @@
 // src/pages/ScoreInput.jsx
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import {
-  collection,
   doc,
   getDoc,
-  getDocs,
   setDoc,
   serverTimestamp,
 } from "firebase/firestore";
 import { db } from "../firebase";
 import { usePageTitle } from "../hooks/usePageTitle";
 import { useOwnerProfile } from "../hooks/useOwnerProfile";
+import {
+  fetchAssignedTasksForCategory,
+  getScoreValueByTask,
+} from "../lib/taskAssignments";
 
 const ScoreInput = () => {
   const { eventId, seasonId, categoryId, participantId } = useParams();
-  const [routes, setRoutes] = useState([]);
+  const [tasks, setTasks] = useState([]);
   const [participantName, setParticipantName] = useState("");
   const [scores, setScores] = useState({});
   const [viewMode, setViewMode] = useState("simple");
   const [showOnlyUncleared, setShowOnlyUncleared] = useState(true);
-  const [routeKeyword, setRouteKeyword] = useState("");
+  const [taskKeyword, setTaskKeyword] = useState("");
   const [status, setStatus] = useState("");
   const [updatedAt, setUpdatedAt] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -64,22 +66,12 @@ const ScoreInput = () => {
           setParticipantName(participantSnap.data().name || "");
         }
 
-        const routeSnap = await getDocs(
-          collection(
-            db,
-            "events",
-            eventId,
-            "seasons",
-            seasonId,
-            "categories",
-            categoryId,
-            "routes"
-          )
-        );
-        const fetchedRoutes = routeSnap.docs
-          .map((doc) => doc.data())
-          .sort((a, b) => a.name.localeCompare(b.name, "ja"));
-        setRoutes(fetchedRoutes);
+        const assignedTasks = await fetchAssignedTasksForCategory({
+          eventId,
+          seasonId,
+          categoryId,
+        });
+        setTasks(assignedTasks);
 
         const scoresSnap = await getDoc(
           doc(
@@ -119,29 +111,42 @@ const ScoreInput = () => {
     profileError,
   ]);
 
-  const handleToggleScore = (routeName) => {
-    setScores((prev) => ({
-      ...prev,
-      [routeName]: !prev[routeName],
-    }));
+  const resolveScoreKey = (task, scoreMap = {}) => {
+    if (task?.id && task.id in scoreMap) return task.id;
+    if (task?.name && task.name in scoreMap) return task.name;
+    return task?.name || task?.id || "";
   };
 
-  const normalizedKeyword = routeKeyword.trim().toLowerCase();
-  const clearCount = routes.filter((route) => !!scores[route.name]).length;
-  const remainingCount = routes.length - clearCount;
-  const visibleRoutes = routes.filter((route) => {
+  const handleToggleScore = (task) => {
+    setScores((prev) => {
+      const key = resolveScoreKey(task, prev);
+      if (!key) return prev;
+      return {
+        ...prev,
+        [key]: !getScoreValueByTask(prev, task),
+      };
+    });
+  };
+
+  const normalizedKeyword = taskKeyword.trim().toLowerCase();
+  const clearCount = tasks.filter((task) => getScoreValueByTask(scores, task)).length;
+  const remainingCount = tasks.length - clearCount;
+  const visibleTasks = tasks.filter((task) => {
     const matchesKeyword =
-      normalizedKeyword.length === 0 || route.name.toLowerCase().includes(normalizedKeyword);
+      normalizedKeyword.length === 0 ||
+      String(task.name || "").toLowerCase().includes(normalizedKeyword);
     if (!matchesKeyword) return false;
     if (!showOnlyUncleared) return true;
-    return !scores[route.name];
+    return !getScoreValueByTask(scores, task);
   });
 
   const applyBulkToVisible = (isCleared) => {
     setScores((prev) => {
       const next = { ...prev };
-      for (const route of visibleRoutes) {
-        next[route.name] = isCleared;
+      for (const task of visibleTasks) {
+        const key = resolveScoreKey(task, prev);
+        if (!key) continue;
+        next[key] = isCleared;
       }
       return next;
     });
@@ -185,9 +190,6 @@ const ScoreInput = () => {
     return (
       <div style={{ padding: "2em" }}>
         <p>{error || profileError}</p>
-        <Link to={`/events/${eventId}/edit`} state={{ tab: "scores", seasonId, categoryId }}>
-          ← スコア採点に戻る
-        </Link>
       </div>
     );
   }
@@ -196,7 +198,6 @@ const ScoreInput = () => {
     return (
       <div style={{ padding: "2em" }}>
         <p>このイベントの採点を行う権限がありません。</p>
-        <Link to="/dashboard">← ダッシュボードに戻る</Link>
       </div>
     );
   }
@@ -204,14 +205,9 @@ const ScoreInput = () => {
   return (
     <div style={{ padding: "1.2em", maxWidth: "920px", margin: "0 auto" }}>
       <h2>📝 スコア入力</h2>
-      <p>
-        <Link to={`/events/${eventId}/edit`} state={{ tab: "scores", seasonId, categoryId }}>
-          ← スコア採点に戻る
-        </Link>
-      </p>
-      <p style={{ marginBottom: "0.3em" }}>参加者: {participantName}</p>
+      <p style={{ marginBottom: "0.3em" }}>クライマー: {participantName}</p>
       <p style={{ marginTop: 0, marginBottom: "0.6em" }}>
-        完登 {clearCount} / 全{routes.length}（未完登 {remainingCount}）
+        完登 {clearCount} / 全{tasks.length}（未完登 {remainingCount}）
       </p>
       {updatedAt && (
         <p style={{ fontStyle: "italic", fontSize: "0.9em", marginTop: 0 }}>
@@ -267,8 +263,8 @@ const ScoreInput = () => {
             課題検索:
             <input
               type="text"
-              value={routeKeyword}
-              onChange={(e) => setRouteKeyword(e.target.value)}
+              value={taskKeyword}
+              onChange={(e) => setTaskKeyword(e.target.value)}
               placeholder="No.01"
               style={{ marginLeft: "0.4em" }}
             />
@@ -285,7 +281,7 @@ const ScoreInput = () => {
       </section>
 
       <div style={{ marginTop: "0.9em" }}>
-        {visibleRoutes.length === 0 ? (
+        {visibleTasks.length === 0 ? (
           <p>表示条件に一致する課題がありません。</p>
         ) : viewMode === "simple" ? (
           <div
@@ -295,13 +291,13 @@ const ScoreInput = () => {
               gap: "0.6em",
             }}
           >
-            {visibleRoutes.map((route) => {
-              const isCleared = !!scores[route.name];
+            {visibleTasks.map((task) => {
+              const isCleared = getScoreValueByTask(scores, task);
               return (
                 <button
-                  key={route.name}
+                  key={task.id || task.name}
                   type="button"
-                  onClick={() => handleToggleScore(route.name)}
+                  onClick={() => handleToggleScore(task)}
                   style={{
                     textAlign: "left",
                     border: `1px solid ${isCleared ? "#7bbf8e" : "#ccc"}`,
@@ -311,9 +307,9 @@ const ScoreInput = () => {
                     minHeight: "88px",
                   }}
                 >
-                  <div style={{ fontWeight: "bold" }}>{route.name}</div>
+                  <div style={{ fontWeight: "bold" }}>{task.name || task.id}</div>
                   <div style={{ fontSize: "0.9em", marginTop: "0.25em" }}>
-                    級: {route.grade || "-"} / 点: {route.points ?? "-"}
+                    級: {task.grade || "-"} / 点: {task.points ?? "-"}
                   </div>
                   <div style={{ marginTop: "0.35em", fontWeight: "bold" }}>
                     {isCleared ? "完登" : "未完登"}
@@ -334,16 +330,16 @@ const ScoreInput = () => {
                 </tr>
               </thead>
               <tbody>
-                {visibleRoutes.map((route) => (
-                  <tr key={route.name}>
-                    <td style={{ padding: "0.4em 0" }}>{route.name}</td>
-                    <td>{route.grade || "-"}</td>
-                    <td style={{ textAlign: "right" }}>{route.points ?? "-"}</td>
+                {visibleTasks.map((task) => (
+                  <tr key={task.id || task.name}>
+                    <td style={{ padding: "0.4em 0" }}>{task.name || task.id}</td>
+                    <td>{task.grade || "-"}</td>
+                    <td style={{ textAlign: "right" }}>{task.points ?? "-"}</td>
                     <td style={{ textAlign: "center" }}>
                       <input
                         type="checkbox"
-                        checked={!!scores[route.name]}
-                        onChange={() => handleToggleScore(route.name)}
+                        checked={getScoreValueByTask(scores, task)}
+                        onChange={() => handleToggleScore(task)}
                       />
                     </td>
                   </tr>

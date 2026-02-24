@@ -96,9 +96,6 @@ const Dashboard = () => {
     return (
       <div style={{ padding: "2em" }}>
         <p>{error || profileError}</p>
-        <div style={{ marginTop: "1em" }}>
-          <Link to="/">← Homeに戻る</Link>
-        </div>
       </div>
     );
   }
@@ -106,7 +103,7 @@ const Dashboard = () => {
   return (
     <div style={{ padding: "2em", maxWidth: "980px", margin: "0 auto" }}>
       <h2>ジムオーナー管理画面</h2>
-      <p>イベントの準備と開催時オペレーションをここから行います。</p>
+      <p>イベントの設定と開催時オペレーションをここから行います。</p>
       <p>
         担当ジム:{" "}
         {hasAllGymAccess
@@ -117,7 +114,7 @@ const Dashboard = () => {
       </p>
 
       <section style={{ border: "1px solid #ddd", borderRadius: "10px", padding: "1em" }}>
-        <h3 style={{ marginTop: 0 }}>準備フェーズ</h3>
+        <h3 style={{ marginTop: 0 }}>設定</h3>
         <p style={{ marginTop: 0 }}>
           まずイベントを作成し、イベントごとにシーズン・カテゴリ・課題を設定します。
         </p>
@@ -159,17 +156,15 @@ const Dashboard = () => {
               <p style={{ marginTop: 0 }}>ジム: {gymNameById.get(event.gymId) || "未設定"}</p>
 
               <div style={{ display: "flex", gap: "0.8em", flexWrap: "wrap" }}>
-                <Link to={`/events/${event.id}/edit`} state={{ tab: "seasons" }}>
-                  シーズン / カテゴリ / 課題設定
+                <Link to={`/events/${event.id}/edit`}>
+                  設定
                 </Link>
-                <Link to={`/events/${event.id}/edit`} state={{ tab: "participants" }}>
-                  参加者登録
+                <Link to={`/events/${event.id}/climbers`}>
+                  クライマー
                 </Link>
-                <Link to={`/events/${event.id}/edit`} state={{ tab: "scores" }}>
-                  採点入力
+                <Link to={`/events/${event.id}/scores`}>
+                  スコア
                 </Link>
-                <Link to={`/events/${event.id}/data-io`}>CSV入出力</Link>
-                <Link to={`/score-summary/${event.id}`}>公開ランキング確認</Link>
                 <button type="button" onClick={() => handleDelete(event.id)}>
                   🗑 イベント削除
                 </button>
@@ -181,9 +176,6 @@ const Dashboard = () => {
 
       <div style={{ marginTop: "2em" }}>
         <button type="button" onClick={handleLogout}>ログアウト</button>
-      </div>
-      <div style={{ marginTop: "1em" }}>
-        <Link to="/">← Homeに戻る</Link>
       </div>
     </div>
   );

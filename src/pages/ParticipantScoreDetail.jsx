@@ -3,6 +3,12 @@ import { Link, useParams, useSearchParams } from "react-router-dom";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
 import { usePageTitle } from "../hooks/usePageTitle";
+import {
+  buildAssignedTasks,
+  buildTaskByScoreKey,
+  fetchCategoryAssignments,
+  fetchSeasonTasks,
+} from "../lib/taskAssignments";
 
 const getTimestampText = (value) => {
   if (!value) return "-";
@@ -51,7 +57,7 @@ const ParticipantScoreDetail = () => {
   const [loading, setLoading] = useState(true);
   const [calculating, setCalculating] = useState(false);
   const [error, setError] = useState("");
-  usePageTitle(participant?.name ? `参加者詳細: ${participant.name}` : "参加者詳細");
+  usePageTitle(participant?.name ? `クライマー詳細: ${participant.name}` : "クライマー詳細");
 
   const buildParticipantDetailLink = (targetParticipantId) => {
     const params = new URLSearchParams();
@@ -91,7 +97,7 @@ const ParticipantScoreDetail = () => {
           return;
         }
         if (!participantDocSnap.exists()) {
-          if (!cancelled) setError("参加者が見つかりません。");
+          if (!cancelled) setError("クライマーが見つかりません。");
           return;
         }
 
@@ -117,8 +123,8 @@ const ParticipantScoreDetail = () => {
         setCategories(categoryRows);
         setSelectedSeasonId(initialSeason);
       } catch (err) {
-        console.error("参加者詳細の初期データ取得に失敗:", err);
-        if (!cancelled) setError("参加者詳細の読み込み中にエラーが発生しました。");
+        console.error("クライマー詳細の初期データ取得に失敗:", err);
+        if (!cancelled) setError("クライマー詳細の読み込み中にエラーが発生しました。");
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -154,22 +160,12 @@ const ParticipantScoreDetail = () => {
         const aggregateByCategory = {};
 
         for (const season of targetSeasons) {
+          const seasonTasks = await fetchSeasonTasks(eventId, season.id);
           const categorySummaries = [];
 
           const categoryTasks = targetCategoryIds.map(async (categoryId) => {
-            const [routesSnap, scoresSnap] = await Promise.all([
-              getDocs(
-                collection(
-                  db,
-                  "events",
-                  eventId,
-                  "seasons",
-                  season.id,
-                  "categories",
-                  categoryId,
-                  "routes"
-                )
-              ),
+            const [assignments, scoresSnap] = await Promise.all([
+              fetchCategoryAssignments(eventId, season.id, categoryId),
               getDocs(
                 collection(
                   db,
@@ -184,12 +180,8 @@ const ParticipantScoreDetail = () => {
               ),
             ]);
 
-            const routeMap = new Map(
-              routesSnap.docs.map((routeDoc) => {
-                const route = routeDoc.data();
-                return [route.name, route];
-              })
-            );
+            const assignedTasks = buildAssignedTasks(seasonTasks, assignments);
+            const taskByScoreKey = buildTaskByScoreKey(assignedTasks);
 
             const rowsByParticipantId = new Map();
             const categoryParticipants = allParticipants.filter((p) => p.categoryId === categoryId);
@@ -220,10 +212,15 @@ const ParticipantScoreDetail = () => {
                 clearCount: 0,
               };
 
+              const countedTaskIds = new Set();
               for (const [routeName, isCleared] of Object.entries(scoreMap)) {
                 if (!isCleared) continue;
-                const route = routeMap.get(routeName);
-                currentRow.totalPoints += Number(route?.points) || 1;
+                const task = taskByScoreKey.get(routeName);
+                const canonicalTaskId = task?.id || routeName;
+                if (countedTaskIds.has(canonicalTaskId)) continue;
+                countedTaskIds.add(canonicalTaskId);
+
+                currentRow.totalPoints += Number(task?.points) || 1;
                 currentRow.clearCount += 1;
               }
 
@@ -261,17 +258,22 @@ const ParticipantScoreDetail = () => {
             }
 
             const scores = participantScoreData?.scores || {};
-            const clearedRoutes = Object.entries(scores)
-              .filter(([, isCleared]) => !!isCleared)
-              .map(([routeName]) => {
-                const route = routeMap.get(routeName);
-                return {
-                  routeName,
-                  points: Number(route?.points) || 1,
-                  grade: route?.grade || "-",
-                };
-              })
-              .sort((a, b) => a.routeName.localeCompare(b.routeName, "ja"));
+            const clearedTaskIds = new Set();
+            const clearedRoutes = [];
+            for (const [scoreKey, isCleared] of Object.entries(scores)) {
+              if (!isCleared) continue;
+              const task = taskByScoreKey.get(scoreKey);
+              const canonicalTaskId = task?.id || scoreKey;
+              if (clearedTaskIds.has(canonicalTaskId)) continue;
+              clearedTaskIds.add(canonicalTaskId);
+
+              clearedRoutes.push({
+                routeName: task?.name || scoreKey,
+                points: Number(task?.points) || 1,
+                grade: task?.grade || "-",
+              });
+            }
+            clearedRoutes.sort((a, b) => a.routeName.localeCompare(b.routeName, "ja"));
 
             const totalPoints = clearedRoutes.reduce((sum, route) => sum + route.points, 0);
 
@@ -334,8 +336,8 @@ const ParticipantScoreDetail = () => {
           setSeasonSummaries(seasonRows);
         }
       } catch (err) {
-        console.error("参加者詳細の集計に失敗:", err);
-        if (!cancelled) setError("参加者詳細の集計中にエラーが発生しました。");
+        console.error("クライマー詳細の集計に失敗:", err);
+        if (!cancelled) setError("クライマー詳細の集計中にエラーが発生しました。");
       } finally {
         if (!cancelled) setCalculating(false);
       }
@@ -357,7 +359,7 @@ const ParticipantScoreDetail = () => {
   );
 
   if (loading) {
-    return <p>参加者詳細を読み込んでいます...</p>;
+    return <p>クライマー詳細を読み込んでいます...</p>;
   }
 
   if (error) {
@@ -373,7 +375,7 @@ const ParticipantScoreDetail = () => {
 
   return (
     <div style={{ padding: "2em", maxWidth: "980px", margin: "0 auto" }}>
-      <h2>{event?.name} - 参加者詳細</h2>
+      <h2>{event?.name} - クライマー詳細</h2>
       <p style={{ marginBottom: "0.4em" }}>
         名前: <strong>{participant?.name || "-"}</strong>
       </p>
@@ -432,21 +434,21 @@ const ParticipantScoreDetail = () => {
             marginTop: "1em",
           }}
         >
-          <h3 style={{ marginTop: 0 }}>近い順位の参加者</h3>
+          <h3 style={{ marginTop: 0 }}>近い順位のクライマー</h3>
           <div style={{ display: "flex", gap: "0.8em", flexWrap: "wrap" }}>
             {adjacentParticipants.prev ? (
               <Link to={buildParticipantDetailLink(adjacentParticipants.prev.participantId)}>
                 ↑ {adjacentParticipants.prev.rank}位 {adjacentParticipants.prev.name}
               </Link>
             ) : (
-              <span>これより上位の参加者はいません</span>
+              <span>これより上位のクライマーはいません</span>
             )}
             {adjacentParticipants.next ? (
               <Link to={buildParticipantDetailLink(adjacentParticipants.next.participantId)}>
                 ↓ {adjacentParticipants.next.rank}位 {adjacentParticipants.next.name}
               </Link>
             ) : (
-              <span>これより下位の参加者はいません</span>
+              <span>これより下位のクライマーはいません</span>
             )}
           </div>
         </section>

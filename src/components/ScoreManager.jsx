@@ -50,7 +50,7 @@ const ScoreManager = ({ eventId }) => {
         const filtered = all.filter((p) => p.categoryId === selectedCategory);
         setParticipants(filtered);
       } catch (err) {
-        console.error("参加者の取得に失敗:", err);
+        console.error("クライマーの取得に失敗:", err);
       }
     };
 
@@ -69,6 +69,10 @@ const ScoreManager = ({ eventId }) => {
   return (
     <div style={{ padding: "2em" }}>
       <h2>📋 スコア採点</h2>
+      <div style={{ marginBottom: "1em", display: "flex", gap: "0.8em", flexWrap: "wrap" }}>
+        <Link to={`/events/${eventId}/data-io`}>CSV入出力</Link>
+        <Link to={`/score-summary/${eventId}`}>公開ランキング</Link>
+      </div>
 
       <div style={{ marginBottom: "1em" }}>
         <label>

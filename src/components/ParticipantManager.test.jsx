@@ -62,7 +62,7 @@ describe("ParticipantManager", () => {
     const user = userEvent.setup();
     render(<ParticipantManager eventId="event-1" categories={categories} />);
 
-    await user.type(screen.getByPlaceholderText("参加者名"), "  山田 太郎  ");
+    await user.type(screen.getByPlaceholderText("クライマー名"), "  山田 太郎  ");
     await user.type(screen.getByPlaceholderText("会員番号"), "  M-100  ");
     await user.type(screen.getByPlaceholderText("年齢"), "20");
 

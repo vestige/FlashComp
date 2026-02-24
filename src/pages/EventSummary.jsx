@@ -3,6 +3,12 @@ import { Link, useParams, useSearchParams } from "react-router-dom";
 import { db } from "../firebase";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { usePageTitle } from "../hooks/usePageTitle";
+import {
+  buildAssignedTasks,
+  buildTaskByScoreKey,
+  fetchCategoryAssignments,
+  fetchSeasonTasks,
+} from "../lib/taskAssignments";
 
 const getTimestampMs = (value) => {
   if (!value) return 0;
@@ -155,21 +161,16 @@ const EventSummary = () => {
         const categoryMap = buildInitialCategoryMap(categories, participants);
         const participantById = new Map(participants.map((p) => [p.id, p]));
 
+        const seasonTasksBySeasonId = new Map(
+          await Promise.all(
+            targetSeasonIds.map(async (seasonId) => [seasonId, await fetchSeasonTasks(eventId, seasonId)])
+          )
+        );
+
         const fetchTasks = targetSeasonIds.flatMap((seasonId) =>
           categories.map(async (category) => {
-            const [routeSnap, scoreSnap] = await Promise.all([
-              getDocs(
-                collection(
-                  db,
-                  "events",
-                  eventId,
-                  "seasons",
-                  seasonId,
-                  "categories",
-                  category.id,
-                  "routes"
-                )
-              ),
+            const [assignments, scoreSnap] = await Promise.all([
+              fetchCategoryAssignments(eventId, seasonId, category.id),
               getDocs(
                 collection(
                   db,
@@ -184,19 +185,21 @@ const EventSummary = () => {
               ),
             ]);
 
-            return { categoryId: category.id, routeSnap, scoreSnap };
+            return {
+              categoryId: category.id,
+              assignedTasks: buildAssignedTasks(
+                seasonTasksBySeasonId.get(seasonId) || [],
+                assignments
+              ),
+              scoreSnap,
+            };
           })
         );
 
         const results = await Promise.all(fetchTasks);
 
-        for (const { categoryId, routeSnap, scoreSnap } of results) {
-          const routePointMap = {};
-          for (const routeDoc of routeSnap.docs) {
-            const route = routeDoc.data();
-            routePointMap[route.name] = Number(route.points) || 1;
-          }
-
+        for (const { categoryId, assignedTasks, scoreSnap } of results) {
+          const taskByScoreKey = buildTaskByScoreKey(assignedTasks);
           for (const scoreDoc of scoreSnap.docs) {
             const data = scoreDoc.data();
             const scoreMap = data.scores || {};
@@ -215,10 +218,17 @@ const EventSummary = () => {
             }
 
             const row = categoryMap[categoryId].get(participantId);
+            const countedTaskIds = new Set();
 
-            for (const [routeName, isCleared] of Object.entries(scoreMap)) {
+            for (const [scoreKey, isCleared] of Object.entries(scoreMap)) {
               if (!isCleared) continue;
-              row.totalPoints += routePointMap[routeName] ?? 1;
+
+              const task = taskByScoreKey.get(scoreKey);
+              const canonicalTaskId = task?.id || scoreKey;
+              if (countedTaskIds.has(canonicalTaskId)) continue;
+              countedTaskIds.add(canonicalTaskId);
+
+              row.totalPoints += Number(task?.points) || 1;
               row.clearCount += 1;
             }
 
@@ -440,7 +450,7 @@ const EventSummary = () => {
             </select>
           </label>
           <label>
-            参加者:
+            クライマー:
             <select
               value={selectedParticipantId}
               onChange={(e) => setSelectedParticipantId(e.target.value)}
@@ -505,7 +515,7 @@ const EventSummary = () => {
       {visibleCategories.length === 0 ? (
         <p>カテゴリが登録されていません。</p>
       ) : showOnlySelected && !selectedParticipantId ? (
-        <p>参加者を選択すると、自分の順位とスコアを表示します。</p>
+        <p>クライマーを選択すると、自分の順位とスコアを表示します。</p>
       ) : (
         visibleCategories.map((category) => {
           const allRows = rankings[category.id] || [];
@@ -527,7 +537,7 @@ const EventSummary = () => {
             <section key={category.id} style={{ marginBottom: "2em" }}>
               <h3>カテゴリ: {category.name}</h3>
               {rows.length === 0 ? (
-                <p>{hasSearch ? "検索条件に一致する参加者がいません。" : "参加者データがありません。"}</p>
+                <p>{hasSearch ? "検索条件に一致するクライマーがいません。" : "クライマーデータがありません。"}</p>
               ) : (
                 <div style={{ overflowX: "auto" }}>
                   <table style={{ borderCollapse: "collapse", width: "100%", minWidth: "650px" }}>

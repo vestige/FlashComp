@@ -38,7 +38,7 @@ const ParticipantManager = ({ eventId, categories }) => {
       const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       setParticipants(data);
     } catch (err) {
-      console.error("参加者の取得に失敗:", err);
+      console.error("クライマーの取得に失敗:", err);
     }
   }, [eventId]);
 
@@ -60,7 +60,7 @@ const ParticipantManager = ({ eventId, categories }) => {
       setForm(EMPTY_FORM);
       fetchParticipants();
     } catch (err) {
-      console.error("参加者の登録に失敗:", err);
+      console.error("クライマーの登録に失敗:", err);
     }
   };
 
@@ -113,29 +113,29 @@ const ParticipantManager = ({ eventId, categories }) => {
       );
       cancelEditParticipant();
     } catch (err) {
-      console.error("参加者の更新に失敗:", err);
-      alert("参加者の更新に失敗しました。");
+      console.error("クライマーの更新に失敗:", err);
+      alert("クライマーの更新に失敗しました。");
     }
   };
 
   const handleDeleteParticipant = async (participantId) => {
-    const confirmDelete = window.confirm("この参加者を削除してもよいですか？");
+    const confirmDelete = window.confirm("このクライマーを削除してもよいですか？");
     if (!confirmDelete) return;
     try {
       await deleteDoc(doc(db, "events", eventId, "participants", participantId));
       setParticipants((prev) => prev.filter((p) => p.id !== participantId));
     } catch (err) {
-      console.error("参加者の削除に失敗:", err);
+      console.error("クライマーの削除に失敗:", err);
     }
   };
 
   return (
     <div>
-      <h3>👤 参加者登録</h3>
+      <h3>👤 クライマー登録</h3>
       <form onSubmit={handleAddParticipant}>
         <input
           type="text"
-          placeholder="参加者名"
+          placeholder="クライマー名"
           value={form.name}
           onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
           required

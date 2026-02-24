@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { collection, deleteDoc, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
+import { collection, deleteDoc, doc, getDocs, setDoc } from "firebase/firestore";
 import { useParams } from "react-router-dom";
 import { db } from "../firebase";
 
@@ -129,19 +129,6 @@ const RouteSelector = ({ eventId: eventIdProp, categories: categoriesProp = [] }
       taskId
     );
 
-  const legacyRouteDocRef = (categoryId, taskId) =>
-    doc(
-      db,
-      "events",
-      eventId,
-      "seasons",
-      selectedSeason,
-      "categories",
-      categoryId,
-      "routes",
-      taskId
-    );
-
   const nextTaskNo = () => {
     const used = new Set(tasks.map((task) => toTaskNo(task)).filter((value) => Number.isFinite(value)));
     let candidate = 1;
@@ -191,28 +178,6 @@ const RouteSelector = ({ eventId: eventIdProp, categories: categoriesProp = [] }
     setTasks((prev) => prev.map((task, i) => ({ ...task, isEditing: i === index ? !task.isEditing : false })));
   };
 
-  const syncLegacyRouteForCategory = async (categoryId, task) => {
-    await setDoc(legacyRouteDocRef(categoryId, task.id), {
-      name: task.name,
-      taskNo: toTaskNo(task),
-      grade: task.grade,
-      points: Number(task.points) || 1,
-      isBonus: Boolean(task.isBonus),
-    });
-  };
-
-  const syncLegacyRouteForAssignedCategories = async (task) => {
-    const checks = await Promise.all(
-      categories.map(async (category) => {
-        const assignSnap = await getDoc(assignmentDocRef(category.id, task.id));
-        return { categoryId: category.id, assigned: assignSnap.exists() };
-      })
-    );
-
-    const targets = checks.filter((row) => row.assigned).map((row) => row.categoryId);
-    await Promise.all(targets.map((categoryId) => syncLegacyRouteForCategory(categoryId, task)));
-  };
-
   const handleSaveTask = async (index) => {
     const task = tasks[index];
     if (!task.name?.trim()) {
@@ -239,12 +204,6 @@ const RouteSelector = ({ eventId: eventIdProp, categories: categoriesProp = [] }
 
     const mergedTask = { ...task, ...payload, isEditing: false, isNew: false };
 
-    if (selectedCategory && assignedSet.has(task.id)) {
-      await syncLegacyRouteForCategory(selectedCategory, mergedTask);
-    }
-
-    await syncLegacyRouteForAssignedCategories(mergedTask);
-
     setTasks((prev) => {
       const next = [...prev];
       next[index] = mergedTask;
@@ -261,10 +220,7 @@ const RouteSelector = ({ eventId: eventIdProp, categories: categoriesProp = [] }
 
     await Promise.all(
       categories.map(async (category) => {
-        await Promise.all([
-          deleteDoc(assignmentDocRef(category.id, task.id)),
-          deleteDoc(legacyRouteDocRef(category.id, task.id)),
-        ]);
+        await deleteDoc(assignmentDocRef(category.id, task.id));
       })
     );
 
@@ -287,14 +243,10 @@ const RouteSelector = ({ eventId: eventIdProp, categories: categoriesProp = [] }
         enabled: true,
         taskNo: toTaskNo(task),
       });
-      await syncLegacyRouteForCategory(selectedCategory, task);
       setAssignedTaskIds((prev) => Array.from(new Set([...prev, task.id])));
       setStatus(`✅ ${task.name} をカテゴリに追加しました`);
     } else {
-      await Promise.all([
-        deleteDoc(assignmentDocRef(selectedCategory, task.id)),
-        deleteDoc(legacyRouteDocRef(selectedCategory, task.id)),
-      ]);
+      await deleteDoc(assignmentDocRef(selectedCategory, task.id));
       setAssignedTaskIds((prev) => prev.filter((id) => id !== task.id));
       setStatus(`🗑️ ${task.name} をカテゴリから外しました`);
     }

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import {
   collection,
   doc,
@@ -11,6 +11,12 @@ import {
 import { db } from "../firebase";
 import { useOwnerProfile } from "../hooks/useOwnerProfile";
 import { usePageTitle } from "../hooks/usePageTitle";
+import {
+  buildAssignedTasks,
+  buildTaskByScoreKey,
+  fetchCategoryAssignments,
+  fetchSeasonTasks,
+} from "../lib/taskAssignments";
 
 const REQUIRED_IMPORT_COLUMNS = ["name", "memberNo", "age", "gender"];
 
@@ -289,7 +295,7 @@ const EventDataIO = () => {
     }));
 
     downloadCsv(`${event.id}-participants.csv`, headers, rows);
-    setStatus(`✅ 参加者CSVを出力しました（${rows.length}件）。`);
+    setStatus(`✅ クライマーCSVを出力しました（${rows.length}件）。`);
   };
 
   const exportGenderRatioCsv = () => {
@@ -357,30 +363,33 @@ const EventDataIO = () => {
     const categoryMap = buildInitialCategoryMap(categories, participants);
     const participantById = new Map(participants.map((participant) => [participant.id, participant]));
 
+    const seasonTasksBySeasonId = new Map(
+      await Promise.all(
+        targetSeasonIds.map(async (seasonId) => [seasonId, await fetchSeasonTasks(eventId, seasonId)])
+      )
+    );
+
     const fetchTasks = targetSeasonIds.flatMap((seasonId) =>
       categories.map(async (category) => {
-        const [routeSnap, scoreSnap] = await Promise.all([
-          getDocs(
-            collection(db, "events", eventId, "seasons", seasonId, "categories", category.id, "routes")
-          ),
+        const [assignments, scoreSnap] = await Promise.all([
+          fetchCategoryAssignments(eventId, seasonId, category.id),
           getDocs(
             collection(db, "events", eventId, "seasons", seasonId, "categories", category.id, "participants")
           ),
         ]);
 
-        return { categoryId: category.id, routeSnap, scoreSnap };
+        return {
+          categoryId: category.id,
+          assignedTasks: buildAssignedTasks(seasonTasksBySeasonId.get(seasonId) || [], assignments),
+          scoreSnap,
+        };
       })
     );
 
     const results = await Promise.all(fetchTasks);
 
-    for (const { categoryId, routeSnap, scoreSnap } of results) {
-      const routePointMap = {};
-      for (const routeDoc of routeSnap.docs) {
-        const route = routeDoc.data();
-        routePointMap[route.name] = Number(route.points) || 1;
-      }
-
+    for (const { categoryId, assignedTasks, scoreSnap } of results) {
+      const taskByScoreKey = buildTaskByScoreKey(assignedTasks);
       for (const scoreDoc of scoreSnap.docs) {
         const data = scoreDoc.data();
         const scoreMap = data.scores || {};
@@ -399,9 +408,16 @@ const EventDataIO = () => {
         }
 
         const row = categoryMap[categoryId].get(participantId);
-        for (const [routeName, isCleared] of Object.entries(scoreMap)) {
+        const countedTaskIds = new Set();
+        for (const [scoreKey, isCleared] of Object.entries(scoreMap)) {
           if (!isCleared) continue;
-          row.totalPoints += routePointMap[routeName] ?? 1;
+
+          const task = taskByScoreKey.get(scoreKey);
+          const canonicalTaskId = task?.id || scoreKey;
+          if (countedTaskIds.has(canonicalTaskId)) continue;
+          countedTaskIds.add(canonicalTaskId);
+
+          row.totalPoints += Number(task?.points) || 1;
           row.clearCount += 1;
         }
         row.latestUpdatedAt = Math.max(row.latestUpdatedAt, toTimestampMs(data.updatedAt));
@@ -583,10 +599,10 @@ const EventDataIO = () => {
 
       await commitBatchIfNeeded(true);
       await loadBaseData();
-      setStatus(`✅ 参加者CSVを取り込みました（${importRows.length}件）。`);
+      setStatus(`✅ クライマーCSVを取り込みました（${importRows.length}件）。`);
     } catch (err) {
-      console.error("参加者CSV取り込みに失敗:", err);
-      setStatus("❌ 参加者CSV取り込みに失敗しました。");
+      console.error("クライマーCSV取り込みに失敗:", err);
+      setStatus("❌ クライマーCSV取り込みに失敗しました。");
     } finally {
       setImporting(false);
     }
@@ -600,7 +616,6 @@ const EventDataIO = () => {
     return (
       <div style={{ padding: "2em" }}>
         <p>{error || profileError}</p>
-        <Link to="/dashboard">← ダッシュボードに戻る</Link>
       </div>
     );
   }
@@ -609,7 +624,6 @@ const EventDataIO = () => {
     return (
       <div style={{ padding: "2em" }}>
         <p>このイベントのCSV入出力を行う権限がありません。</p>
-        <Link to="/dashboard">← ダッシュボードに戻る</Link>
       </div>
     );
   }
@@ -617,19 +631,14 @@ const EventDataIO = () => {
   return (
     <div style={{ padding: "1.4em", maxWidth: "980px", margin: "0 auto" }}>
       <h2>CSV入出力: {event?.name || eventId}</h2>
-      <p style={{ marginTop: 0 }}>
-        <Link to={`/events/${eventId}/edit`} state={{ tab: "participants" }}>
-          ← イベント編集に戻る
-        </Link>
-      </p>
 
       <section style={{ border: "1px solid #ddd", borderRadius: "10px", padding: "1em" }}>
-        <h3 style={{ marginTop: 0 }}>参加者CSV</h3>
+        <h3 style={{ marginTop: 0 }}>クライマーCSV</h3>
         <p style={{ marginTop: 0 }}>
-          参加者一覧をCSVで出力・更新できます。必須列: `name,memberNo,age,gender,categoryId`
+          クライマー一覧をCSVで出力・更新できます。必須列: `name,memberNo,age,gender,categoryId`
         </p>
         <div style={{ display: "flex", gap: "0.8em", flexWrap: "wrap", alignItems: "center" }}>
-          <button type="button" onClick={exportParticipantsCsv}>参加者CSVを出力</button>
+          <button type="button" onClick={exportParticipantsCsv}>クライマーCSVを出力</button>
           <label>
             <input
               type="file"
@@ -638,7 +647,7 @@ const EventDataIO = () => {
               disabled={importing}
             />
           </label>
-          <span>{importing ? "取り込み中..." : `現在の参加者: ${participants.length}件`}</span>
+          <span>{importing ? "取り込み中..." : `現在のクライマー: ${participants.length}件`}</span>
         </div>
       </section>
 

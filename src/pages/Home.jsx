@@ -19,12 +19,12 @@ const Home = () => {
       >
         <section style={{ border: "1px solid #ddd", borderRadius: "10px", padding: "1em" }}>
           <h2 style={{ marginTop: 0 }}>ジムオーナー向け</h2>
-          <p style={{ marginTop: 0 }}>イベント運営の設定・参加者登録・採点入力を行います。</p>
+          <p style={{ marginTop: 0 }}>イベント運営の設定・クライマー登録・採点入力を行います。</p>
           <ol style={{ paddingLeft: "1.2em" }}>
             <li>ログイン</li>
             <li>イベント作成</li>
             <li>シーズン / カテゴリ / 課題の設定</li>
-            <li>参加者登録・採点入力</li>
+            <li>クライマー登録・採点入力</li>
           </ol>
           <p style={{ marginBottom: 0 }}>
             <Link to="/login">ジムオーナーログインへ</Link>
@@ -40,7 +40,7 @@ const Home = () => {
           <ol style={{ paddingLeft: "1.2em" }}>
             <li>イベントを選ぶ</li>
             <li>自分のスコアを確認する</li>
-            <li>カテゴリ順位や他参加者の結果を確認する</li>
+            <li>カテゴリ順位や他クライマーの結果を確認する</li>
           </ol>
           <p style={{ marginBottom: 0 }}>
             <Link to="/score-summary">イベント結果を見る</Link>

@@ -50,8 +50,11 @@ const setupFirestore = () => {
         { id: "p1", name: "Aoi", memberNo: "M-1001", categoryId: "cat-1" },
         { id: "p2", name: "Riku", memberNo: "M-1002", categoryId: "cat-1" },
       ]),
-      "events/event-1/seasons/season-1/categories/cat-1/routes": makeSnapshot([
-        { id: "No.01", name: "No.01", points: 100, grade: "6Q" },
+      "events/event-1/seasons/season-1/tasks": makeSnapshot([
+        { id: "task-01", name: "No.01", points: 100, grade: "6Q", taskNo: 1 },
+      ]),
+      "events/event-1/seasons/season-1/categoryTaskMap/cat-1/assignments": makeSnapshot([
+        { id: "task-01", enabled: true, taskNo: 1 },
       ]),
       "events/event-1/seasons/season-1/categories/cat-1/participants": makeSnapshot([
         {
@@ -107,7 +110,7 @@ describe("EventSummary", () => {
     await user.click(screen.getByRole("button", { name: "フィルターをリセット" }));
     await waitFor(() => {
       expect(screen.getByLabelText(/カテゴリ:/)).toHaveValue("all");
-      expect(screen.getByLabelText(/参加者:/)).toHaveValue("");
+      expect(screen.getByLabelText(/クライマー:/)).toHaveValue("");
       expect(screen.getByPlaceholderText("例: 山田 / M-1001")).toHaveValue("");
     });
     expect(screen.queryByRole("link", { name: "詳細へ移動" })).not.toBeInTheDocument();
