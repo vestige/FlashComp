@@ -256,16 +256,20 @@ const RouteSelector = ({ eventId: eventIdProp, categories: categoriesProp = [] }
 
   return (
     <div>
-      <h3>🧩 課題設定</h3>
-      <p style={{ marginTop: "0.2em", color: "#444" }}>
+      <h3 className="text-xl font-bold text-slate-900">🧩 課題設定</h3>
+      <p className="mt-1 text-sm text-slate-600">
         先にシーズン共通の課題を作成し、カテゴリごとに採用する課題を選択します。
       </p>
-      {status && <p>{status}</p>}
+      {status && <p className="mt-2 text-sm text-slate-700">{status}</p>}
 
-      <div style={{ display: "flex", gap: "0.8em", flexWrap: "wrap" }}>
-        <label>
+      <div className="mt-3 flex flex-wrap gap-3">
+        <label className="text-sm text-slate-700">
           シーズン選択：
-          <select value={selectedSeason} onChange={(e) => setSelectedSeason(e.target.value)}>
+          <select
+            value={selectedSeason}
+            onChange={(e) => setSelectedSeason(e.target.value)}
+            className="ml-2 rounded-lg border border-slate-300 px-2 py-1 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+          >
             <option value="">-- 選択 --</option>
             {seasons.map((season) => (
               <option key={season.id} value={season.id}>
@@ -275,9 +279,13 @@ const RouteSelector = ({ eventId: eventIdProp, categories: categoriesProp = [] }
           </select>
         </label>
 
-        <label>
+        <label className="text-sm text-slate-700">
           カテゴリ選択：
-          <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)}>
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="ml-2 rounded-lg border border-slate-300 px-2 py-1 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+          >
             <option value="">-- 選択 --</option>
             {categories.map((category) => (
               <option key={category.id} value={category.id}>
@@ -290,44 +298,55 @@ const RouteSelector = ({ eventId: eventIdProp, categories: categoriesProp = [] }
 
       {selectedSeason && (
         <>
-          <div style={{ marginTop: "1em", display: "flex", gap: "0.7em", alignItems: "center" }}>
-            <button type="button" onClick={handleAddTask}>＋ シーズン課題を追加</button>
-            <span style={{ color: "#444" }}>課題数: {tasks.length}</span>
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={handleAddTask}
+              className="rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-sm font-semibold text-sky-800 transition hover:bg-sky-100"
+            >
+              ＋ シーズン課題を追加
+            </button>
+            <span className="text-sm text-slate-600">課題数: {tasks.length}</span>
             {selectedCategory && (
-              <span style={{ color: "#444" }}>
+              <span className="text-sm text-slate-600">
                 カテゴリ採用数: {assignedTaskIds.length}
               </span>
             )}
           </div>
 
-          <table style={{ marginTop: "1em", borderCollapse: "collapse", width: "100%" }}>
+          <table className="mt-4 w-full border-collapse text-sm">
             <thead>
               <tr>
-                <th>課題名</th>
-                <th>グレード</th>
-                <th>ポイント</th>
-                <th>ボーナス</th>
-                <th>カテゴリ採用</th>
-                <th>操作</th>
+                <th className="border-b border-slate-200 py-2 text-left">課題名</th>
+                <th className="border-b border-slate-200 py-2 text-left">グレード</th>
+                <th className="border-b border-slate-200 py-2 text-left">ポイント</th>
+                <th className="border-b border-slate-200 py-2 text-left">ボーナス</th>
+                <th className="border-b border-slate-200 py-2 text-left">カテゴリ採用</th>
+                <th className="border-b border-slate-200 py-2 text-left">操作</th>
               </tr>
             </thead>
             <tbody>
               {tasks.map((task, index) => (
                 <tr key={task.id}>
-                  <td>
+                  <td className="py-2">
                     {task.isEditing ? (
                       <input
                         value={task.name || ""}
                         onChange={(e) => handleTaskChange(index, "name", e.target.value)}
                         placeholder="課題名"
+                        className="w-full rounded-lg border border-slate-300 px-2 py-1 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
                       />
                     ) : (
                       task.name
                     )}
                   </td>
-                  <td>
+                  <td className="py-2">
                     {task.isEditing ? (
-                      <select value={task.grade || ""} onChange={(e) => handleTaskChange(index, "grade", e.target.value)}>
+                      <select
+                        value={task.grade || ""}
+                        onChange={(e) => handleTaskChange(index, "grade", e.target.value)}
+                        className="rounded-lg border border-slate-300 px-2 py-1 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                      >
                         <option value="">-- 選択 --</option>
                         {GRADE_OPTIONS.map((grade) => (
                           <option key={grade} value={grade}>
@@ -339,7 +358,7 @@ const RouteSelector = ({ eventId: eventIdProp, categories: categoriesProp = [] }
                       task.grade || "-"
                     )}
                   </td>
-                  <td>
+                  <td className="py-2">
                     {task.isEditing ? (
                       <input
                         type="number"
@@ -347,13 +366,13 @@ const RouteSelector = ({ eventId: eventIdProp, categories: categoriesProp = [] }
                         step="1"
                         value={Number(task.points) || 1}
                         onChange={(e) => handleTaskChange(index, "points", e.target.value)}
-                        style={{ width: "5.5em" }}
+                        className="w-24 rounded-lg border border-slate-300 px-2 py-1 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
                       />
                     ) : (
                       Number(task.points) || 1
                     )}
                   </td>
-                  <td>
+                  <td className="py-2">
                     {task.isEditing ? (
                       <input
                         type="checkbox"
@@ -366,7 +385,7 @@ const RouteSelector = ({ eventId: eventIdProp, categories: categoriesProp = [] }
                       "-"
                     )}
                   </td>
-                  <td>
+                  <td className="py-2">
                     <input
                       type="checkbox"
                       disabled={!selectedCategory || !task.grade}
@@ -374,24 +393,48 @@ const RouteSelector = ({ eventId: eventIdProp, categories: categoriesProp = [] }
                       onChange={(e) => handleToggleAssignment(task, e.target.checked)}
                     />
                   </td>
-                  <td>
+                  <td className="py-2">
                     {task.isEditing ? (
-                      <>
-                        <button type="button" onClick={() => handleSaveTask(index)}>保存</button>
-                        <button type="button" onClick={() => toggleEdit(index)}>キャンセル</button>
-                      </>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleSaveTask(index)}
+                          className="rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100"
+                        >
+                          保存
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => toggleEdit(index)}
+                          className="rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50"
+                        >
+                          キャンセル
+                        </button>
+                      </div>
                     ) : (
-                      <>
-                        <button type="button" onClick={() => toggleEdit(index)}>編集</button>
-                        <button type="button" onClick={() => handleDeleteTask(index)}>削除</button>
-                      </>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => toggleEdit(index)}
+                          className="rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50"
+                        >
+                          編集
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteTask(index)}
+                          className="rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-medium text-rose-700 transition hover:bg-rose-100"
+                        >
+                          削除
+                        </button>
+                      </div>
                     )}
                   </td>
                 </tr>
               ))}
               {tasks.length === 0 && (
                 <tr>
-                  <td colSpan={6} style={{ padding: "0.8em", color: "#666" }}>
+                  <td colSpan={6} className="py-4 text-sm text-slate-500">
                     課題がありません。まずは「＋ シーズン課題を追加」で登録してください。
                   </td>
                 </tr>

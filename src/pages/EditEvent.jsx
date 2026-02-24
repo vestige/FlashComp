@@ -117,21 +117,29 @@ const EditEvent = () => {
   }, [activeTab, searchParams, setSearchParams]);
 
   if (loading || profileLoading) {
-    return <p style={{ padding: "2em" }}>イベント編集データを読み込んでいます...</p>;
+    return (
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+        <p className="text-sm text-slate-600">イベント編集データを読み込んでいます...</p>
+      </div>
+    );
   }
 
   if (error || profileError) {
     return (
-      <div style={{ padding: "2em" }}>
-        <p>{error || profileError}</p>
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+        <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          {error || profileError}
+        </p>
       </div>
     );
   }
 
   if (accessDenied) {
     return (
-      <div style={{ padding: "2em" }}>
-        <p>このイベントを編集する権限がありません。</p>
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+        <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+          このイベントを編集する権限がありません。
+        </p>
       </div>
     );
   }
@@ -142,90 +150,73 @@ const EditEvent = () => {
     { label: "カテゴリ", value: categories.length },
     { label: "クライマー", value: participantCount },
   ];
+  const tabClass = (isActive) =>
+    `rounded-lg border px-3 py-2 text-sm font-medium transition ${
+      isActive
+        ? "border-sky-300 bg-sky-50 text-sky-800"
+        : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+    }`;
 
   return (
-    <div style={{ padding: "1.2em", maxWidth: "980px", margin: "0 auto" }}>
-      <h2>🛠 イベント設定：{eventName}</h2>
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#dbeafe_0%,_#f8fafc_45%,_#ecfeff_100%)]">
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+        <h2 className="text-2xl font-bold text-slate-900">🛠 イベント設定：{eventName}</h2>
 
-      <section
-        style={{
-          marginTop: "1em",
-          border: "1px solid #ddd",
-          borderRadius: "10px",
-          padding: "0.8em",
-        }}
-      >
-        <p style={{ marginTop: 0, marginBottom: "0.6em" }}>
-          現在の登録状況を見ながら、上から順に設定するとスムーズです。
-        </p>
-        <div style={{ display: "flex", gap: "0.6em", flexWrap: "wrap" }}>
-          {summaryItems.map((item) => (
-            <span
-              key={item.label}
-              style={{
-                border: "1px solid #ccc",
-                borderRadius: "999px",
-                padding: "0.2em 0.7em",
-              }}
+        <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p className="text-sm text-slate-600">
+            現在の登録状況を見ながら、上から順に設定するとスムーズです。
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {summaryItems.map((item) => (
+              <span
+                key={item.label}
+                className="rounded-full border border-slate-300 bg-slate-50 px-3 py-1 text-sm text-slate-700"
+              >
+                {item.label}: {item.value}
+              </span>
+            ))}
+          </div>
+        </section>
+
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          {TAB_CONFIG.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className={tabClass(activeTab === tab.id)}
             >
-              {item.label}: {item.value}
-            </span>
+              {tab.label}
+            </button>
           ))}
-        </div>
-      </section>
-
-      <div style={{ marginTop: "1em", display: "flex", gap: "0.5em", flexWrap: "wrap", alignItems: "center" }}>
-        {TAB_CONFIG.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => setActiveTab(tab.id)}
-            style={{
-              border: "1px solid #bbb",
-              borderRadius: "8px",
-              padding: "0.45em 0.7em",
-              background: activeTab === tab.id ? "#f0f0f0" : "#fff",
-              fontWeight: activeTab === tab.id ? "bold" : "normal",
-            }}
+          <Link
+            to="/dashboard"
+            className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
           >
-            {tab.label}
-          </button>
-        ))}
-        <Link
-          to="/dashboard"
-          style={{
-            border: "1px solid #bbb",
-            borderRadius: "8px",
-            padding: "0.45em 0.7em",
-            textDecoration: "none",
-            color: "inherit",
-          }}
-        >
-          ↩ 戻る
-        </Link>
-      </div>
-      <p style={{ marginTop: "0.7em", marginBottom: "0.4em", color: "#444" }}>
-        {activeTabConfig?.hint}
-      </p>
+            ↩ 戻る
+          </Link>
+        </div>
+        <p className="mt-3 text-sm text-slate-600">{activeTabConfig?.hint}</p>
 
-      {activeTab === "seasons" && <SeasonManager eventId={eventId} />}
-      {activeTab === "categories" && (
-        <CategoryManager
-          eventId={eventId}
-          categories={categories}
-          setCategories={setCategories}
-        />
-      )}
-      {activeTab === "tasks" && (
-        categories.length === 0 ? (
-          <p>先にカテゴリを登録してください。</p>
-        ) : (
-          <RouteSelector
+        {activeTab === "seasons" && <SeasonManager eventId={eventId} />}
+        {activeTab === "categories" && (
+          <CategoryManager
             eventId={eventId}
             categories={categories}
+            setCategories={setCategories}
           />
-        )
-      )}
+        )}
+        {activeTab === "tasks" && (
+          categories.length === 0 ? (
+            <p className="mt-4 text-sm text-slate-600">先にカテゴリを登録してください。</p>
+          ) : (
+            <RouteSelector
+              eventId={eventId}
+              categories={categories}
+            />
+          )
+        )}
+      </div>
     </div>
   );
 };

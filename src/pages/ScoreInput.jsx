@@ -1,6 +1,6 @@
 // src/pages/ScoreInput.jsx
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import {
   doc,
   getDoc,
@@ -182,164 +182,178 @@ const ScoreInput = () => {
     }
   };
 
+  const statusClass = status.startsWith("✅")
+    ? "rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700"
+    : "rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700";
+
   if (loading || profileLoading) {
-    return <p style={{ padding: "2em" }}>採点画面を読み込んでいます...</p>;
+    return (
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+        <p className="text-sm text-slate-600">採点画面を読み込んでいます...</p>
+      </div>
+    );
   }
 
   if (error || profileError) {
     return (
-      <div style={{ padding: "2em" }}>
-        <p>{error || profileError}</p>
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+        <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          {error || profileError}
+        </p>
       </div>
     );
   }
 
   if (accessDenied) {
     return (
-      <div style={{ padding: "2em" }}>
-        <p>このイベントの採点を行う権限がありません。</p>
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+        <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+          このイベントの採点を行う権限がありません。
+        </p>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: "1.2em", maxWidth: "920px", margin: "0 auto" }}>
-      <h2>📝 スコア入力</h2>
-      <p style={{ marginBottom: "0.3em" }}>クライマー: {participantName}</p>
-      <p style={{ marginTop: 0, marginBottom: "0.6em" }}>
-        完登 {clearCount} / 全{tasks.length}（未完登 {remainingCount}）
-      </p>
-      {updatedAt && (
-        <p style={{ fontStyle: "italic", fontSize: "0.9em", marginTop: 0 }}>
-          最終更新: {updatedAt.toLocaleString()}
-        </p>
-      )}
-
-      <section
-        style={{
-          marginTop: "0.8em",
-          border: "1px solid #ddd",
-          borderRadius: "8px",
-          padding: "0.8em",
-        }}
-      >
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.6em", alignItems: "center" }}>
-          <button
-            type="button"
-            onClick={() => setViewMode("simple")}
-            style={{
-              border: "1px solid #bbb",
-              background: viewMode === "simple" ? "#f0f0f0" : "#fff",
-              borderRadius: "999px",
-              padding: "0.35em 0.8em",
-              fontWeight: viewMode === "simple" ? "bold" : "normal",
-            }}
-          >
-            簡易表示
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode("detail")}
-            style={{
-              border: "1px solid #bbb",
-              background: viewMode === "detail" ? "#f0f0f0" : "#fff",
-              borderRadius: "999px",
-              padding: "0.35em 0.8em",
-              fontWeight: viewMode === "detail" ? "bold" : "normal",
-            }}
-          >
-            詳細表示
-          </button>
-          <label>
-            <input
-              type="checkbox"
-              checked={showOnlyUncleared}
-              onChange={(e) => setShowOnlyUncleared(e.target.checked)}
-              style={{ marginRight: "0.3em" }}
-            />
-            未完登のみ
-          </label>
-          <label>
-            課題検索:
-            <input
-              type="text"
-              value={taskKeyword}
-              onChange={(e) => setTaskKeyword(e.target.value)}
-              placeholder="No.01"
-              style={{ marginLeft: "0.4em" }}
-            />
-          </label>
-        </div>
-        <div style={{ marginTop: "0.7em", display: "flex", gap: "0.6em", flexWrap: "wrap" }}>
-          <button type="button" onClick={() => applyBulkToVisible(true)}>
-            表示中をすべて完登
-          </button>
-          <button type="button" onClick={() => applyBulkToVisible(false)}>
-            表示中をすべて未完登
-          </button>
-        </div>
-      </section>
-
-      <div style={{ marginTop: "0.9em" }}>
-        {visibleTasks.length === 0 ? (
-          <p>表示条件に一致する課題がありません。</p>
-        ) : viewMode === "simple" ? (
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
-              gap: "0.6em",
-            }}
-          >
-            {visibleTasks.map((task) => {
-              const isCleared = getScoreValueByTask(scores, task);
-              return (
-                <button
-                  key={task.id || task.name}
-                  type="button"
-                  onClick={() => handleToggleScore(task)}
-                  style={{
-                    textAlign: "left",
-                    border: `1px solid ${isCleared ? "#7bbf8e" : "#ccc"}`,
-                    background: isCleared ? "#eaf8ee" : "#fff",
-                    borderRadius: "10px",
-                    padding: "0.7em",
-                    minHeight: "88px",
-                  }}
-                >
-                  <div style={{ fontWeight: "bold" }}>{task.name || task.id}</div>
-                  <div style={{ fontSize: "0.9em", marginTop: "0.25em" }}>
-                    級: {task.grade || "-"} / 点: {task.points ?? "-"}
-                  </div>
-                  <div style={{ marginTop: "0.35em", fontWeight: "bold" }}>
-                    {isCleared ? "完登" : "未完登"}
-                  </div>
-                </button>
-              );
-            })}
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#dbeafe_0%,_#f8fafc_45%,_#ecfeff_100%)]">
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+        <header className="rounded-3xl border border-slate-200 bg-white px-6 py-6 shadow-sm">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">Score Input</p>
+          <h2 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">📝 スコア入力</h2>
+          <div className="mt-4">
+            <Link
+              to={`/events/${eventId}/scores`}
+              state={{ seasonId, categoryId }}
+              className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+            >
+              ↩ スコア入口に戻る
+            </Link>
           </div>
-        ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ borderCollapse: "collapse", width: "100%", minWidth: "520px" }}>
+          <p className="mt-4 text-sm text-slate-700">クライマー: {participantName}</p>
+          <p className="mt-1 text-sm text-slate-600">
+            完登 {clearCount} / 全{tasks.length}（未完登 {remainingCount}）
+          </p>
+          {updatedAt && (
+            <p className="mt-1 text-xs italic text-slate-500">
+              最終更新: {updatedAt.toLocaleString()}
+            </p>
+          )}
+        </header>
+
+        <section className="mt-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setViewMode("simple")}
+              className={`rounded-full border px-3 py-1.5 text-sm font-medium transition ${
+                viewMode === "simple"
+                  ? "border-sky-300 bg-sky-50 text-sky-800"
+                  : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+              }`}
+            >
+              簡易表示
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("detail")}
+              className={`rounded-full border px-3 py-1.5 text-sm font-medium transition ${
+                viewMode === "detail"
+                  ? "border-sky-300 bg-sky-50 text-sky-800"
+                  : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+              }`}
+            >
+              詳細表示
+            </button>
+            <label className="ml-1 inline-flex items-center gap-2 text-sm text-slate-700">
+              <input
+                type="checkbox"
+                checked={showOnlyUncleared}
+                onChange={(e) => setShowOnlyUncleared(e.target.checked)}
+                className="size-4 rounded border-slate-300"
+              />
+              未完登のみ
+            </label>
+            <label className="ml-1 inline-flex items-center gap-2 text-sm text-slate-700">
+              課題検索:
+              <input
+                type="text"
+                value={taskKeyword}
+                onChange={(e) => setTaskKeyword(e.target.value)}
+                placeholder="No.01"
+                className="w-32 rounded-lg border border-slate-300 px-2 py-1 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+              />
+            </label>
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => applyBulkToVisible(true)}
+              className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700 transition hover:bg-emerald-100"
+            >
+              表示中をすべて完登
+            </button>
+            <button
+              type="button"
+              onClick={() => applyBulkToVisible(false)}
+              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+            >
+              表示中をすべて未完登
+            </button>
+          </div>
+        </section>
+
+        <section className="mt-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          {visibleTasks.length === 0 ? (
+            <p className="text-sm text-slate-600">表示条件に一致する課題がありません。</p>
+          ) : viewMode === "simple" ? (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {visibleTasks.map((task) => {
+                const isCleared = getScoreValueByTask(scores, task);
+                return (
+                  <button
+                    key={task.id || task.name}
+                    type="button"
+                    onClick={() => handleToggleScore(task)}
+                    className={`min-h-[96px] rounded-xl border p-3 text-left transition ${
+                      isCleared
+                        ? "border-emerald-300 bg-emerald-50"
+                        : "border-slate-300 bg-white hover:bg-slate-50"
+                    }`}
+                  >
+                    <div className="font-semibold text-slate-900">{task.name || task.id}</div>
+                    <div className="mt-1 text-sm text-slate-600">
+                      級: {task.grade || "-"} / 点: {task.points ?? "-"}
+                    </div>
+                    <div className={`mt-2 text-sm font-semibold ${isCleared ? "text-emerald-700" : "text-slate-700"}`}>
+                      {isCleared ? "完登" : "未完登"}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-[520px] w-full border-collapse">
               <thead>
                 <tr>
-                  <th style={{ textAlign: "left", borderBottom: "1px solid #ddd" }}>課題</th>
-                  <th style={{ textAlign: "left", borderBottom: "1px solid #ddd" }}>級</th>
-                  <th style={{ textAlign: "right", borderBottom: "1px solid #ddd" }}>点数</th>
-                  <th style={{ textAlign: "center", borderBottom: "1px solid #ddd" }}>完登</th>
+                    <th className="border-b border-slate-200 pb-2 text-left text-sm font-semibold text-slate-700">課題</th>
+                    <th className="border-b border-slate-200 pb-2 text-left text-sm font-semibold text-slate-700">級</th>
+                    <th className="border-b border-slate-200 pb-2 text-right text-sm font-semibold text-slate-700">点数</th>
+                    <th className="border-b border-slate-200 pb-2 text-center text-sm font-semibold text-slate-700">完登</th>
                 </tr>
               </thead>
               <tbody>
                 {visibleTasks.map((task) => (
                   <tr key={task.id || task.name}>
-                    <td style={{ padding: "0.4em 0" }}>{task.name || task.id}</td>
-                    <td>{task.grade || "-"}</td>
-                    <td style={{ textAlign: "right" }}>{task.points ?? "-"}</td>
-                    <td style={{ textAlign: "center" }}>
+                      <td className="py-2 text-sm text-slate-800">{task.name || task.id}</td>
+                      <td className="py-2 text-sm text-slate-700">{task.grade || "-"}</td>
+                      <td className="py-2 text-right text-sm text-slate-700">{task.points ?? "-"}</td>
+                      <td className="py-2 text-center">
                       <input
                         type="checkbox"
                         checked={getScoreValueByTask(scores, task)}
                         onChange={() => handleToggleScore(task)}
+                          className="size-4 rounded border-slate-300"
                       />
                     </td>
                   </tr>
@@ -348,11 +362,18 @@ const ScoreInput = () => {
             </table>
           </div>
         )}
-      </div>
+        </section>
 
-      <div style={{ marginTop: "1em" }}>
-        <button type="button" onClick={handleSave}>💾 保存</button>
-        <span style={{ marginLeft: "1em" }}>{status}</span>
+        <div className="mt-5 flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={handleSave}
+            className="inline-flex items-center rounded-lg border border-sky-200 bg-sky-50 px-4 py-2 text-sm font-semibold text-sky-800 transition hover:bg-sky-100"
+          >
+            💾 保存
+          </button>
+          {status && <span className={statusClass}>{status}</span>}
+        </div>
       </div>
     </div>
   );

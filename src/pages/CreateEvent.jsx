@@ -89,64 +89,92 @@ function CreateEvent() {
   };
 
   if (loading || profileLoading) {
-    return <p style={{ padding: "2em" }}>作成フォームを読み込んでいます...</p>;
+    return (
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+        <p className="text-sm text-slate-600">作成フォームを読み込んでいます...</p>
+      </div>
+    );
   }
 
   if (error || profileError) {
     return (
-      <div style={{ padding: "2em" }}>
-        <p>{error || profileError}</p>
-        <Link to="/dashboard">← ダッシュボードへ戻る</Link>
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+        <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          {error || profileError}
+        </p>
+        <Link
+          to="/dashboard"
+          className="mt-4 inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+        >
+          ← ダッシュボードへ戻る
+        </Link>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: "2em" }}>
-      <h2>🗓 イベント作成</h2>
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#dbeafe_0%,_#f8fafc_45%,_#ecfeff_100%)]">
+      <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
+        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="text-2xl font-bold text-slate-900">🗓 イベント作成</h2>
+          <Link
+            to="/dashboard"
+            className="mt-3 inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+          >
+            ← ダッシュボードへ戻る
+          </Link>
 
-      <Link to="/dashboard">← ダッシュボードへ戻る</Link>
-
-      {gyms.length === 0 ? (
-        <p style={{ marginTop: "1em" }}>
-          担当ジムが未設定のため、イベントを作成できません。システム管理者に設定を依頼してください。
-        </p>
-      ) : (
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          placeholder="イベント名"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-        />
-        <select
-          value={gymId}
-          onChange={(e) => setGymId(e.target.value)}
-          required
-        >
-          {gyms.map((gym) => (
-            <option key={gym.id} value={gym.id}>
-              {gym.name || gym.id}
-            </option>
-          ))}
-        </select>
-        <input
-          type="date"
-          value={startDate}
-          onChange={(e) => setStartDate(e.target.value)}
-          required
-        />
-        <input
-          type="date"
-          value={endDate}
-          onChange={(e) => setEndDate(e.target.value)}
-          required
-        />
-        <button type="submit">作成</button>
-      </form>
-      )}
-      <p>{status}</p>
+          {gyms.length === 0 ? (
+            <p className="mt-4 text-sm text-slate-600">
+              担当ジムが未設定のため、イベントを作成できません。システム管理者に設定を依頼してください。
+            </p>
+          ) : (
+            <form onSubmit={handleSubmit} className="mt-4 grid gap-3">
+              <input
+                type="text"
+                placeholder="イベント名"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+              />
+              <select
+                value={gymId}
+                onChange={(e) => setGymId(e.target.value)}
+                required
+                className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+              >
+                {gyms.map((gym) => (
+                  <option key={gym.id} value={gym.id}>
+                    {gym.name || gym.id}
+                  </option>
+                ))}
+              </select>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                required
+                className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+              />
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                required
+                className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+              />
+              <button
+                type="submit"
+                className="inline-flex items-center justify-center rounded-lg border border-sky-200 bg-sky-50 px-4 py-2 text-sm font-semibold text-sky-800 transition hover:bg-sky-100"
+              >
+                作成
+              </button>
+            </form>
+          )}
+          {status && <p className="mt-4 text-sm text-slate-600">{status}</p>}
+        </section>
+      </div>
     </div>
   );
 }

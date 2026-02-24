@@ -296,220 +296,266 @@ const SystemAdmin = () => {
   };
 
   if (profileLoading || loading) {
-    return <p style={{ padding: "2em" }}>システム管理データを読み込んでいます...</p>;
+    return (
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+        <p className="text-sm text-slate-600">システム管理データを読み込んでいます...</p>
+      </div>
+    );
   }
 
   if (error || profileError) {
     return (
-      <div style={{ padding: "2em" }}>
-        <p>{error || profileError}</p>
-        <Link to="/dashboard">← ダッシュボードに戻る</Link>
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+        <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          {error || profileError}
+        </p>
+        <Link
+          to="/dashboard"
+          className="mt-4 inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+        >
+          ← ダッシュボードに戻る
+        </Link>
       </div>
     );
   }
 
   if (role !== "admin") {
     return (
-      <div style={{ padding: "2em" }}>
-        <p>このページはシステム管理者専用です。</p>
-        <Link to="/dashboard">← ダッシュボードに戻る</Link>
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+        <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+          このページはシステム管理者専用です。
+        </p>
+        <Link
+          to="/dashboard"
+          className="mt-4 inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+        >
+          ← ダッシュボードに戻る
+        </Link>
       </div>
     );
   }
 
+  const sectionClass = "rounded-2xl border border-slate-200 bg-white p-5 shadow-sm";
+  const inputClass =
+    "w-full max-w-[560px] rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100";
+  const actionButtonClass =
+    "rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100";
+  const primaryButtonClass =
+    "rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-sm font-semibold text-sky-800 transition hover:bg-sky-100";
+  const dangerButtonClass =
+    "rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700 transition hover:bg-rose-100";
+
   return (
-    <div style={{ padding: "1.5em", maxWidth: "1100px", margin: "0 auto" }}>
-      <h2>システム管理者</h2>
-      <p>ジム管理とオーナープロファイル管理を行います。</p>
-      <p style={{ marginTop: 0 }}>
-        <Link to="/dashboard">← オーナーダッシュボードに戻る</Link>
-      </p>
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#dbeafe_0%,_#f8fafc_45%,_#ecfeff_100%)]">
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+        <h2 className="text-2xl font-bold text-slate-900">システム管理者</h2>
+        <p className="mt-2 text-sm text-slate-600">ジム管理とオーナープロファイル管理を行います。</p>
+        <p className="mt-2">
+          <Link
+            to="/dashboard"
+            className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+          >
+            ← オーナーダッシュボードに戻る
+          </Link>
+        </p>
 
-      <p style={{ marginTop: "1em" }}>{status}</p>
+        {status && <p className="mt-4 text-sm text-slate-700">{status}</p>}
 
-      <section style={{ border: "1px solid #ddd", borderRadius: "10px", padding: "1em" }}>
-        <h3 style={{ marginTop: 0 }}>ジム登録</h3>
-        <form onSubmit={handleCreateGym} style={{ display: "grid", gap: "0.6em", maxWidth: "560px" }}>
-          <input
-            type="text"
-            placeholder="ジムID (例: gym-shibuya)"
-            value={gymForm.id}
-            onChange={(e) => setGymForm((prev) => ({ ...prev, id: e.target.value }))}
-            required
-          />
-          <input
-            type="text"
-            placeholder="ジム名"
-            value={gymForm.name}
-            onChange={(e) => setGymForm((prev) => ({ ...prev, name: e.target.value }))}
-            required
-          />
-          <input
-            type="text"
-            placeholder="市区町村"
-            value={gymForm.city}
-            onChange={(e) => setGymForm((prev) => ({ ...prev, city: e.target.value }))}
-          />
-          <input
-            type="text"
-            placeholder="都道府県"
-            value={gymForm.prefecture}
-            onChange={(e) => setGymForm((prev) => ({ ...prev, prefecture: e.target.value }))}
-          />
-          <button type="submit">ジムを登録</button>
-        </form>
-      </section>
-
-      <section style={{ border: "1px solid #ddd", borderRadius: "10px", padding: "1em", marginTop: "1em" }}>
-        <h3 style={{ marginTop: 0 }}>登録済みジム</h3>
-        {gyms.length === 0 ? (
-          <p>ジムが未登録です。</p>
-        ) : (
-          <div style={{ display: "grid", gap: "0.8em" }}>
-            {gyms.map((gym) => (
-              <div key={gym.id} style={{ border: "1px solid #eee", borderRadius: "8px", padding: "0.8em" }}>
-                <p style={{ marginTop: 0, marginBottom: "0.5em", fontWeight: "bold" }}>{gym.id}</p>
-                <div style={{ display: "grid", gap: "0.5em", maxWidth: "560px" }}>
-                  <input
-                    type="text"
-                    value={gymDrafts[gym.id]?.name || ""}
-                    onChange={(e) => setGymDrafts((prev) => ({
-                      ...prev,
-                      [gym.id]: { ...prev[gym.id], name: e.target.value },
-                    }))}
-                    placeholder="ジム名"
-                  />
-                  <input
-                    type="text"
-                    value={gymDrafts[gym.id]?.city || ""}
-                    onChange={(e) => setGymDrafts((prev) => ({
-                      ...prev,
-                      [gym.id]: { ...prev[gym.id], city: e.target.value },
-                    }))}
-                    placeholder="市区町村"
-                  />
-                  <input
-                    type="text"
-                    value={gymDrafts[gym.id]?.prefecture || ""}
-                    onChange={(e) => setGymDrafts((prev) => ({
-                      ...prev,
-                      [gym.id]: { ...prev[gym.id], prefecture: e.target.value },
-                    }))}
-                    placeholder="都道府県"
-                  />
-                </div>
-                <p style={{ marginBottom: "0.6em" }}>
-                  関連イベント数: {eventCountByGym.get(gym.id) || 0}
-                </p>
-                <div style={{ display: "flex", gap: "0.6em", flexWrap: "wrap" }}>
-                  <button type="button" onClick={() => handleUpdateGym(gym.id)}>更新</button>
-                  <button type="button" onClick={() => handleDeleteGym(gym.id)}>削除</button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-
-      <section style={{ border: "1px solid #ddd", borderRadius: "10px", padding: "1em", marginTop: "1em" }}>
-        <h3 style={{ marginTop: 0 }}>ジムオーナープロファイル管理</h3>
-        <form onSubmit={handleSaveOwner} style={{ display: "grid", gap: "0.6em", maxWidth: "700px" }}>
-          <input
-            type="text"
-            placeholder="プロファイルID（空欄ならメールから自動生成）"
-            value={ownerForm.id}
-            onChange={(e) => setOwnerForm((prev) => ({ ...prev, id: e.target.value }))}
-          />
-          <input
-            type="email"
-            placeholder="メールアドレス"
-            value={ownerForm.email}
-            onChange={(e) => setOwnerForm((prev) => ({ ...prev, email: e.target.value }))}
-            required
-          />
-          <input
-            type="text"
-            placeholder="表示名"
-            value={ownerForm.name}
-            onChange={(e) => setOwnerForm((prev) => ({ ...prev, name: e.target.value }))}
-          />
-          <div style={{ display: "flex", gap: "1em", flexWrap: "wrap" }}>
-            <label>
-              <input
-                type="radio"
-                name="owner-role"
-                checked={ownerForm.role === "owner"}
-                onChange={() => setOwnerForm((prev) => ({ ...prev, role: "owner" }))}
-              />
-              owner（担当ジムのみ）
-            </label>
-            <label>
-              <input
-                type="radio"
-                name="owner-role"
-                checked={ownerForm.role === "admin"}
-                onChange={() => setOwnerForm((prev) => ({ ...prev, role: "admin", gymIds: ["*"] }))}
-              />
-              admin（全ジム）
-            </label>
-          </div>
-
-          {ownerForm.role === "owner" && (
+        <section className={`${sectionClass} mt-4`}>
+          <h3 className="text-lg font-semibold text-slate-900">ジム登録</h3>
+          <form onSubmit={handleCreateGym} className="mt-3 grid gap-2">
+            <input
+              type="text"
+              placeholder="ジムID (例: gym-shibuya)"
+              value={gymForm.id}
+              onChange={(e) => setGymForm((prev) => ({ ...prev, id: e.target.value }))}
+              required
+              className={inputClass}
+            />
+            <input
+              type="text"
+              placeholder="ジム名"
+              value={gymForm.name}
+              onChange={(e) => setGymForm((prev) => ({ ...prev, name: e.target.value }))}
+              required
+              className={inputClass}
+            />
+            <input
+              type="text"
+              placeholder="市区町村"
+              value={gymForm.city}
+              onChange={(e) => setGymForm((prev) => ({ ...prev, city: e.target.value }))}
+              className={inputClass}
+            />
+            <input
+              type="text"
+              placeholder="都道府県"
+              value={gymForm.prefecture}
+              onChange={(e) => setGymForm((prev) => ({ ...prev, prefecture: e.target.value }))}
+              className={inputClass}
+            />
             <div>
-              <p style={{ marginBottom: "0.4em" }}>担当ジム（複数可）</p>
-              <div style={{ display: "flex", gap: "0.8em", flexWrap: "wrap" }}>
-                {gyms.map((gym) => (
-                  <label key={gym.id}>
+              <button type="submit" className={primaryButtonClass}>ジムを登録</button>
+            </div>
+          </form>
+        </section>
+
+        <section className={`${sectionClass} mt-4`}>
+          <h3 className="text-lg font-semibold text-slate-900">登録済みジム</h3>
+          {gyms.length === 0 ? (
+            <p className="mt-2 text-sm text-slate-600">ジムが未登録です。</p>
+          ) : (
+            <div className="mt-3 grid gap-3">
+              {gyms.map((gym) => (
+                <div key={gym.id} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                  <p className="font-semibold text-slate-800">{gym.id}</p>
+                  <div className="mt-2 grid gap-2">
                     <input
-                      type="checkbox"
-                      checked={ownerForm.gymIds.includes(gym.id)}
-                      onChange={() => toggleOwnerGym(gym.id)}
+                      type="text"
+                      value={gymDrafts[gym.id]?.name || ""}
+                      onChange={(e) => setGymDrafts((prev) => ({
+                        ...prev,
+                        [gym.id]: { ...prev[gym.id], name: e.target.value },
+                      }))}
+                      placeholder="ジム名"
+                      className={inputClass}
                     />
-                    {gym.name || gym.id}
-                  </label>
-                ))}
-              </div>
+                    <input
+                      type="text"
+                      value={gymDrafts[gym.id]?.city || ""}
+                      onChange={(e) => setGymDrafts((prev) => ({
+                        ...prev,
+                        [gym.id]: { ...prev[gym.id], city: e.target.value },
+                      }))}
+                      placeholder="市区町村"
+                      className={inputClass}
+                    />
+                    <input
+                      type="text"
+                      value={gymDrafts[gym.id]?.prefecture || ""}
+                      onChange={(e) => setGymDrafts((prev) => ({
+                        ...prev,
+                        [gym.id]: { ...prev[gym.id], prefecture: e.target.value },
+                      }))}
+                      placeholder="都道府県"
+                      className={inputClass}
+                    />
+                  </div>
+                  <p className="mt-3 text-sm text-slate-600">
+                    関連イベント数: {eventCountByGym.get(gym.id) || 0}
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <button type="button" onClick={() => handleUpdateGym(gym.id)} className={actionButtonClass}>更新</button>
+                    <button type="button" onClick={() => handleDeleteGym(gym.id)} className={dangerButtonClass}>削除</button>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
+        </section>
 
-          <div style={{ display: "flex", gap: "0.6em", flexWrap: "wrap" }}>
-            <button type="submit">
-              {editingOwnerId ? `プロファイルを更新 (${editingOwnerId})` : "新規プロファイルを保存"}
-            </button>
-            <button type="button" onClick={resetOwnerForm}>フォームをリセット</button>
-          </div>
-        </form>
+        <section className={`${sectionClass} mt-4`}>
+          <h3 className="text-lg font-semibold text-slate-900">ジムオーナープロファイル管理</h3>
+          <form onSubmit={handleSaveOwner} className="mt-3 grid gap-2">
+            <input
+              type="text"
+              placeholder="プロファイルID（空欄ならメールから自動生成）"
+              value={ownerForm.id}
+              onChange={(e) => setOwnerForm((prev) => ({ ...prev, id: e.target.value }))}
+              className="w-full max-w-[700px] rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+            />
+            <input
+              type="email"
+              placeholder="メールアドレス"
+              value={ownerForm.email}
+              onChange={(e) => setOwnerForm((prev) => ({ ...prev, email: e.target.value }))}
+              required
+              className="w-full max-w-[700px] rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+            />
+            <input
+              type="text"
+              placeholder="表示名"
+              value={ownerForm.name}
+              onChange={(e) => setOwnerForm((prev) => ({ ...prev, name: e.target.value }))}
+              className="w-full max-w-[700px] rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+            />
+            <div className="flex flex-wrap gap-4">
+              <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+                <input
+                  type="radio"
+                  name="owner-role"
+                  checked={ownerForm.role === "owner"}
+                  onChange={() => setOwnerForm((prev) => ({ ...prev, role: "owner" }))}
+                />
+                owner（担当ジムのみ）
+              </label>
+              <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+                <input
+                  type="radio"
+                  name="owner-role"
+                  checked={ownerForm.role === "admin"}
+                  onChange={() => setOwnerForm((prev) => ({ ...prev, role: "admin", gymIds: ["*"] }))}
+                />
+                admin（全ジム）
+              </label>
+            </div>
 
-        <h4 style={{ marginTop: "1.2em" }}>登録済みオーナープロファイル</h4>
-        {users.length === 0 ? (
-          <p>プロファイルがありません。</p>
-        ) : (
-          <div style={{ display: "grid", gap: "0.7em" }}>
-            {users.map((userProfile) => (
-              <div
-                key={userProfile.id}
-                style={{
-                  border: "1px solid #eee",
-                  borderRadius: "8px",
-                  padding: "0.8em",
-                  background: editingOwnerId === userProfile.id ? "#f8f8f8" : "#fff",
-                }}
-              >
-                <p style={{ marginTop: 0, marginBottom: "0.3em" }}>
-                  <strong>{userProfile.email || "(no email)"}</strong> / role: {userProfile.role || "-"}
-                </p>
-                <p style={{ marginTop: 0, marginBottom: "0.5em" }}>
-                  profileId: {userProfile.id} / gymIds: {JSON.stringify(normalizeGymIds(userProfile.gymIds))}
-                </p>
-                <div style={{ display: "flex", gap: "0.6em", flexWrap: "wrap" }}>
-                  <button type="button" onClick={() => handleSelectOwnerForEdit(userProfile)}>編集</button>
-                  <button type="button" onClick={() => handleDeleteOwner(userProfile)}>削除</button>
+            {ownerForm.role === "owner" && (
+              <div>
+                <p className="mb-2 text-sm text-slate-700">担当ジム（複数可）</p>
+                <div className="flex flex-wrap gap-3">
+                  {gyms.map((gym) => (
+                    <label key={gym.id} className="inline-flex items-center gap-2 text-sm text-slate-700">
+                      <input
+                        type="checkbox"
+                        checked={ownerForm.gymIds.includes(gym.id)}
+                        onChange={() => toggleOwnerGym(gym.id)}
+                      />
+                      {gym.name || gym.id}
+                    </label>
+                  ))}
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-      </section>
+            )}
+
+            <div className="flex flex-wrap gap-2">
+              <button type="submit" className={primaryButtonClass}>
+                {editingOwnerId ? `プロファイルを更新 (${editingOwnerId})` : "新規プロファイルを保存"}
+              </button>
+              <button type="button" onClick={resetOwnerForm} className={actionButtonClass}>フォームをリセット</button>
+            </div>
+          </form>
+
+          <h4 className="mt-5 text-base font-semibold text-slate-900">登録済みオーナープロファイル</h4>
+          {users.length === 0 ? (
+            <p className="mt-2 text-sm text-slate-600">プロファイルがありません。</p>
+          ) : (
+            <div className="mt-3 grid gap-3">
+              {users.map((userProfile) => (
+                <div
+                  key={userProfile.id}
+                  className={`rounded-xl border p-4 ${
+                    editingOwnerId === userProfile.id
+                      ? "border-sky-200 bg-sky-50"
+                      : "border-slate-200 bg-white"
+                  }`}
+                >
+                  <p className="text-sm text-slate-800">
+                    <strong>{userProfile.email || "(no email)"}</strong> / role: {userProfile.role || "-"}
+                  </p>
+                  <p className="mt-1 text-sm text-slate-600">
+                    profileId: {userProfile.id} / gymIds: {JSON.stringify(normalizeGymIds(userProfile.gymIds))}
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <button type="button" onClick={() => handleSelectOwnerForEdit(userProfile)} className={actionButtonClass}>編集</button>
+                    <button type="button" onClick={() => handleDeleteOwner(userProfile)} className={dangerButtonClass}>削除</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
     </div>
   );
 };

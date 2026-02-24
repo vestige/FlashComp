@@ -26,22 +26,37 @@ const Login = () => {
   };
 
   return (
-    <div style={{ padding: "2em", maxWidth: "400px", margin: "auto" }}>
-      <h2>管理者ログイン</h2>
-      <input
-        type="email"
-        placeholder="メールアドレス"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
-      <input
-        type="password"
-        placeholder="パスワード"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-      <button onClick={handleLogin}>ログイン</button>
-      <div style={{ marginTop: "1em", color: "red" }}>{status}</div>
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#dbeafe_0%,_#f8fafc_50%,_#eef2ff_100%)] px-4 py-10">
+      <div className="mx-auto w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 className="text-2xl font-bold text-slate-900">管理者ログイン</h2>
+        <div className="mt-4 grid gap-3">
+          <input
+            type="email"
+            placeholder="メールアドレス"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+          />
+          <input
+            type="password"
+            placeholder="パスワード"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+          />
+          <button
+            onClick={handleLogin}
+            className="inline-flex items-center justify-center rounded-lg border border-sky-200 bg-sky-50 px-4 py-2 text-sm font-semibold text-sky-800 transition hover:bg-sky-100"
+          >
+            ログイン
+          </button>
+        </div>
+        {status && (
+          <div className="mt-4 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+            {status}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

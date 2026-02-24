@@ -57,7 +57,7 @@ const ScoreManager = ({ eventId }) => {
     fetchParticipants();
   }, [eventId, selectedCategory]);
 
-   useEffect(() => {
+  useEffect(() => {
       if (location.state?.seasonId) {
          setSelectedSeason(location.state.seasonId);
       }
@@ -67,19 +67,30 @@ const ScoreManager = ({ eventId }) => {
    }, [location.state]);
 
   return (
-    <div style={{ padding: "2em" }}>
-      <h2>📋 スコア採点</h2>
-      <div style={{ marginBottom: "1em", display: "flex", gap: "0.8em", flexWrap: "wrap" }}>
-        <Link to={`/events/${eventId}/data-io`}>CSV入出力</Link>
-        <Link to={`/score-summary/${eventId}`}>公開ランキング</Link>
+    <div className="p-4 sm:p-5">
+      <h2 className="text-2xl font-bold text-slate-900">📋 スコア採点</h2>
+      <div className="mt-3 mb-4 flex flex-wrap gap-2">
+        <Link
+          to={`/events/${eventId}/data-io`}
+          className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+        >
+          CSV入出力
+        </Link>
+        <Link
+          to={`/score-summary/${eventId}`}
+          className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+        >
+          公開ランキング
+        </Link>
       </div>
 
-      <div style={{ marginBottom: "1em" }}>
-        <label>
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-slate-700">
           シーズン選択:
           <select
             value={selectedSeason}
             onChange={(e) => setSelectedSeason(e.target.value)}
+            className="mt-1 block w-full max-w-sm rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
           >
             <option value="">-- 選択してください --</option>
             {seasons.map((s) => (
@@ -91,12 +102,13 @@ const ScoreManager = ({ eventId }) => {
         </label>
       </div>
 
-      <div style={{ marginBottom: "1em" }}>
-        <label>
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-slate-700">
           カテゴリ選択:
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
+            className="mt-1 block w-full max-w-sm rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
           >
             <option value="">-- 選択してください --</option>
             {categories.map((c) => (
@@ -109,13 +121,13 @@ const ScoreManager = ({ eventId }) => {
       </div>
 
       {selectedSeason && selectedCategory && (
-        <ul>
+        <ul className="space-y-2">
           {participants.map((p) => (
-            <li key={p.id}>
-              {p.name}
+            <li key={p.id} className="rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-800">
+              <span className="font-medium">{p.name}</span>
               <Link
                 to={`/events/${eventId}/scoreinput/${selectedSeason}/${selectedCategory}/${p.id}`}
-                style={{ marginLeft: "1em" }}
+                className="ml-3 inline-flex items-center rounded-lg border border-sky-200 bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-800 transition hover:bg-sky-100"
               >
                 📝 採点へ
               </Link>

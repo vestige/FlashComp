@@ -359,162 +359,179 @@ const ParticipantScoreDetail = () => {
   );
 
   if (loading) {
-    return <p>クライマー詳細を読み込んでいます...</p>;
+    return (
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+        <p className="text-sm text-slate-600">クライマー詳細を読み込んでいます...</p>
+      </div>
+    );
   }
 
   if (error) {
     return (
-      <div style={{ padding: "2em" }}>
-        <p>{error}</p>
-        <div style={{ marginTop: "1.5em" }}>
-          <Link to={summaryLink}>← 集計結果に戻る</Link>
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+        <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          {error}
+        </p>
+        <div className="mt-6">
+          <Link
+            to={summaryLink}
+            className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+          >
+            ← 集計結果に戻る
+          </Link>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: "2em", maxWidth: "980px", margin: "0 auto" }}>
-      <h2>{event?.name} - クライマー詳細</h2>
-      <p style={{ marginBottom: "0.4em" }}>
-        名前: <strong>{participant?.name || "-"}</strong>
-      </p>
-      <p style={{ marginTop: 0 }}>
-        会員番号: {participant?.memberNo || "-"} / カテゴリ:
-        {" "}
-        {categories.find((c) => c.id === participant?.categoryId)?.name || "未設定"}
-      </p>
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#dbeafe_0%,_#f8fafc_45%,_#ecfeff_100%)]">
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+        <h2 className="text-2xl font-bold text-slate-900">{event?.name} - クライマー詳細</h2>
+        <p className="mt-3 text-sm text-slate-700">
+          名前: <strong>{participant?.name || "-"}</strong>
+        </p>
+        <p className="mt-1 text-sm text-slate-700">
+          会員番号: {participant?.memberNo || "-"} / カテゴリ:
+          {" "}
+          {categories.find((c) => c.id === participant?.categoryId)?.name || "未設定"}
+        </p>
 
-      <div style={{ margin: "1em 0" }}>
-        <label>
-          表示シーズン:
-          <select
-            value={selectedSeasonId}
-            onChange={(e) => setSelectedSeasonId(e.target.value)}
-            style={{ marginLeft: "0.5em" }}
-          >
-            <option value="all">総合（全シーズン）</option>
-            {seasons.map((season) => (
-              <option key={season.id} value={season.id}>
-                {season.name}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
-
-      <section style={{ border: "1px solid #ddd", borderRadius: "8px", padding: "1em" }}>
-        <h3 style={{ marginTop: 0 }}>合計</h3>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.8em", alignItems: "center" }}>
-          <p style={{ margin: 0 }}>
-            得点: <strong>{totalSummary.totalPoints}</strong>
-          </p>
-          <p style={{ margin: 0 }}>
-            完登数: <strong>{totalSummary.totalClears}</strong>
-          </p>
-        </div>
-        {overallRankInfo && (
-          <p style={{ marginBottom: 0, marginTop: "0.6em" }}>
-            順位（{overallRankInfo.categoryName}）:
-            {" "}
-            <strong>{overallRankInfo.rank}</strong>
-            {" / "}
-            {overallRankInfo.totalParticipants}
-            {" "}
-            （得点 {overallRankInfo.totalPoints} / 完登 {overallRankInfo.totalClears}）
-          </p>
-        )}
-      </section>
-      {(adjacentParticipants.prev || adjacentParticipants.next) && (
-        <section
-          style={{
-            border: "1px solid #ddd",
-            borderRadius: "8px",
-            padding: "1em",
-            marginTop: "1em",
-          }}
-        >
-          <h3 style={{ marginTop: 0 }}>近い順位のクライマー</h3>
-          <div style={{ display: "flex", gap: "0.8em", flexWrap: "wrap" }}>
-            {adjacentParticipants.prev ? (
-              <Link to={buildParticipantDetailLink(adjacentParticipants.prev.participantId)}>
-                ↑ {adjacentParticipants.prev.rank}位 {adjacentParticipants.prev.name}
-              </Link>
-            ) : (
-              <span>これより上位のクライマーはいません</span>
-            )}
-            {adjacentParticipants.next ? (
-              <Link to={buildParticipantDetailLink(adjacentParticipants.next.participantId)}>
-                ↓ {adjacentParticipants.next.rank}位 {adjacentParticipants.next.name}
-              </Link>
-            ) : (
-              <span>これより下位のクライマーはいません</span>
-            )}
-          </div>
-        </section>
-      )}
-
-      {calculating && <p style={{ marginTop: "1em" }}>内訳を計算中...</p>}
-
-      <div style={{ marginTop: "1.2em" }}>
-        {seasonSummaries.length === 0 ? (
-          <p>採点データがありません。</p>
-        ) : (
-          seasonSummaries.map((season) => (
-            <section
-              key={season.seasonId}
-              style={{ border: "1px solid #ddd", borderRadius: "8px", padding: "1em", marginBottom: "1em" }}
+        <div className="mt-4">
+          <label className="text-sm text-slate-700">
+            表示シーズン:
+            <select
+              value={selectedSeasonId}
+              onChange={(e) => setSelectedSeasonId(e.target.value)}
+              className="ml-2 rounded-lg border border-slate-300 px-2 py-1 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
             >
-              <h3 style={{ marginTop: 0 }}>
-                {season.seasonName} / 得点 {season.totalPoints} / 完登 {season.totalClears}
-              </h3>
+              <option value="all">総合（全シーズン）</option>
+              {seasons.map((season) => (
+                <option key={season.id} value={season.id}>
+                  {season.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
 
-              {season.categorySummaries.length === 0 ? (
-                <p>このシーズンの採点データはありません。</p>
+        <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <h3 className="text-lg font-semibold text-slate-900">合計</h3>
+          <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-slate-700">
+            <p>
+              得点: <strong>{totalSummary.totalPoints}</strong>
+            </p>
+            <p>
+              完登数: <strong>{totalSummary.totalClears}</strong>
+            </p>
+          </div>
+          {overallRankInfo && (
+            <p className="mt-2 text-sm text-slate-700">
+              順位（{overallRankInfo.categoryName}）:
+              {" "}
+              <strong>{overallRankInfo.rank}</strong>
+              {" / "}
+              {overallRankInfo.totalParticipants}
+              {" "}
+              （得点 {overallRankInfo.totalPoints} / 完登 {overallRankInfo.totalClears}）
+            </p>
+          )}
+        </section>
+        {(adjacentParticipants.prev || adjacentParticipants.next) && (
+          <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <h3 className="text-lg font-semibold text-slate-900">近い順位のクライマー</h3>
+            <div className="mt-2 flex flex-wrap gap-2 text-sm">
+              {adjacentParticipants.prev ? (
+                <Link
+                  to={buildParticipantDetailLink(adjacentParticipants.prev.participantId)}
+                  className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-2.5 py-1 text-slate-700 transition hover:bg-slate-100"
+                >
+                  ↑ {adjacentParticipants.prev.rank}位 {adjacentParticipants.prev.name}
+                </Link>
               ) : (
-                season.categorySummaries.map((category) => (
-                  <div key={`${season.seasonId}-${category.categoryId}`} style={{ marginTop: "1em" }}>
-                    <h4 style={{ marginBottom: "0.4em" }}>
-                      カテゴリ: {category.categoryName} / 順位 {category.rank}/{category.totalParticipants}
-                      {" / "}得点 {category.totalPoints} / 完登 {category.clearCount}
-                    </h4>
-                    <p style={{ marginTop: 0, fontSize: "0.9em" }}>
-                      最終更新: {category.updatedAtText}
-                    </p>
-                    {category.clearedRoutes.length === 0 ? (
-                      <p>完登課題はありません。</p>
-                    ) : (
-                      <div style={{ overflowX: "auto" }}>
-                        <table style={{ borderCollapse: "collapse", width: "100%", minWidth: "360px" }}>
-                          <thead>
-                            <tr>
-                              <th style={{ textAlign: "left", borderBottom: "1px solid #ccc" }}>課題</th>
-                              <th style={{ textAlign: "left", borderBottom: "1px solid #ccc" }}>グレード</th>
-                              <th style={{ textAlign: "right", borderBottom: "1px solid #ccc" }}>点数</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {category.clearedRoutes.map((route) => (
-                              <tr key={route.routeName}>
-                                <td style={{ padding: "0.35em 0" }}>{route.routeName}</td>
-                                <td>{route.grade}</td>
-                                <td style={{ textAlign: "right" }}>{route.points}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                  </div>
-                ))
+                <span className="text-slate-600">これより上位のクライマーはいません</span>
               )}
-            </section>
-          ))
+              {adjacentParticipants.next ? (
+                <Link
+                  to={buildParticipantDetailLink(adjacentParticipants.next.participantId)}
+                  className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-2.5 py-1 text-slate-700 transition hover:bg-slate-100"
+                >
+                  ↓ {adjacentParticipants.next.rank}位 {adjacentParticipants.next.name}
+                </Link>
+              ) : (
+                <span className="text-slate-600">これより下位のクライマーはいません</span>
+              )}
+            </div>
+          </section>
         )}
-      </div>
 
-      <div style={{ marginTop: "1.5em" }}>
-        <Link to={summaryLink}>← 集計結果に戻る</Link>
+        {calculating && <p className="mt-4 text-sm text-slate-600">内訳を計算中...</p>}
+
+        <div className="mt-5">
+          {seasonSummaries.length === 0 ? (
+            <p className="text-sm text-slate-600">採点データがありません。</p>
+          ) : (
+            seasonSummaries.map((season) => (
+              <section
+                key={season.seasonId}
+                className="mb-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+              >
+                <h3 className="text-lg font-semibold text-slate-900">
+                  {season.seasonName} / 得点 {season.totalPoints} / 完登 {season.totalClears}
+                </h3>
+
+                {season.categorySummaries.length === 0 ? (
+                  <p className="mt-2 text-sm text-slate-600">このシーズンの採点データはありません。</p>
+                ) : (
+                  season.categorySummaries.map((category) => (
+                    <div key={`${season.seasonId}-${category.categoryId}`} className="mt-4">
+                      <h4 className="text-sm font-semibold text-slate-800">
+                        カテゴリ: {category.categoryName} / 順位 {category.rank}/{category.totalParticipants}
+                        {" / "}得点 {category.totalPoints} / 完登 {category.clearCount}
+                      </h4>
+                      <p className="mt-1 text-xs text-slate-500">
+                        最終更新: {category.updatedAtText}
+                      </p>
+                      {category.clearedRoutes.length === 0 ? (
+                        <p className="mt-2 text-sm text-slate-600">完登課題はありません。</p>
+                      ) : (
+                        <div className="mt-2 overflow-x-auto">
+                          <table className="min-w-[360px] w-full border-collapse text-sm">
+                            <thead>
+                              <tr>
+                                <th className="border-b border-slate-200 py-2 text-left">課題</th>
+                                <th className="border-b border-slate-200 py-2 text-left">グレード</th>
+                                <th className="border-b border-slate-200 py-2 text-right">点数</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {category.clearedRoutes.map((route) => (
+                                <tr key={route.routeName}>
+                                  <td className="py-2">{route.routeName}</td>
+                                  <td className="py-2">{route.grade}</td>
+                                  <td className="py-2 text-right">{route.points}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </section>
+            ))
+          )}
+        </div>
+
+        <div className="mt-6">
+          <Link
+            to={summaryLink}
+            className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+          >
+            ← 集計結果に戻る
+          </Link>
+        </div>
       </div>
     </div>
   );

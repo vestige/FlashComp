@@ -154,128 +154,137 @@ const ScoreSummary = () => {
   };
 
   if (loading) {
-    return <p>イベントを読み込んでいます...</p>;
+    return (
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+        <p className="text-sm text-slate-600">イベントを読み込んでいます...</p>
+      </div>
+    );
   }
 
   if (error) {
     return (
-      <div style={{ padding: "2em" }}>
-        <p>{error}</p>
-        <div style={{ marginTop: "1.5em" }}>
-          <Link to="/">← Homeに戻る</Link>
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+        <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          {error}
+        </p>
+        <div className="mt-6">
+          <Link
+            to="/"
+            className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+          >
+            ← Homeに戻る
+          </Link>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: "2em", maxWidth: "980px", margin: "0 auto" }}>
-      <h2>🏆 クライマー向け結果ページ</h2>
-      <p style={{ marginBottom: "0.4em" }}>確認したいイベントを選んでください。</p>
-      <ol style={{ marginTop: 0, paddingLeft: "1.2em" }}>
-        <li>イベントを選ぶ</li>
-        <li>ランキングから自分を検索する</li>
-        <li>「詳細を見る」でシーズン別の完登内訳を確認する</li>
-      </ol>
-      <div
-        style={{
-          border: "1px solid #ddd",
-          borderRadius: "10px",
-          padding: "0.8em",
-          marginBottom: "1em",
-          display: "flex",
-          flexWrap: "wrap",
-          gap: "0.8em",
-          alignItems: "center",
-        }}
-      >
-        <label>
-          イベント名:
-          <input
-            type="text"
-            value={keyword}
-            onChange={(e) => setKeyword(e.target.value)}
-            placeholder="例: Spring"
-            style={{ marginLeft: "0.5em" }}
-          />
-        </label>
-        <label>
-          開催状況:
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            style={{ marginLeft: "0.5em" }}
-          >
-            <option value="all">すべて</option>
-            <option value="ongoing">開催中</option>
-            <option value="upcoming">開催予定</option>
-            <option value="ended">終了</option>
-          </select>
-        </label>
-        <label>
-          ジム:
-          <select
-            value={gymFilter}
-            onChange={(e) => setGymFilter(e.target.value)}
-            style={{ marginLeft: "0.5em" }}
-          >
-            <option value="all">すべて</option>
-            {gyms.map((gym) => (
-              <option key={gym.id} value={gym.id}>
-                {gym.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <button type="button" onClick={resetFilters}>
-          フィルターをリセット
-        </button>
-        <span style={{ marginLeft: "auto" }}>
-          表示 {filteredEvents.length} / {events.length} 件
-        </span>
-      </div>
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#dbeafe_0%,_#f8fafc_45%,_#ecfeff_100%)]">
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+        <h2 className="text-2xl font-bold text-slate-900">🏆 クライマー向け結果ページ</h2>
+        <p className="mt-2 text-sm text-slate-600">確認したいイベントを選んでください。</p>
+        <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm text-slate-700">
+          <li>イベントを選ぶ</li>
+          <li>ランキングから自分を検索する</li>
+          <li>「詳細を見る」でシーズン別の完登内訳を確認する</li>
+        </ol>
 
-      {events.length === 0 ? (
-        <p>イベントがありません。</p>
-      ) : filteredEvents.length === 0 ? (
-        <p>条件に一致するイベントがありません。</p>
-      ) : (
-        <div style={{ display: "grid", gap: "1em" }}>
-          {filteredEvents.map((event) => {
-            const status = getEventStatus(event, Date.now());
-            return (
-              <section
-                key={event.id}
-                style={{ border: "1px solid #ddd", borderRadius: "10px", padding: "1em" }}
-              >
-                <h3 style={{ marginTop: 0, marginBottom: "0.5em" }}>
-                  {event.name}
-                  <span
-                    style={{
-                      marginLeft: "0.6em",
-                      fontSize: "0.8em",
-                      border: "1px solid #ccc",
-                      borderRadius: "999px",
-                      padding: "0.1em 0.5em",
-                    }}
-                  >
-                    {statusLabelMap[status]}
-                  </span>
-                </h3>
-                <p style={{ marginTop: 0 }}>
-                  開催期間: {toDateText(event.startDate)} 〜 {toDateText(event.endDate)}
-                </p>
-                <p style={{ marginTop: 0 }}>
-                  ジム: {gymNameById.get(event.gymId) || "未設定"}
-                </p>
-                <Link to={`/score-summary/${event.id}`}>このイベントのランキングを見る</Link>
-              </section>
-            );
-          })}
+        <div className="mt-4 flex flex-wrap items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <label className="text-sm text-slate-700">
+            イベント名:
+            <input
+              type="text"
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
+              placeholder="例: Spring"
+              className="ml-2 rounded-lg border border-slate-300 px-2 py-1 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+            />
+          </label>
+          <label className="text-sm text-slate-700">
+            開催状況:
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="ml-2 rounded-lg border border-slate-300 px-2 py-1 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+            >
+              <option value="all">すべて</option>
+              <option value="ongoing">開催中</option>
+              <option value="upcoming">開催予定</option>
+              <option value="ended">終了</option>
+            </select>
+          </label>
+          <label className="text-sm text-slate-700">
+            ジム:
+            <select
+              value={gymFilter}
+              onChange={(e) => setGymFilter(e.target.value)}
+              className="ml-2 rounded-lg border border-slate-300 px-2 py-1 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+            >
+              <option value="all">すべて</option>
+              {gyms.map((gym) => (
+                <option key={gym.id} value={gym.id}>
+                  {gym.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button
+            type="button"
+            onClick={resetFilters}
+            className="rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+          >
+            フィルターをリセット
+          </button>
+          <span className="ml-auto text-sm text-slate-600">
+            表示 {filteredEvents.length} / {events.length} 件
+          </span>
         </div>
-      )}
-      <div style={{ marginTop: "2em" }}>
-        <Link to="/">← Homeに戻る</Link>
+
+        {events.length === 0 ? (
+          <p className="mt-4 text-sm text-slate-600">イベントがありません。</p>
+        ) : filteredEvents.length === 0 ? (
+          <p className="mt-4 text-sm text-slate-600">条件に一致するイベントがありません。</p>
+        ) : (
+          <div className="mt-4 grid gap-3">
+            {filteredEvents.map((event) => {
+              const status = getEventStatus(event, Date.now());
+              return (
+                <section
+                  key={event.id}
+                  className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+                >
+                  <h3 className="text-lg font-semibold text-slate-900">
+                    {event.name}
+                    <span className="ml-2 rounded-full border border-slate-300 bg-slate-50 px-2 py-0.5 text-xs text-slate-600">
+                      {statusLabelMap[status]}
+                    </span>
+                  </h3>
+                  <p className="mt-2 text-sm text-slate-600">
+                    開催期間: {toDateText(event.startDate)} 〜 {toDateText(event.endDate)}
+                  </p>
+                  <p className="mt-1 text-sm text-slate-600">
+                    ジム: {gymNameById.get(event.gymId) || "未設定"}
+                  </p>
+                  <Link
+                    to={`/score-summary/${event.id}`}
+                    className="mt-2 inline-flex items-center rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-sm font-semibold text-sky-800 transition hover:bg-sky-100"
+                  >
+                    このイベントのランキングを見る
+                  </Link>
+                </section>
+              );
+            })}
+          </div>
+        )}
+        <div className="mt-8">
+          <Link
+            to="/"
+            className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+          >
+            ← Homeに戻る
+          </Link>
+        </div>
       </div>
     </div>
   );

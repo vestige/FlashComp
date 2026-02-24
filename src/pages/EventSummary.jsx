@@ -374,214 +374,226 @@ const EventSummary = () => {
   }, 0);
 
   if (loading) {
-    return <p>集計情報を読み込んでいます...</p>;
+    return (
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+        <p className="text-sm text-slate-600">集計情報を読み込んでいます...</p>
+      </div>
+    );
   }
 
   if (error) {
     return (
-      <div style={{ padding: "2em" }}>
-        <p>{error}</p>
-        <div style={{ marginTop: "2em" }}>
-          <Link to="/score-summary">← イベント選択に戻る</Link>
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+        <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          {error}
+        </p>
+        <div className="mt-8">
+          <Link
+            to="/score-summary"
+            className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+          >
+            ← イベント選択に戻る
+          </Link>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: "2em", maxWidth: "1100px", margin: "0 auto" }}>
-      <h2>{event?.name} - 集計結果</h2>
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#dbeafe_0%,_#f8fafc_45%,_#ecfeff_100%)]">
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+        <h2 className="text-2xl font-bold text-slate-900">{event?.name} - 集計結果</h2>
 
-      <div style={{ margin: "1em 0", display: "flex", flexWrap: "wrap", gap: "0.8em" }}>
-        <label>
-          表示対象:
-          <select
-            value={selectedSeasonId}
-            onChange={(e) => setSelectedSeasonId(e.target.value)}
-            style={{ marginLeft: "0.5em" }}
-          >
-            <option value="all">総合（全シーズン）</option>
-            {seasons.map((season) => (
-              <option key={season.id} value={season.id}>
-                {season.name}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
-      <div style={{ margin: "1em 0" }}>
-        <label>
-          名前/会員番号で検索:
-          <input
-            type="text"
-            value={searchKeyword}
-            onChange={(e) => setSearchKeyword(e.target.value)}
-            placeholder="例: 山田 / M-1001"
-            style={{ marginLeft: "0.5em" }}
-          />
-        </label>
-        {hasSearch && (
-          <span style={{ marginLeft: "0.8em" }}>該当 {matchedCount} 件</span>
-        )}
-      </div>
-      <div
-        style={{
-          margin: "1em 0",
-          border: "1px solid #ddd",
-          borderRadius: "8px",
-          padding: "0.8em",
-        }}
-      >
-        <p style={{ marginTop: 0, marginBottom: "0.5em" }}>自分のスコアをすぐ確認</p>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.8em", alignItems: "center" }}>
-          <label>
-            カテゴリ:
+        <div className="mt-4 flex flex-wrap gap-3">
+          <label className="text-sm text-slate-700">
+            表示対象:
             <select
-              value={selectedCategoryId}
-              onChange={(e) => setSelectedCategoryId(e.target.value)}
-              style={{ marginLeft: "0.5em", marginRight: "0.8em" }}
+              value={selectedSeasonId}
+              onChange={(e) => setSelectedSeasonId(e.target.value)}
+              className="ml-2 rounded-lg border border-slate-300 px-2 py-1 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
             >
-              <option value="all">すべて</option>
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
+              <option value="all">総合（全シーズン）</option>
+              {seasons.map((season) => (
+                <option key={season.id} value={season.id}>
+                  {season.name}
                 </option>
               ))}
             </select>
           </label>
-          <label>
-            クライマー:
-            <select
-              value={selectedParticipantId}
-              onChange={(e) => setSelectedParticipantId(e.target.value)}
-              style={{ marginLeft: "0.5em", marginRight: "0.8em" }}
-            >
-              <option value="">-- 選択 --</option>
-              {participantsForQuickSelect.map((participant) => (
-                <option key={participant.id} value={participant.id}>
-                  {participant.name} ({participant.memberNo || "-"})
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={showOnlySelected}
-              onChange={(e) => setShowOnlySelected(e.target.checked)}
-              disabled={!selectedParticipantId}
-              style={{ marginLeft: "0.5em", marginRight: "0.3em" }}
-            />
-            自分だけ表示
-          </label>
-          <button type="button" onClick={resetQuickFilters}>
-            フィルターをリセット
-          </button>
-          {selectedParticipantId && (
-            <Link to={buildDetailLink(selectedParticipantId)}>
-              詳細へ移動
-            </Link>
-          )}
         </div>
-      </div>
-      {selectedParticipant && (
-        <section
-          style={{
-            margin: "1em 0",
-            border: "1px solid #ddd",
-            borderRadius: "8px",
-            padding: "0.8em",
-          }}
-        >
-          <h3 style={{ marginTop: 0, marginBottom: "0.5em" }}>
-            選択中: {selectedParticipant.name} ({selectedParticipant.memberNo || "-"})
-          </h3>
-          {selectedParticipantRows.length === 0 ? (
-            <p style={{ marginBottom: 0 }}>この条件では順位データがありません。</p>
-          ) : (
-            <ul style={{ marginBottom: 0, paddingLeft: "1.2em" }}>
-              {selectedParticipantRows.map((row) => (
-                <li key={`${row.categoryName}-${row.participantId}`}>
-                  {row.categoryName}: {row.rank}位 / 得点 {row.totalPoints} / 完登 {row.clearCount}
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-      )}
+        <div className="mt-3">
+          <label className="text-sm text-slate-700">
+            名前/会員番号で検索:
+            <input
+              type="text"
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              placeholder="例: 山田 / M-1001"
+              className="ml-2 rounded-lg border border-slate-300 px-2 py-1 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+            />
+          </label>
+          {hasSearch && <span className="ml-3 text-sm text-slate-600">該当 {matchedCount} 件</span>}
+        </div>
+        <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p className="text-sm font-medium text-slate-700">自分のスコアをすぐ確認</p>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <label className="text-sm text-slate-700">
+              カテゴリ:
+              <select
+                value={selectedCategoryId}
+                onChange={(e) => setSelectedCategoryId(e.target.value)}
+                className="ml-2 rounded-lg border border-slate-300 px-2 py-1 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+              >
+                <option value="all">すべて</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="text-sm text-slate-700">
+              クライマー:
+              <select
+                value={selectedParticipantId}
+                onChange={(e) => setSelectedParticipantId(e.target.value)}
+                className="ml-2 rounded-lg border border-slate-300 px-2 py-1 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+              >
+                <option value="">-- 選択 --</option>
+                {participantsForQuickSelect.map((participant) => (
+                  <option key={participant.id} value={participant.id}>
+                    {participant.name} ({participant.memberNo || "-"})
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+              <input
+                type="checkbox"
+                checked={showOnlySelected}
+                onChange={(e) => setShowOnlySelected(e.target.checked)}
+                disabled={!selectedParticipantId}
+                className="size-4 rounded border-slate-300"
+              />
+              自分だけ表示
+            </label>
+            <button
+              type="button"
+              onClick={resetQuickFilters}
+              className="rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+            >
+              フィルターをリセット
+            </button>
+            {selectedParticipantId && (
+              <Link
+                to={buildDetailLink(selectedParticipantId)}
+                className="inline-flex items-center rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-sm font-semibold text-sky-800 transition hover:bg-sky-100"
+              >
+                詳細へ移動
+              </Link>
+            )}
+          </div>
+        </div>
+        {selectedParticipant && (
+          <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <h3 className="text-lg font-semibold text-slate-900">
+              選択中: {selectedParticipant.name} ({selectedParticipant.memberNo || "-"})
+            </h3>
+            {selectedParticipantRows.length === 0 ? (
+              <p className="mt-2 text-sm text-slate-600">この条件では順位データがありません。</p>
+            ) : (
+              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700">
+                {selectedParticipantRows.map((row) => (
+                  <li key={`${row.categoryName}-${row.participantId}`}>
+                    {row.categoryName}: {row.rank}位 / 得点 {row.totalPoints} / 完登 {row.clearCount}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        )}
 
-      {calculating && <p>ランキングを計算中...</p>}
+        {calculating && <p className="mt-4 text-sm text-slate-600">ランキングを計算中...</p>}
 
-      {visibleCategories.length === 0 ? (
-        <p>カテゴリが登録されていません。</p>
-      ) : showOnlySelected && !selectedParticipantId ? (
-        <p>クライマーを選択すると、自分の順位とスコアを表示します。</p>
-      ) : (
-        visibleCategories.map((category) => {
-          const allRows = rankings[category.id] || [];
-          const rows = allRows.filter((row) => {
-            if (
-              showOnlySelected &&
-              selectedParticipantId &&
-              row.participantId !== selectedParticipantId
-            ) {
-              return false;
-            }
-            if (!hasSearch) return true;
-            const name = (row.name || "").toLowerCase();
-            const memberNo = (row.memberNo || "").toLowerCase();
-            return name.includes(normalizedKeyword) || memberNo.includes(normalizedKeyword);
-          });
+        {visibleCategories.length === 0 ? (
+          <p className="mt-4 text-sm text-slate-600">カテゴリが登録されていません。</p>
+        ) : showOnlySelected && !selectedParticipantId ? (
+          <p className="mt-4 text-sm text-slate-600">クライマーを選択すると、自分の順位とスコアを表示します。</p>
+        ) : (
+          visibleCategories.map((category) => {
+            const allRows = rankings[category.id] || [];
+            const rows = allRows.filter((row) => {
+              if (
+                showOnlySelected &&
+                selectedParticipantId &&
+                row.participantId !== selectedParticipantId
+              ) {
+                return false;
+              }
+              if (!hasSearch) return true;
+              const name = (row.name || "").toLowerCase();
+              const memberNo = (row.memberNo || "").toLowerCase();
+              return name.includes(normalizedKeyword) || memberNo.includes(normalizedKeyword);
+            });
 
-          return (
-            <section key={category.id} style={{ marginBottom: "2em" }}>
-              <h3>カテゴリ: {category.name}</h3>
-              {rows.length === 0 ? (
-                <p>{hasSearch ? "検索条件に一致するクライマーがいません。" : "クライマーデータがありません。"}</p>
-              ) : (
-                <div style={{ overflowX: "auto" }}>
-                  <table style={{ borderCollapse: "collapse", width: "100%", minWidth: "650px" }}>
-                    <thead>
-                      <tr>
-                        <th style={{ textAlign: "left", borderBottom: "1px solid #ccc" }}>順位</th>
-                        <th style={{ textAlign: "left", borderBottom: "1px solid #ccc" }}>名前</th>
-                        <th style={{ textAlign: "left", borderBottom: "1px solid #ccc" }}>会員番号</th>
-                        <th style={{ textAlign: "right", borderBottom: "1px solid #ccc" }}>得点</th>
-                        <th style={{ textAlign: "right", borderBottom: "1px solid #ccc" }}>完登数</th>
-                        <th style={{ textAlign: "left", borderBottom: "1px solid #ccc" }}>詳細</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {rows.map((row) => (
-                        <tr key={row.participantId}>
-                          <td style={{ padding: "0.4em 0" }}>{row.rank}</td>
-                          <td>
-                            {row.name}
-                            {selectedParticipantId === row.participantId && (
-                              <strong style={{ marginLeft: "0.4em" }}>(選択中)</strong>
-                            )}
-                          </td>
-                          <td>{row.memberNo}</td>
-                          <td style={{ textAlign: "right" }}>{row.totalPoints}</td>
-                          <td style={{ textAlign: "right" }}>{row.clearCount}</td>
-                          <td>
-                            <Link to={buildDetailLink(row.participantId)}>
-                              詳細を見る
-                            </Link>
-                          </td>
+            return (
+              <section key={category.id} className="mt-6">
+                <h3 className="text-lg font-bold text-slate-900">カテゴリ: {category.name}</h3>
+                {rows.length === 0 ? (
+                  <p className="mt-2 text-sm text-slate-600">{hasSearch ? "検索条件に一致するクライマーがいません。" : "クライマーデータがありません。"}</p>
+                ) : (
+                  <div className="mt-3 overflow-x-auto rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+                    <table className="min-w-[650px] w-full border-collapse text-sm">
+                      <thead>
+                        <tr>
+                          <th className="border-b border-slate-200 py-2 text-left">順位</th>
+                          <th className="border-b border-slate-200 py-2 text-left">名前</th>
+                          <th className="border-b border-slate-200 py-2 text-left">会員番号</th>
+                          <th className="border-b border-slate-200 py-2 text-right">得点</th>
+                          <th className="border-b border-slate-200 py-2 text-right">完登数</th>
+                          <th className="border-b border-slate-200 py-2 text-left">詳細</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </section>
-          );
-        })
-      )}
+                      </thead>
+                      <tbody>
+                        {rows.map((row) => (
+                          <tr key={row.participantId}>
+                            <td className="py-2">{row.rank}</td>
+                            <td className="py-2">
+                              {row.name}
+                              {selectedParticipantId === row.participantId && (
+                                <strong className="ml-2 text-xs text-slate-500">(選択中)</strong>
+                              )}
+                            </td>
+                            <td className="py-2">{row.memberNo}</td>
+                            <td className="py-2 text-right">{row.totalPoints}</td>
+                            <td className="py-2 text-right">{row.clearCount}</td>
+                            <td className="py-2">
+                              <Link
+                                to={buildDetailLink(row.participantId)}
+                                className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-100"
+                              >
+                                詳細を見る
+                              </Link>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </section>
+            );
+          })
+        )}
 
-      <div style={{ marginTop: "2em" }}>
-        <Link to="/score-summary">← イベント選択に戻る</Link>
+        <div className="mt-8">
+          <Link
+            to="/score-summary"
+            className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+          >
+            ← イベント選択に戻る
+          </Link>
+        </div>
       </div>
     </div>
   );

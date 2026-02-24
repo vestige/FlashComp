@@ -28,27 +28,43 @@ const ScoreEventSelector = () => {
   }, []);
 
   if (loading) {
-    return <p>イベントを読み込んでいます...</p>;
+    return (
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+        <p className="text-sm text-slate-600">イベントを読み込んでいます...</p>
+      </div>
+    );
   }
 
   return (
-    <div style={{ padding: "2em" }}>
-      <h2>📋 スコア採点するイベントを選択</h2>
-      {events.length === 0 ? (
-        <p>採点可能なイベントがありません。</p>
-      ) : (
-        <ul>
-          {events.map((event) => (
-            <li key={event.id}>
-              <Link to={`/events/${event.id}/scores`}>
-                {event.name}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
-      <div style={{ marginTop: "2em" }}>
-        <Link to="/dashboard">← ダッシュボードに戻る</Link>
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#dbeafe_0%,_#f8fafc_45%,_#ecfeff_100%)]">
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="text-2xl font-bold text-slate-900">📋 スコア採点するイベントを選択</h2>
+          {events.length === 0 ? (
+            <p className="mt-4 text-sm text-slate-600">採点可能なイベントがありません。</p>
+          ) : (
+            <ul className="mt-4 space-y-2">
+              {events.map((event) => (
+                <li key={event.id}>
+                  <Link
+                    to={`/events/${event.id}/scores`}
+                    className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                  >
+                    {event.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="mt-6">
+            <Link
+              to="/dashboard"
+              className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+            >
+              ← ダッシュボードに戻る
+            </Link>
+          </div>
+        </section>
       </div>
     </div>
   );
