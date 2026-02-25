@@ -88,7 +88,7 @@ const Home = () => {
             </div>
             <h1 className="text-2xl font-extrabold tracking-tight text-emerald-700">Climbing Competition</h1>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="relative flex items-center gap-2">
             {!currentUser && (
               <Link
                 to="/login"
@@ -133,33 +133,33 @@ const Home = () => {
                 <path d="M4 7h16M4 12h16M4 17h16" />
               </svg>
             </button>
+            {isMenuOpen && (
+              <div className="absolute right-0 top-12 z-50 w-56 rounded-xl border border-slate-200 bg-white p-2 shadow-lg">
+                <button
+                  type="button"
+                  onClick={() => handlePortalNavigation("/dashboard", "/dashboard")}
+                  className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                >
+                  ジムオーナー
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handlePortalNavigation("/score-summary")}
+                  className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                >
+                  クライマー
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handlePortalNavigation("/system-admin", "/system-admin")}
+                  className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                >
+                  システム管理者
+                </button>
+              </div>
+            )}
           </div>
         </div>
-        {isMenuOpen && (
-          <div className="mx-auto mt-3 w-full max-w-7xl rounded-xl border border-slate-200 bg-white p-2 shadow-sm">
-            <button
-              type="button"
-              onClick={() => handlePortalNavigation("/dashboard", "/dashboard")}
-              className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-            >
-              ジムオーナー
-            </button>
-            <button
-              type="button"
-              onClick={() => handlePortalNavigation("/score-summary")}
-              className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-            >
-              クライマー
-            </button>
-            <button
-              type="button"
-              onClick={() => handlePortalNavigation("/system-admin", "/system-admin")}
-              className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-            >
-              システム管理者
-            </button>
-          </div>
-        )}
       </header>
 
       <main className="relative">
