@@ -13,6 +13,7 @@ import EventSummary from "./pages/EventSummary"; // インポートを追加
 import ParticipantScoreDetail from "./pages/ParticipantScoreDetail";
 import SystemAdmin from "./pages/SystemAdmin";
 import ProtectedRoute from "./components/ProtectedRoute";
+import ManagementLayout from "./components/ManagementLayout";
 
 function App() {
   return (
@@ -21,61 +22,23 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route
-          path="/dashboard"
           element={
             <ProtectedRoute>
-              <Dashboard />
+              <ManagementLayout />
             </ProtectedRoute>
           }
-        />
-        <Route
-          path="/create-event"
-          element={
-            <ProtectedRoute>
-              <CreateEvent />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/events/:eventId/edit"
-          element={
-            <ProtectedRoute>
-              <EditEvent />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/events/:eventId/climbers"
-          element={
-            <ProtectedRoute>
-              <EventClimbers />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/events/:eventId/scores"
-          element={
-            <ProtectedRoute>
-              <EventScores />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/events/:eventId/scoreinput/:seasonId/:categoryId/:participantId"
-          element={
-            <ProtectedRoute>
-              <ScoreInput />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/events/:eventId/data-io"
-          element={
-            <ProtectedRoute>
-              <EventDataIO />
-            </ProtectedRoute>
-          }
-        />
+        >
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/create-event" element={<CreateEvent />} />
+          <Route path="/events/:eventId/edit" element={<EditEvent />} />
+          <Route path="/events/:eventId/climbers" element={<EventClimbers />} />
+          <Route path="/events/:eventId/scores" element={<EventScores />} />
+          <Route
+            path="/events/:eventId/scoreinput/:seasonId/:categoryId/:participantId"
+            element={<ScoreInput />}
+          />
+          <Route path="/events/:eventId/data-io" element={<EventDataIO />} />
+        </Route>
         <Route
           path="/system-admin"
           element={

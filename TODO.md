@@ -9,3 +9,10 @@
 
 ## 明日の実装計画（別マシン再開用）
 
+- [ ] ジム管理系ページの共通レイアウト適用確認（`ManagementLayout` のヘッダー/フッター）
+- [ ] `Dashboard` を `DB2.html` ベースで再構成（Page Header / Settings / Registered Events）
+- [ ] `Registered Events` をカードUI化（日付ブロック・ジム名・操作ボタン）
+- [ ] イベント状態表示を追加（`LIVE` / `Completed` を日付から判定）
+- [ ] フィルタUIを追加（`ALL` / `ACTIVE` の切り替え）
+- [ ] `New Registrations` / `Score Completion` / `Active Judges` は実装しない
+- [ ] Dashboard改修後に `CreateEvent` 以降の管理画面へ同じデザイン言語を横展開
