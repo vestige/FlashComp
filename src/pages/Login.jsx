@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase"; 
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { usePageTitle } from "../hooks/usePageTitle";
 
 const Login = () => {
@@ -25,11 +25,22 @@ const Login = () => {
     }
   };
 
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    await handleLogin();
+  };
+
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#dbeafe_0%,_#f8fafc_50%,_#eef2ff_100%)] px-4 py-10">
       <div className="mx-auto w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <Link
+          to="/"
+          className="inline-flex items-center text-sm font-medium text-slate-600 transition hover:text-slate-900"
+        >
+          ← Homeに戻る
+        </Link>
         <h2 className="text-2xl font-bold text-slate-900">管理者ログイン</h2>
-        <div className="mt-4 grid gap-3">
+        <form className="mt-4 grid gap-3" onSubmit={handleSubmit}>
           <input
             type="email"
             placeholder="メールアドレス"
@@ -45,12 +56,12 @@ const Login = () => {
             className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
           />
           <button
-            onClick={handleLogin}
+            type="submit"
             className="inline-flex items-center justify-center rounded-lg border border-sky-200 bg-sky-50 px-4 py-2 text-sm font-semibold text-sky-800 transition hover:bg-sky-100"
           >
             ログイン
           </button>
-        </div>
+        </form>
         {status && (
           <div className="mt-4 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
             {status}
