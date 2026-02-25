@@ -67,6 +67,17 @@ const Home = () => {
     navigate("/", { replace: true });
   };
 
+  const handlePortalNavigation = (path, redirectAfterLoginPath) => {
+    setIsMenuOpen(false);
+    if (redirectAfterLoginPath && !currentUser) {
+      navigate("/login", {
+        state: { from: { pathname: redirectAfterLoginPath } },
+      });
+      return;
+    }
+    navigate(path);
+  };
+
   return (
     <div className="min-h-screen scroll-smooth bg-white text-slate-900">
       <header className="sticky top-0 z-50 border-b border-slate-100 bg-white/90 px-4 py-4 backdrop-blur sm:px-6 lg:px-10">
@@ -126,27 +137,27 @@ const Home = () => {
         </div>
         {isMenuOpen && (
           <div className="mx-auto mt-3 w-full max-w-7xl rounded-xl border border-slate-200 bg-white p-2 shadow-sm">
-            <a
-              href="#portal-owner"
-              onClick={() => setIsMenuOpen(false)}
-              className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+            <button
+              type="button"
+              onClick={() => handlePortalNavigation("/dashboard", "/dashboard")}
+              className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
             >
               ジムオーナー
-            </a>
-            <a
-              href="#portal-climber"
-              onClick={() => setIsMenuOpen(false)}
-              className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+            </button>
+            <button
+              type="button"
+              onClick={() => handlePortalNavigation("/score-summary")}
+              className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
             >
               クライマー
-            </a>
-            <a
-              href="#portal-admin"
-              onClick={() => setIsMenuOpen(false)}
-              className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+            </button>
+            <button
+              type="button"
+              onClick={() => handlePortalNavigation("/system-admin", "/system-admin")}
+              className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
             >
               システム管理者
-            </a>
+            </button>
           </div>
         )}
       </header>
