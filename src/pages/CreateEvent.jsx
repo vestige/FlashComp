@@ -98,81 +98,114 @@ function CreateEvent() {
 
   if (error || profileError) {
     return (
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-          {error || profileError}
-        </p>
-        <Link
-          to="/dashboard"
-          className="mt-4 inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
-        >
-          ← ダッシュボードへ戻る
-        </Link>
+      <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#dbeafe_0%,_#f8fafc_45%,_#ecfeff_100%)]">
+        <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+          <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            {error || profileError}
+          </p>
+          <Link
+            to="/dashboard"
+            className="mt-4 inline-flex items-center rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+          >
+            ← ダッシュボードへ戻る
+          </Link>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#dbeafe_0%,_#f8fafc_45%,_#ecfeff_100%)]">
-      <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-2xl font-bold text-slate-900">🗓 イベント作成</h2>
+      <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">Create New Event</h1>
+            <p className="mt-2 text-base text-slate-600">
+              大会の基本情報を設定し、新しいイベントを開始します。
+            </p>
+          </div>
           <Link
             to="/dashboard"
-            className="mt-3 inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+            className="inline-flex items-center rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
           >
             ← ダッシュボードへ戻る
           </Link>
+        </div>
 
+        <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
           {gyms.length === 0 ? (
-            <p className="mt-4 text-sm text-slate-600">
+            <p className="text-sm text-slate-600">
               担当ジムが未設定のため、イベントを作成できません。システム管理者に設定を依頼してください。
             </p>
           ) : (
-            <form onSubmit={handleSubmit} className="mt-4 grid gap-3">
-              <input
-                type="text"
-                placeholder="イベント名"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
-              />
-              <select
-                value={gymId}
-                onChange={(e) => setGymId(e.target.value)}
-                required
-                className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
-              >
-                {gyms.map((gym) => (
-                  <option key={gym.id} value={gym.id}>
-                    {gym.name || gym.id}
-                  </option>
-                ))}
-              </select>
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                required
-                className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
-              />
-              <input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                required
-                className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
-              />
-              <button
-                type="submit"
-                className="inline-flex items-center justify-center rounded-lg border border-sky-200 bg-sky-50 px-4 py-2 text-sm font-semibold text-sky-800 transition hover:bg-sky-100"
-              >
-                作成
-              </button>
+            <form onSubmit={handleSubmit} className="grid gap-4">
+              <div className="grid gap-2">
+                <label className="text-sm font-semibold text-slate-700">イベント名</label>
+                <input
+                  type="text"
+                  placeholder="例: FlashComp Live 2026"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <label className="text-sm font-semibold text-slate-700">開催ジム</label>
+                <select
+                  value={gymId}
+                  onChange={(e) => setGymId(e.target.value)}
+                  required
+                  className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                >
+                  {gyms.map((gym) => (
+                    <option key={gym.id} value={gym.id}>
+                      {gym.name || gym.id}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-2">
+                  <label className="text-sm font-semibold text-slate-700">開始日</label>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    required
+                    className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <label className="text-sm font-semibold text-slate-700">終了日</label>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    required
+                    className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  className="inline-flex items-center rounded-xl bg-emerald-800 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-900/15 transition hover:bg-emerald-900"
+                >
+                  Create Event
+                </button>
+              </div>
             </form>
           )}
-          {status && <p className="mt-4 text-sm text-slate-600">{status}</p>}
+
+          {status && (
+            <p className={`mt-4 rounded-lg px-3 py-2 text-sm ${status.startsWith("✅") ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>
+              {status}
+            </p>
+          )}
         </section>
       </div>
     </div>
