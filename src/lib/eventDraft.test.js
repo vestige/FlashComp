@@ -6,6 +6,9 @@ describe("validateEventDraft", () => {
     expect(validateEventDraft({ name: "", gymId: "", startDate: "", endDate: "" })).toBe(
       "イベント名を入力してください"
     );
+    expect(
+      validateEventDraft({ name: "   ", gymId: "gym-a", startDate: "2026-03-01", endDate: "2026-03-02" })
+    ).toBe("イベント名を入力してください");
     expect(validateEventDraft({ name: "Event", gymId: "", startDate: "2026-03-01", endDate: "2026-03-02" })).toBe(
       "担当ジムを選択してください"
     );

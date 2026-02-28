@@ -17,7 +17,7 @@
 - [x] Dashboard改修後に `CreateEvent` 以降の管理画面へ同じデザイン言語を横展開（`CreateEvent` / `EditEvent` / `EventClimbers` / `EventScores` / `EventDataIO`）
 
 ### 優先2: Event設定画面の操作集約
-- [ ] イベント編集画面でイベント自体を編集できるようにする（名前・期間）
+- [x] イベント編集画面でイベント自体を編集できるようにする（名前・期間）
 - [ ] `EditEvent` の設定進捗を可視化（シーズン/カテゴリ/課題）
 - [ ] `EditEvent` / `EventClimbers` / `EventScores` のクイックナビを共通化
 - [ ] イベント編集画面でシーズン追加をポップアップで行えるようにする（Create Eventと同系UI）

@@ -8,6 +8,9 @@ import {
   getDocs,
   doc,
   getDoc,
+  Timestamp,
+  serverTimestamp,
+  updateDoc,
 } from "firebase/firestore";
 
 import SeasonManager from "../components/SeasonManager";
@@ -15,6 +18,7 @@ import CategoryManager from "../components/CategoryManager";
 import RouteSelector from "../components/RouteSelector";
 import { usePageTitle } from "../hooks/usePageTitle";
 import { useOwnerProfile } from "../hooks/useOwnerProfile";
+import { validateEventDraft } from "../lib/eventDraft";
 
 const TAB_CONFIG = [
   { id: "seasons", label: "📅 シーズン", hint: "開催期間の分割を設定" },
@@ -26,6 +30,23 @@ const normalizeTab = (value) => {
   if (!value) return "seasons";
   if (value === "routes" || value === "participants" || value === "scores") return "seasons";
   return TAB_CONFIG.some((tab) => tab.id === value) ? value : "seasons";
+};
+
+const toDate = (value) => {
+  if (!value) return null;
+  if (typeof value.toDate === "function") return value.toDate();
+  if (typeof value.seconds === "number") return new Date(value.seconds * 1000);
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
+const toInputDate = (value) => {
+  const date = toDate(value);
+  if (!date) return "";
+  const y = String(date.getFullYear());
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
 };
 
 const EditEvent = () => {
@@ -41,6 +62,14 @@ const EditEvent = () => {
   const [categories, setCategories] = useState([]);
   const [seasonCount, setSeasonCount] = useState(0);
   const [participantCount, setParticipantCount] = useState(0);
+  const [eventGymId, setEventGymId] = useState("");
+  const [eventDraft, setEventDraft] = useState({
+    name: "",
+    startDate: "",
+    endDate: "",
+  });
+  const [saveStatus, setSaveStatus] = useState("");
+  const [isSavingEvent, setIsSavingEvent] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [deleteError, setDeleteError] = useState("");
@@ -75,7 +104,14 @@ const EditEvent = () => {
         }
 
         const eventData = eventDocSnap.data();
-        setEventName(eventData.name || "");
+        const nextName = eventData.name || "";
+        setEventName(nextName);
+        setEventGymId(eventData.gymId || "");
+        setEventDraft({
+          name: nextName,
+          startDate: toInputDate(eventData.startDate),
+          endDate: toInputDate(eventData.endDate),
+        });
         if (!hasAllGymAccess && !gymIds.includes(eventData.gymId)) {
           setAccessDenied(true);
           return;
@@ -119,6 +155,41 @@ const EditEvent = () => {
       setSearchParams(next, { replace: true });
     }
   }, [activeTab, searchParams, setSearchParams]);
+
+  const handleSaveEventMeta = async (e) => {
+    e.preventDefault();
+    const name = eventDraft.name.trim();
+    const validationError = validateEventDraft({
+      name,
+      gymId: eventGymId,
+      startDate: eventDraft.startDate,
+      endDate: eventDraft.endDate,
+    });
+
+    if (validationError) {
+      setSaveStatus(`❌ ${validationError}`);
+      return;
+    }
+
+    setIsSavingEvent(true);
+    setSaveStatus("");
+    try {
+      const payload = {
+        name,
+        startDate: Timestamp.fromDate(new Date(eventDraft.startDate)),
+        endDate: Timestamp.fromDate(new Date(eventDraft.endDate)),
+        updatedAt: serverTimestamp(),
+      };
+      await updateDoc(doc(db, "events", eventId), payload);
+      setEventName(name);
+      setSaveStatus("✅ イベント情報を更新しました。");
+    } catch (err) {
+      console.error("イベント更新に失敗:", err);
+      setSaveStatus("❌ イベント更新に失敗しました。");
+    } finally {
+      setIsSavingEvent(false);
+    }
+  };
 
   const handleDeleteEvent = async () => {
     const targetName = eventName || "このイベント";
@@ -202,6 +273,66 @@ const EditEvent = () => {
             ↩ ダッシュボードへ戻る
           </Link>
         </div>
+
+        <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <h3 className="text-lg font-bold text-slate-900">イベント基本情報</h3>
+          <p className="mt-1 text-sm text-slate-600">
+            大会名と開催期間を更新できます。保存後すぐに各画面へ反映されます。
+          </p>
+          <form onSubmit={handleSaveEventMeta} className="mt-4 grid gap-4">
+            <div className="grid gap-2">
+              <label className="text-sm font-semibold text-slate-700">イベント名</label>
+              <input
+                type="text"
+                value={eventDraft.name}
+                onChange={(e) => setEventDraft((prev) => ({ ...prev, name: e.target.value }))}
+                placeholder="例: FlashComp Live 2026"
+                required
+                className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+              />
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-2">
+                <label className="text-sm font-semibold text-slate-700">開始日</label>
+                <input
+                  type="date"
+                  value={eventDraft.startDate}
+                  onChange={(e) => setEventDraft((prev) => ({ ...prev, startDate: e.target.value }))}
+                  required
+                  className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                />
+              </div>
+              <div className="grid gap-2">
+                <label className="text-sm font-semibold text-slate-700">終了日</label>
+                <input
+                  type="date"
+                  value={eventDraft.endDate}
+                  onChange={(e) => setEventDraft((prev) => ({ ...prev, endDate: e.target.value }))}
+                  required
+                  className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                />
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="submit"
+                disabled={isSavingEvent}
+                className="inline-flex items-center rounded-xl bg-emerald-800 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-emerald-900/15 transition hover:bg-emerald-900 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isSavingEvent ? "保存中..." : "イベント情報を保存"}
+              </button>
+              {saveStatus && (
+                <p
+                  className={`rounded-lg px-3 py-2 text-sm ${
+                    saveStatus.startsWith("✅") ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"
+                  }`}
+                >
+                  {saveStatus}
+                </p>
+              )}
+            </div>
+          </form>
+        </section>
 
         <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <p className="text-sm text-slate-600">
