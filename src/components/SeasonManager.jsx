@@ -10,6 +10,14 @@ import {
   doc,
   Timestamp,
 } from "firebase/firestore";
+import {
+  formatSeasonDate,
+  formatSeasonDay,
+  formatSeasonMonth,
+  getSeasonStatus,
+  seasonStatusLabel,
+  seasonStatusStyle,
+} from "../lib/seasonStatus";
 
 const toInputDate = (value) => {
   if (!value) return "";
@@ -113,55 +121,131 @@ const SeasonManager = ({ eventId, showCreateForm = true, refreshToken = 0 }) => 
   };
 
   return (
-    <div>
-      <h3>{showCreateForm ? "📅 シーズン追加" : "📅 シーズン一覧"}</h3>
+    <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <h3 className="text-base font-bold text-slate-900">{showCreateForm ? "📅 シーズン追加" : "📅 シーズン一覧"}</h3>
       {showCreateForm && (
         <>
-          <form onSubmit={handleAddSeason}>
-            <input type="text" placeholder="シーズン名" value={seasonName} onChange={(e) => setSeasonName(e.target.value)} required />
-            <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} required />
-            <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} required />
-            <button type="submit">追加</button>
+          <form onSubmit={handleAddSeason} className="mt-3 grid gap-3 md:grid-cols-[1fr_auto_auto_auto] md:items-end">
+            <input
+              type="text"
+              placeholder="シーズン名"
+              value={seasonName}
+              onChange={(e) => setSeasonName(e.target.value)}
+              required
+              className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+            />
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              required
+              className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+            />
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              required
+              className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+            />
+            <button
+              type="submit"
+              className="inline-flex items-center justify-center rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-900"
+            >
+              追加
+            </button>
           </form>
-          <p>{status}</p>
+          {status && <p className="mt-3 text-sm text-slate-600">{status}</p>}
         </>
       )}
-      <ul>
-        {seasons.map((season) => (
-          <li key={season.id}>
-            {editingSeasonId === season.id ? (
-              <>
-                <input
-                  type="text"
-                  value={editForm.name}
-                  onChange={(e) => setEditForm((prev) => ({ ...prev, name: e.target.value }))}
-                />
-                <input
-                  type="date"
-                  value={editForm.startDate}
-                  onChange={(e) =>
-                    setEditForm((prev) => ({ ...prev, startDate: e.target.value }))
-                  }
-                />
-                <input
-                  type="date"
-                  value={editForm.endDate}
-                  onChange={(e) => setEditForm((prev) => ({ ...prev, endDate: e.target.value }))}
-                />
-                <button type="button" onClick={() => handleSaveEdit(season.id)}>保存</button>
-                <button type="button" onClick={handleCancelEdit}>キャンセル</button>
-              </>
-            ) : (
-              <>
-                {season.name}
-                （{season.startDate.toDate().toLocaleDateString()}〜
-                {season.endDate.toDate().toLocaleDateString()}）
-                <button type="button" onClick={() => handleStartEdit(season)}>編集</button>
-                <button type="button" onClick={() => handleDeleteSeason(season.id)}>削除</button>
-              </>
-            )}
-          </li>
-        ))}
+      <ul className="mt-4 grid gap-3">
+        {seasons.map((season) => {
+          const seasonStatus = getSeasonStatus(season);
+          const statusClass = seasonStatusStyle[seasonStatus] || seasonStatusStyle.unknown;
+          const statusLabel = seasonStatusLabel[seasonStatus] || seasonStatusLabel.unknown;
+
+          return (
+            <li
+              key={season.id}
+              className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-sky-300"
+            >
+              {editingSeasonId === season.id ? (
+                <div className="grid gap-3 md:grid-cols-[1fr_auto_auto] md:items-end">
+                  <input
+                    type="text"
+                    value={editForm.name}
+                    onChange={(e) => setEditForm((prev) => ({ ...prev, name: e.target.value }))}
+                    className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                  />
+                  <input
+                    type="date"
+                    value={editForm.startDate}
+                    onChange={(e) => setEditForm((prev) => ({ ...prev, startDate: e.target.value }))}
+                    className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                  />
+                  <input
+                    type="date"
+                    value={editForm.endDate}
+                    onChange={(e) => setEditForm((prev) => ({ ...prev, endDate: e.target.value }))}
+                    className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                  />
+                  <div className="md:col-span-3 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleSaveEdit(season.id)}
+                      className="inline-flex items-center rounded-lg bg-emerald-800 px-3 py-2 text-sm font-semibold text-white transition hover:bg-emerald-900"
+                    >
+                      保存
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCancelEdit}
+                      className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                    >
+                      キャンセル
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-14 w-14 rounded-lg bg-sky-50 text-center text-sky-800">
+                      <p className="pt-1 text-[10px] font-bold tracking-wide">{formatSeasonMonth(season.startDate)}</p>
+                      <p className="text-xl font-black">{formatSeasonDay(season.startDate)}</p>
+                    </div>
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-base font-bold text-slate-900">{season.name || "無題シーズン"}</p>
+                        <span className={`rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${statusClass}`}>
+                          {statusLabel}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-sm text-slate-500">
+                        {formatSeasonDate(season.startDate)} - {formatSeasonDate(season.endDate)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2 md:justify-end">
+                    <button
+                      type="button"
+                      onClick={() => handleStartEdit(season)}
+                      className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                    >
+                      編集
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteSeason(season.id)}
+                      className="inline-flex items-center rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700 transition hover:bg-rose-100"
+                    >
+                      削除
+                    </button>
+                  </div>
+                </div>
+              )}
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
