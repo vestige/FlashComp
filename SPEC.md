@@ -157,7 +157,11 @@ graph TD
 - ダッシュボード（`/dashboard`）のイベント別入口:
   - `設定` -> `/events/{eventId}/edit`
   - `クライマー` -> `/events/{eventId}/climbers`
-  - `スコア` -> `/events/{eventId}/scores`
+  - `スコア` -> `/events/{eventId}/scores`（`live` のときのみ表示）
+  - 主CTA（状態別）:
+    - `upcoming`: `Event Settings`（`/events/{eventId}/edit`）
+    - `live`: `Scores`（`/events/{eventId}/scores`）
+    - `completed`: `Public Ranking`（`/score-summary/{eventId}`）
 - 設定画面（`/events/{eventId}/edit`）内のナビ:
   - `シーズン`
   - `カテゴリ`

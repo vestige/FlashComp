@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { collection, getDocs } from "firebase/firestore";
 import { usePageTitle } from "../hooks/usePageTitle";
 import { useOwnerProfile } from "../hooks/useOwnerProfile";
+import { getEventActionPlan } from "../lib/dashboardActions";
 
 const toDate = (value) => {
   if (!value) return null;
@@ -59,6 +60,54 @@ const statusLabel = {
   upcoming: "UPCOMING",
   completed: "Completed",
   unknown: "Unknown",
+};
+
+const actionMeta = {
+  settings: {
+    label: "Event Settings",
+    buildPath: (eventId) => `/events/${eventId}/edit`,
+    icon: (
+      <>
+        <path d="M4 20h4l10-10-4-4L4 16v4Z" />
+        <path d="M12 6l4 4" />
+      </>
+    ),
+  },
+  climbers: {
+    label: "Climbers",
+    buildPath: (eventId) => `/events/${eventId}/climbers`,
+    icon: (
+      <>
+        <circle cx="9" cy="8" r="2.5" />
+        <circle cx="16" cy="9" r="2" />
+        <path d="M4 19c0-2.7 2.2-5 5-5s5 2.3 5 5" />
+        <path d="M14 19c0-1.9 1.6-3.5 3.5-3.5S21 17.1 21 19" />
+      </>
+    ),
+  },
+  scores: {
+    label: "Scores",
+    buildPath: (eventId) => `/events/${eventId}/scores`,
+    icon: (
+      <>
+        <path d="M4 19h16" />
+        <path d="M7 16V9" />
+        <path d="M12 16V5" />
+        <path d="M17 16v-6" />
+      </>
+    ),
+  },
+  ranking: {
+    label: "Public Ranking",
+    buildPath: (eventId) => `/score-summary/${eventId}`,
+    icon: (
+      <>
+        <path d="M5 19h14" />
+        <path d="M8 17V9l4-3 4 3v8" />
+        <path d="M10.5 13h3" />
+      </>
+    ),
+  },
 };
 
 const Icon = ({ children, className = "h-4 w-4" }) => (
@@ -153,6 +202,16 @@ const Dashboard = () => {
   const sectionClass = "rounded-xl border border-slate-200 bg-white p-6 shadow-sm";
   const subtleActionClass =
     "inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100";
+  const statusPrimaryActionClass = {
+    upcoming:
+      "inline-flex items-center gap-2 rounded-lg border border-sky-300 bg-sky-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-700",
+    live:
+      "inline-flex items-center gap-2 rounded-lg border border-emerald-300 bg-emerald-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-800",
+    completed:
+      "inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-slate-800 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-900",
+    unknown:
+      "inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-slate-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800",
+  };
   const primaryActionClass =
     "inline-flex items-center gap-2 rounded-xl bg-emerald-800 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-900/15 transition hover:bg-emerald-900";
   if (loading || profileLoading) {
@@ -261,6 +320,11 @@ const Dashboard = () => {
                 const status = event.status;
                 const isCompleted = status === "completed";
                 const isUpcoming = status === "upcoming";
+                const { primary: primaryActionKey, secondary: secondaryActionKeys } = getEventActionPlan({
+                  status,
+                  isCompleted,
+                });
+                const primaryAction = actionMeta[primaryActionKey];
                 const statusClass = statusStyle[status] || statusStyle.unknown;
                 const label = statusLabel[status] || statusLabel.unknown;
                 return (
@@ -306,33 +370,22 @@ const Dashboard = () => {
                         </div>
                       </div>
                       <div className="flex flex-wrap gap-2 lg:justify-end">
-                        <Link to={`/events/${event.id}/edit`} className={subtleActionClass}>
-                          <Icon>
-                            <path d="M4 20h4l10-10-4-4L4 16v4Z" />
-                            <path d="M12 6l4 4" />
-                          </Icon>
-                          Event Settings
+                        <Link
+                          to={primaryAction.buildPath(event.id)}
+                          className={statusPrimaryActionClass[status] || statusPrimaryActionClass.unknown}
+                        >
+                          <Icon>{primaryAction.icon}</Icon>
+                          {primaryAction.label}
                         </Link>
-                        {!isCompleted && (
-                          <Link to={`/events/${event.id}/climbers`} className={subtleActionClass}>
-                            <Icon>
-                              <circle cx="9" cy="8" r="2.5" />
-                              <circle cx="16" cy="9" r="2" />
-                              <path d="M4 19c0-2.7 2.2-5 5-5s5 2.3 5 5" />
-                              <path d="M14 19c0-1.9 1.6-3.5 3.5-3.5S21 17.1 21 19" />
-                            </Icon>
-                            Climbers
-                          </Link>
-                        )}
-                        <Link to={`/events/${event.id}/scores`} className={subtleActionClass}>
-                          <Icon>
-                            <path d="M4 19h16" />
-                            <path d="M7 16V9" />
-                            <path d="M12 16V5" />
-                            <path d="M17 16v-6" />
-                          </Icon>
-                          Scores
-                        </Link>
+                        {secondaryActionKeys.map((actionKey) => {
+                          const action = actionMeta[actionKey];
+                          return (
+                            <Link key={actionKey} to={action.buildPath(event.id)} className={subtleActionClass}>
+                              <Icon>{action.icon}</Icon>
+                              {action.label}
+                            </Link>
+                          );
+                        })}
                       </div>
                     </div>
                   </article>
