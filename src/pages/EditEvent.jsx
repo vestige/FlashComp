@@ -49,6 +49,12 @@ const toInputDate = (value) => {
   return `${y}-${m}-${d}`;
 };
 
+const formatDisplayDate = (value) => {
+  const date = toDate(value);
+  if (!date) return "-";
+  return date.toLocaleDateString("ja-JP");
+};
+
 const EditEvent = () => {
   const { eventId } = useParams();
   const navigate = useNavigate();
@@ -68,6 +74,12 @@ const EditEvent = () => {
     startDate: "",
     endDate: "",
   });
+  const [savedEventMeta, setSavedEventMeta] = useState({
+    name: "",
+    startDate: "",
+    endDate: "",
+  });
+  const [isEditingEventMeta, setIsEditingEventMeta] = useState(false);
   const [saveStatus, setSaveStatus] = useState("");
   const [isSavingEvent, setIsSavingEvent] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -108,6 +120,11 @@ const EditEvent = () => {
         setEventName(nextName);
         setEventGymId(eventData.gymId || "");
         setEventDraft({
+          name: nextName,
+          startDate: toInputDate(eventData.startDate),
+          endDate: toInputDate(eventData.endDate),
+        });
+        setSavedEventMeta({
           name: nextName,
           startDate: toInputDate(eventData.startDate),
           endDate: toInputDate(eventData.endDate),
@@ -182,7 +199,15 @@ const EditEvent = () => {
       };
       await updateDoc(doc(db, "events", eventId), payload);
       setEventName(name);
+      const nextMeta = {
+        name,
+        startDate: eventDraft.startDate,
+        endDate: eventDraft.endDate,
+      };
+      setEventDraft(nextMeta);
+      setSavedEventMeta(nextMeta);
       setSaveStatus("✅ イベント情報を更新しました。");
+      setIsEditingEventMeta(false);
     } catch (err) {
       console.error("イベント更新に失敗:", err);
       setSaveStatus("❌ イベント更新に失敗しました。");
@@ -279,59 +304,102 @@ const EditEvent = () => {
           <p className="mt-1 text-sm text-slate-600">
             大会名と開催期間を更新できます。保存後すぐに各画面へ反映されます。
           </p>
-          <form onSubmit={handleSaveEventMeta} className="mt-4 grid gap-4">
-            <div className="grid gap-2">
-              <label className="text-sm font-semibold text-slate-700">イベント名</label>
-              <input
-                type="text"
-                value={eventDraft.name}
-                onChange={(e) => setEventDraft((prev) => ({ ...prev, name: e.target.value }))}
-                placeholder="例: FlashComp Live 2026"
-                required
-                className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
-              />
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="grid gap-2">
-                <label className="text-sm font-semibold text-slate-700">開始日</label>
-                <input
-                  type="date"
-                  value={eventDraft.startDate}
-                  onChange={(e) => setEventDraft((prev) => ({ ...prev, startDate: e.target.value }))}
-                  required
-                  className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
-                />
+          {!isEditingEventMeta ? (
+            <div className="mt-4 space-y-3">
+              <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                <p className="text-xs font-semibold tracking-wide text-slate-500">イベント名</p>
+                <p className="mt-1 text-sm font-medium text-slate-900">{eventDraft.name || "-"}</p>
               </div>
-              <div className="grid gap-2">
-                <label className="text-sm font-semibold text-slate-700">終了日</label>
-                <input
-                  type="date"
-                  value={eventDraft.endDate}
-                  onChange={(e) => setEventDraft((prev) => ({ ...prev, endDate: e.target.value }))}
-                  required
-                  className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
-                />
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                  <p className="text-xs font-semibold tracking-wide text-slate-500">開始日</p>
+                  <p className="mt-1 text-sm font-medium text-slate-900">{formatDisplayDate(eventDraft.startDate)}</p>
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                  <p className="text-xs font-semibold tracking-wide text-slate-500">終了日</p>
+                  <p className="mt-1 text-sm font-medium text-slate-900">{formatDisplayDate(eventDraft.endDate)}</p>
+                </div>
               </div>
-            </div>
-            <div className="flex flex-wrap items-center gap-3">
-              <button
-                type="submit"
-                disabled={isSavingEvent}
-                className="inline-flex items-center rounded-xl bg-emerald-800 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-emerald-900/15 transition hover:bg-emerald-900 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {isSavingEvent ? "保存中..." : "イベント情報を保存"}
-              </button>
-              {saveStatus && (
-                <p
-                  className={`rounded-lg px-3 py-2 text-sm ${
-                    saveStatus.startsWith("✅") ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"
-                  }`}
+              <div className="pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEventDraft(savedEventMeta);
+                    setIsEditingEventMeta(true);
+                    setSaveStatus("");
+                  }}
+                  className="inline-flex items-center rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-slate-800"
                 >
-                  {saveStatus}
-                </p>
-              )}
+                  編集
+                </button>
+              </div>
             </div>
-          </form>
+          ) : (
+            <form onSubmit={handleSaveEventMeta} className="mt-4 grid gap-4">
+              <div className="grid gap-2">
+                <label className="text-sm font-semibold text-slate-700">イベント名</label>
+                <input
+                  type="text"
+                  value={eventDraft.name}
+                  onChange={(e) => setEventDraft((prev) => ({ ...prev, name: e.target.value }))}
+                  placeholder="例: FlashComp Live 2026"
+                  required
+                  className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                />
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-2">
+                  <label className="text-sm font-semibold text-slate-700">開始日</label>
+                  <input
+                    type="date"
+                    value={eventDraft.startDate}
+                    onChange={(e) => setEventDraft((prev) => ({ ...prev, startDate: e.target.value }))}
+                    required
+                    className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <label className="text-sm font-semibold text-slate-700">終了日</label>
+                  <input
+                    type="date"
+                    value={eventDraft.endDate}
+                    onChange={(e) => setEventDraft((prev) => ({ ...prev, endDate: e.target.value }))}
+                    required
+                    className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                  />
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  type="submit"
+                  disabled={isSavingEvent}
+                  className="inline-flex items-center rounded-xl bg-emerald-800 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-emerald-900/15 transition hover:bg-emerald-900 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isSavingEvent ? "更新中..." : "更新"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEventDraft(savedEventMeta);
+                    setIsEditingEventMeta(false);
+                    setSaveStatus("");
+                  }}
+                  className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                >
+                  キャンセル
+                </button>
+              </div>
+            </form>
+          )}
+          {saveStatus && (
+            <p
+              className={`mt-3 inline-flex rounded-lg px-3 py-2 text-sm ${
+                saveStatus.startsWith("✅") ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"
+              }`}
+            >
+              {saveStatus}
+            </p>
+          )}
         </section>
 
         <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
