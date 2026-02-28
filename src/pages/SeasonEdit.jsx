@@ -13,8 +13,9 @@ import {
 import { db } from "../firebase";
 import { useOwnerProfile } from "../hooks/useOwnerProfile";
 import { usePageTitle } from "../hooks/usePageTitle";
-import { validateSeasonDraft } from "../lib/seasonDraft";
+import { validateSeasonDraft, validateSeasonInEventRange } from "../lib/seasonDraft";
 import { formatSeasonDate, getSeasonStatus, seasonStatusLabel, seasonStatusStyle } from "../lib/seasonStatus";
+import RouteSelector from "../components/RouteSelector";
 
 const toDate = (value) => {
   if (!value) return null;
@@ -39,6 +40,8 @@ const SeasonEdit = () => {
   const [eventName, setEventName] = useState("");
   const [seasonDraft, setSeasonDraft] = useState({ name: "", startDate: "", endDate: "" });
   const [savedSeason, setSavedSeason] = useState({ name: "", startDate: "", endDate: "" });
+  const [eventRange, setEventRange] = useState({ startDate: "", endDate: "" });
+  const [categories, setCategories] = useState([]);
   const [taskCount, setTaskCount] = useState(0);
   const [status, setStatus] = useState("");
   const [deleteError, setDeleteError] = useState("");
@@ -71,9 +74,10 @@ const SeasonEdit = () => {
       try {
         const eventRef = doc(db, "events", eventId);
         const seasonRef = doc(db, "events", eventId, "seasons", seasonId);
-        const [eventSnap, seasonSnap, taskSnap] = await Promise.all([
+        const [eventSnap, seasonSnap, categorySnap, taskSnap] = await Promise.all([
           getDoc(eventRef),
           getDoc(seasonRef),
+          getDocs(collection(db, "events", eventId, "categories")),
           getDocs(collection(db, "events", eventId, "seasons", seasonId, "tasks")),
         ]);
 
@@ -88,12 +92,17 @@ const SeasonEdit = () => {
 
         const eventData = eventSnap.data();
         setEventName(eventData.name || "");
+        setEventRange({
+          startDate: toInputDate(eventData.startDate),
+          endDate: toInputDate(eventData.endDate),
+        });
         if (!hasAllGymAccess && !gymIds.includes(eventData.gymId)) {
           setAccessDenied(true);
           return;
         }
 
         const seasonData = seasonSnap.data();
+        setCategories(categorySnap.docs.map((categoryDoc) => ({ id: categoryDoc.id, ...categoryDoc.data() })));
         const nextDraft = {
           name: seasonData.name || "",
           startDate: toInputDate(seasonData.startDate),
@@ -123,6 +132,16 @@ const SeasonEdit = () => {
     const validationError = validateSeasonDraft(normalizedDraft);
     if (validationError) {
       setStatus(`❌ ${validationError}`);
+      return;
+    }
+    const rangeError = validateSeasonInEventRange({
+      startDate: normalizedDraft.startDate,
+      endDate: normalizedDraft.endDate,
+      eventStartDate: eventRange.startDate,
+      eventEndDate: eventRange.endDate,
+    });
+    if (rangeError) {
+      setStatus(`❌ ${rangeError}`);
       return;
     }
 
@@ -348,15 +367,21 @@ const SeasonEdit = () => {
 
         <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <h3 className="text-base font-bold text-slate-900">課題設定</h3>
-          <p className="mt-1 text-sm text-slate-600">
-            次ステップで、この画面からシーズン課題の追加・編集へ統合します。現状はイベント設定の課題タブから操作してください。
-          </p>
-          <Link
-            to={`/events/${eventId}/edit?tab=tasks`}
-            className="mt-3 inline-flex items-center rounded-lg border border-sky-300 bg-sky-50 px-3 py-2 text-sm font-semibold text-sky-800 transition hover:bg-sky-100"
-          >
-            🧩 課題設定タブへ移動
-          </Link>
+          {categories.length === 0 ? (
+            <p className="mt-1 text-sm text-slate-600">
+              先にイベント設定でカテゴリを登録してください。
+            </p>
+          ) : (
+            <div className="mt-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <RouteSelector
+                eventId={eventId}
+                categories={categories}
+                fixedSeasonId={seasonId}
+                hideSeasonSelector
+                title="🧩 このシーズンの課題設定"
+              />
+            </div>
+          )}
         </section>
 
         <section className="mt-8 rounded-2xl border border-rose-200 bg-rose-50/70 p-4 shadow-sm">

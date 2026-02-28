@@ -16,12 +16,11 @@ import {
 
 import SeasonManager from "../components/SeasonManager";
 import CategoryManager from "../components/CategoryManager";
-import RouteSelector from "../components/RouteSelector";
 import { usePageTitle } from "../hooks/usePageTitle";
 import { useOwnerProfile } from "../hooks/useOwnerProfile";
 import { validateEventDraft } from "../lib/eventDraft";
 import { buildSettingsProgress } from "../lib/settingsProgress";
-import { validateSeasonDraft } from "../lib/seasonDraft";
+import { validateSeasonDraft, validateSeasonInEventRange } from "../lib/seasonDraft";
 import { validateCategoryDraft } from "../lib/categoryDraft";
 
 const TAB_CONFIG = [
@@ -70,6 +69,7 @@ const EditEvent = () => {
   );
 
   const [categories, setCategories] = useState([]);
+  const [seasons, setSeasons] = useState([]);
   const [seasonCount, setSeasonCount] = useState(0);
   const [taskCount, setTaskCount] = useState(0);
   const [participantCount, setParticipantCount] = useState(0);
@@ -126,8 +126,13 @@ const EditEvent = () => {
       id: categoryDoc.id,
       ...categoryDoc.data(),
     }));
+    const seasonRows = seasonSnap.docs.map((seasonDoc) => ({
+      id: seasonDoc.id,
+      ...seasonDoc.data(),
+    }));
 
     setCategories(categoryRows);
+    setSeasons(seasonRows);
     setSeasonCount(seasonSnap.size);
     setTaskCount(nextTaskCount);
     setParticipantCount(participantSnap.size);
@@ -275,6 +280,16 @@ const EditEvent = () => {
     const validationError = validateSeasonDraft(seasonDraft);
     if (validationError) {
       setSeasonStatus(`❌ ${validationError}`);
+      return;
+    }
+    const rangeError = validateSeasonInEventRange({
+      startDate: seasonDraft.startDate,
+      endDate: seasonDraft.endDate,
+      eventStartDate: savedEventMeta.startDate,
+      eventEndDate: savedEventMeta.endDate,
+    });
+    if (rangeError) {
+      setSeasonStatus(`❌ ${rangeError}`);
       return;
     }
 
@@ -629,14 +644,28 @@ const EditEvent = () => {
           />
         )}
         {activeTab === "tasks" && (
-          categories.length === 0 ? (
-            <p className="mt-4 text-sm text-slate-600">先にカテゴリを登録してください。</p>
-          ) : (
-            <RouteSelector
-              eventId={eventId}
-              categories={categories}
-            />
-          )
+          <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <h3 className="text-base font-bold text-slate-900">課題設定の導線</h3>
+            <p className="mt-1 text-sm text-slate-600">
+              課題の追加・編集はシーズン編集ページで行います。対象シーズンを選択してください。
+            </p>
+            {seasons.length === 0 ? (
+              <p className="mt-3 text-sm text-slate-600">先にシーズンを登録してください。</p>
+            ) : (
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                {seasons.map((season) => (
+                  <Link
+                    key={season.id}
+                    to={`/events/${eventId}/seasons/${season.id}/edit`}
+                    className="inline-flex items-center justify-between rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700 transition hover:border-sky-300 hover:bg-sky-50 hover:text-sky-800"
+                  >
+                    <span>{season.name || "無題シーズン"}</span>
+                    <span>→</span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </section>
         )}
 
         <section className="mt-8 rounded-2xl border border-rose-200 bg-rose-50/70 p-4 shadow-sm">

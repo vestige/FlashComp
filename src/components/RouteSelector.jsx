@@ -31,7 +31,13 @@ const sortTasks = (rows) => {
   });
 };
 
-const RouteSelector = ({ eventId: eventIdProp, categories: categoriesProp = [] }) => {
+const RouteSelector = ({
+  eventId: eventIdProp,
+  categories: categoriesProp = [],
+  fixedSeasonId = "",
+  hideSeasonSelector = false,
+  title = "🧩 課題設定",
+}) => {
   const params = useParams();
   const eventId = eventIdProp || params.eventId;
 
@@ -63,6 +69,11 @@ const RouteSelector = ({ eventId: eventIdProp, categories: categoriesProp = [] }
 
     fetchBaseData();
   }, [eventId, categoriesProp]);
+
+  useEffect(() => {
+    if (!fixedSeasonId) return;
+    setSelectedSeason(fixedSeasonId);
+  }, [fixedSeasonId]);
 
   useEffect(() => {
     if (!eventId || !selectedSeason) {
@@ -256,28 +267,30 @@ const RouteSelector = ({ eventId: eventIdProp, categories: categoriesProp = [] }
 
   return (
     <div>
-      <h3 className="text-xl font-bold text-slate-900">🧩 課題設定</h3>
+      <h3 className="text-xl font-bold text-slate-900">{title}</h3>
       <p className="mt-1 text-sm text-slate-600">
         先にシーズン共通の課題を作成し、カテゴリごとに採用する課題を選択します。
       </p>
       {status && <p className="mt-2 text-sm text-slate-700">{status}</p>}
 
       <div className="mt-3 flex flex-wrap gap-3">
-        <label className="text-sm text-slate-700">
-          シーズン選択：
-          <select
-            value={selectedSeason}
-            onChange={(e) => setSelectedSeason(e.target.value)}
-            className="ml-2 rounded-lg border border-slate-300 px-2 py-1 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
-          >
-            <option value="">-- 選択 --</option>
-            {seasons.map((season) => (
-              <option key={season.id} value={season.id}>
-                {season.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        {!hideSeasonSelector && (
+          <label className="text-sm text-slate-700">
+            シーズン選択：
+            <select
+              value={selectedSeason}
+              onChange={(e) => setSelectedSeason(e.target.value)}
+              className="ml-2 rounded-lg border border-slate-300 px-2 py-1 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+            >
+              <option value="">-- 選択 --</option>
+              {seasons.map((season) => (
+                <option key={season.id} value={season.id}>
+                  {season.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
 
         <label className="text-sm text-slate-700">
           カテゴリ選択：
