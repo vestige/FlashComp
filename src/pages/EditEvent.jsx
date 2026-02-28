@@ -180,6 +180,12 @@ const EditEvent = () => {
         ? "border-sky-300 bg-sky-50 text-sky-800"
         : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
     }`;
+  const quickLinkClass = (active) =>
+    `inline-flex items-center rounded-lg border px-3 py-2 text-sm font-medium transition ${
+      active
+        ? "border-sky-300 bg-sky-50 text-sky-800"
+        : "border-slate-300 bg-slate-50 text-slate-700 hover:bg-slate-100"
+    }`;
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#dbeafe_0%,_#f8fafc_45%,_#ecfeff_100%)]">
@@ -212,21 +218,24 @@ const EditEvent = () => {
             ))}
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
+            <Link to={`/events/${eventId}/edit`} className={quickLinkClass(true)}>
+              🛠 イベント設定
+            </Link>
             <Link
               to={`/events/${eventId}/climbers`}
-              className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+              className={quickLinkClass(false)}
             >
               👤 クライマー管理
             </Link>
             <Link
               to={`/events/${eventId}/scores`}
-              className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+              className={quickLinkClass(false)}
             >
               📋 スコア管理
             </Link>
             <Link
               to={`/events/${eventId}/data-io`}
-              className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+              className={quickLinkClass(false)}
             >
               ⇅ CSV入出力
             </Link>

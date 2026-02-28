@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import {
   collection,
   doc,
@@ -197,6 +197,13 @@ const EventDataIO = () => {
   const [status, setStatus] = useState("");
   const [importing, setImporting] = useState(false);
   const [exportingRank, setExportingRank] = useState(false);
+
+  const quickLinkClass = (active) =>
+    `inline-flex items-center rounded-lg border px-3 py-2 text-sm font-medium transition ${
+      active
+        ? "border-sky-300 bg-sky-50 text-sky-800"
+        : "border-slate-300 bg-slate-50 text-slate-700 hover:bg-slate-100"
+    }`;
 
   const categoryById = useMemo(
     () => new Map(categories.map((category) => [category.id, category])),
@@ -639,7 +646,35 @@ const EventDataIO = () => {
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#dbeafe_0%,_#f8fafc_45%,_#ecfeff_100%)]">
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        <h2 className="text-2xl font-bold text-slate-900">CSV入出力: {event?.name || eventId}</h2>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-sky-700">Data IO</p>
+            <h2 className="text-2xl font-bold text-slate-900">⇅ CSV入出力：{event?.name || eventId}</h2>
+          </div>
+          <Link
+            to="/dashboard"
+            className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+          >
+            ↩ ダッシュボードへ戻る
+          </Link>
+        </div>
+
+        <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="flex flex-wrap gap-2">
+            <Link to={`/events/${eventId}/edit`} className={quickLinkClass(false)}>
+              🛠 イベント設定
+            </Link>
+            <Link to={`/events/${eventId}/climbers`} className={quickLinkClass(false)}>
+              👤 クライマー管理
+            </Link>
+            <Link to={`/events/${eventId}/scores`} className={quickLinkClass(false)}>
+              📋 スコア管理
+            </Link>
+            <Link to={`/events/${eventId}/data-io`} className={quickLinkClass(true)}>
+              ⇅ CSV入出力
+            </Link>
+          </div>
+        </section>
 
         <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <h3 className="text-lg font-bold text-slate-900">クライマーCSV</h3>

@@ -163,6 +163,9 @@ graph TD
     - `upcoming`: `Event Settings`（`/events/{eventId}/edit`）
     - `live`: `Scores`（`/events/{eventId}/scores`）
     - `completed`: `Public Ranking`（`/score-summary/{eventId}`）
+- 管理ページ共通（`EditEvent` / `EventClimbers` / `EventScores` / `EventDataIO`）:
+  - ページ上部に共通クイックナビ（`イベント設定` / `クライマー管理` / `スコア管理` / `CSV入出力`）
+  - 現在ページのみアクティブスタイルで表示
 - 設定画面（`/events/{eventId}/edit`）内のナビ:
   - `シーズン`
   - `カテゴリ`
