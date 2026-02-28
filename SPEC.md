@@ -155,6 +155,7 @@ graph TD
 運営側の導線は「入口を絞る」方針で以下に整理する。
 
 - ダッシュボード（`/dashboard`）のイベント別入口:
+  - `Create New Event` はダッシュボード内モーダル（ポップアップ）で起動
   - `設定` -> `/events/{eventId}/edit`
   - `クライマー` -> `/events/{eventId}/climbers`
   - `スコア` -> `/events/{eventId}/scores`（`live` のときのみ表示）

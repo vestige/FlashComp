@@ -1,19 +1,15 @@
 import { useEffect, useState } from "react";
 import { db } from "../firebase";
 import { useNavigate, Link } from "react-router-dom";
-import { collection, addDoc, getDocs, serverTimestamp, Timestamp } from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
 import { usePageTitle } from "../hooks/usePageTitle";
 import { useOwnerProfile } from "../hooks/useOwnerProfile";
+import EventCreateForm from "../components/EventCreateForm";
 
 function CreateEvent() {
   usePageTitle("イベント作成");
 
-  const [name, setName] = useState("");
-  const [gymId, setGymId] = useState("");
   const [gyms, setGyms] = useState([]);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const navigate = useNavigate();
@@ -43,11 +39,6 @@ function CreateEvent() {
           .filter((gym) => hasAllGymAccess || gymIds.includes(gym.id))
           .sort((a, b) => (a.name || "").localeCompare(b.name || "", "ja"));
         setGyms(gymRows);
-        if (gymRows.length > 0) {
-          setGymId((current) => current || gymRows[0].id);
-        } else {
-          setGymId("");
-        }
       } catch (err) {
         console.error("ジム一覧の取得に失敗:", err);
         setError("ジム一覧の取得に失敗しました。");
@@ -58,35 +49,6 @@ function CreateEvent() {
 
     fetchGyms();
   }, [profileLoading, profileError, gymIds, hasAllGymAccess]);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!gymId) {
-      setStatus("❌ 担当ジムを選択してください");
-      return;
-    }
-    if (new Date(startDate) > new Date(endDate)) {
-      setStatus("❌ 開始日は終了日以前にしてください");
-      return;
-    }
-
-    try {
-      await addDoc(collection(db, "events"), {
-        name,
-        gymId,
-        ownerUid: authUser?.uid || "",
-        startDate: Timestamp.fromDate(new Date(startDate)),
-        endDate: Timestamp.fromDate(new Date(endDate)),
-        createdAt: serverTimestamp(),
-      });
-      setStatus("✅ イベントを作成しました！");
-      setName("");
-      navigate("/dashboard");
-    } catch (err) {
-      console.error(err);
-      setStatus("❌ 作成に失敗しました");
-    }
-  };
 
   if (loading || profileLoading) {
     return (
@@ -133,79 +95,12 @@ function CreateEvent() {
         </div>
 
         <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-          {gyms.length === 0 ? (
-            <p className="text-sm text-slate-600">
-              担当ジムが未設定のため、イベントを作成できません。システム管理者に設定を依頼してください。
-            </p>
-          ) : (
-            <form onSubmit={handleSubmit} className="grid gap-4">
-              <div className="grid gap-2">
-                <label className="text-sm font-semibold text-slate-700">イベント名</label>
-                <input
-                  type="text"
-                  placeholder="例: FlashComp Live 2026"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                  className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
-                />
-              </div>
-
-              <div className="grid gap-2">
-                <label className="text-sm font-semibold text-slate-700">開催ジム</label>
-                <select
-                  value={gymId}
-                  onChange={(e) => setGymId(e.target.value)}
-                  required
-                  className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
-                >
-                  {gyms.map((gym) => (
-                    <option key={gym.id} value={gym.id}>
-                      {gym.name || gym.id}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="grid gap-2">
-                  <label className="text-sm font-semibold text-slate-700">開始日</label>
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    required
-                    className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <label className="text-sm font-semibold text-slate-700">終了日</label>
-                  <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    required
-                    className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
-                  />
-                </div>
-              </div>
-
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  className="inline-flex items-center rounded-xl bg-emerald-800 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-900/15 transition hover:bg-emerald-900"
-                >
-                  Create Event
-                </button>
-              </div>
-            </form>
-          )}
-
-          {status && (
-            <p className={`mt-4 rounded-lg px-3 py-2 text-sm ${status.startsWith("✅") ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>
-              {status}
-            </p>
-          )}
+          <EventCreateForm
+            gyms={gyms}
+            ownerUid={authUser?.uid || ""}
+            submitLabel="Create Event"
+            onCreated={() => navigate("/dashboard")}
+          />
         </section>
       </div>
     </div>

@@ -5,6 +5,7 @@ import { collection, getDocs } from "firebase/firestore";
 import { usePageTitle } from "../hooks/usePageTitle";
 import { useOwnerProfile } from "../hooks/useOwnerProfile";
 import { getEventActionPlan } from "../lib/dashboardActions";
+import EventCreateForm from "../components/EventCreateForm";
 
 const toDate = (value) => {
   if (!value) return null;
@@ -130,10 +131,12 @@ const Dashboard = () => {
 
   const [events, setEvents] = useState([]);
   const [gyms, setGyms] = useState([]);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [eventFilter, setEventFilter] = useState("active");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const {
+    authUser,
     gymIds,
     hasAllGymAccess,
     loading: profileLoading,
@@ -175,6 +178,15 @@ const Dashboard = () => {
 
     fetchEvents();
   }, [profileLoading, profileError, gymIds, hasAllGymAccess]);
+
+  useEffect(() => {
+    if (!isCreateModalOpen) return;
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") setIsCreateModalOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [isCreateModalOpen]);
 
   const gymNameById = new Map(gyms.map((gym) => [gym.id, gym.name || gym.id]));
   const ownerGymSummary = hasAllGymAccess
@@ -264,12 +276,12 @@ const Dashboard = () => {
               </p>
             </div>
             {hasAllGymAccess || gymIds.length > 0 ? (
-              <Link to="/create-event" className={primaryActionClass}>
+              <button type="button" onClick={() => setIsCreateModalOpen(true)} className={primaryActionClass}>
                 <Icon className="h-4 w-4">
                   <path d="M12 5v14M5 12h14" />
                 </Icon>
                 Create New Event
-              </Link>
+              </button>
             ) : (
               <p className="text-sm text-slate-600">
                 担当ジムが未設定のため、イベントを作成できません。システム管理者に設定を依頼してください。
@@ -395,6 +407,47 @@ const Dashboard = () => {
           )}
         </section>
       </div>
+
+      {isCreateModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/45 px-4 py-8"
+          role="dialog"
+          aria-modal="true"
+          aria-label="イベント作成"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsCreateModalOpen(false);
+          }}
+        >
+          <section className="w-full max-w-2xl rounded-2xl border border-slate-200 bg-white p-5 shadow-xl sm:p-6">
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-xl font-bold text-slate-900">Create New Event</h3>
+                <p className="mt-1 text-sm text-slate-600">
+                  大会の基本情報を設定し、新しいイベントを開始します。
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsCreateModalOpen(false)}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-600 transition hover:bg-slate-50"
+                aria-label="close event create modal"
+              >
+                ✕
+              </button>
+            </div>
+            <EventCreateForm
+              gyms={gyms}
+              ownerUid={authUser?.uid || ""}
+              submitLabel="Create Event"
+              onCancel={() => setIsCreateModalOpen(false)}
+              onCreated={(createdEvent) => {
+                setEvents((prev) => [createdEvent, ...prev.filter((event) => event.id !== createdEvent.id)]);
+                setIsCreateModalOpen(false);
+              }}
+            />
+          </section>
+        </div>
+      )}
     </div>
   );
 };

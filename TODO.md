@@ -13,7 +13,7 @@
 
 ### 優先1: Dashboard起点の導線強化
 - [x] Dashboardカードの主CTAを状態別に最適化（`upcoming`=`Event Settings` / `live`=`Scores` / `completed`=`公開ランキング`）
-- [ ] Create New Event画面をダッシュボード上のポップアップで開始できるようにする
+- [x] Create New Event画面をダッシュボード上のポップアップで開始できるようにする
 - [ ] Dashboard改修後に `CreateEvent` 以降の管理画面へ同じデザイン言語を横展開（`CreateEvent` は対応済み）
 
 ### 優先2: Event設定画面の操作集約
@@ -33,4 +33,3 @@
 ### 仕上げ
 - [ ] 削除Confirmを専用モーダルに変更（誤操作防止）
 - [ ] 受け入れ確認: `npm run lint` / `npm run test:run` / `npm run build`
-
