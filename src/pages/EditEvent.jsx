@@ -1,6 +1,6 @@
 // src/pages/EditEvent.jsx
 import { Link, useNavigate, useParams, useLocation, useSearchParams } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { db } from "../firebase";
 import {
   collection,
@@ -19,6 +19,7 @@ import RouteSelector from "../components/RouteSelector";
 import { usePageTitle } from "../hooks/usePageTitle";
 import { useOwnerProfile } from "../hooks/useOwnerProfile";
 import { validateEventDraft } from "../lib/eventDraft";
+import { buildSettingsProgress } from "../lib/settingsProgress";
 
 const TAB_CONFIG = [
   { id: "seasons", label: "📅 シーズン", hint: "開催期間の分割を設定" },
@@ -67,6 +68,7 @@ const EditEvent = () => {
 
   const [categories, setCategories] = useState([]);
   const [seasonCount, setSeasonCount] = useState(0);
+  const [taskCount, setTaskCount] = useState(0);
   const [participantCount, setParticipantCount] = useState(0);
   const [eventGymId, setEventGymId] = useState("");
   const [eventDraft, setEventDraft] = useState({
@@ -94,6 +96,29 @@ const EditEvent = () => {
     error: profileError,
   } = useOwnerProfile();
   usePageTitle(eventName ? `イベント編集: ${eventName}` : "イベント編集");
+
+  const refreshSetupSummary = useCallback(async () => {
+    const [categorySnap, seasonSnap, participantSnap] = await Promise.all([
+      getDocs(collection(db, "events", eventId, "categories")),
+      getDocs(collection(db, "events", eventId, "seasons")),
+      getDocs(collection(db, "events", eventId, "participants")),
+    ]);
+    const taskSnaps = await Promise.all(
+      seasonSnap.docs.map((seasonDoc) =>
+        getDocs(collection(db, "events", eventId, "seasons", seasonDoc.id, "tasks"))
+      )
+    );
+    const nextTaskCount = taskSnaps.reduce((sum, taskSnap) => sum + taskSnap.size, 0);
+    const categoryRows = categorySnap.docs.map((categoryDoc) => ({
+      id: categoryDoc.id,
+      ...categoryDoc.data(),
+    }));
+
+    setCategories(categoryRows);
+    setSeasonCount(seasonSnap.size);
+    setTaskCount(nextTaskCount);
+    setParticipantCount(participantSnap.size);
+  }, [eventId]);
 
   useEffect(() => {
     if (profileLoading) return;
@@ -134,18 +159,7 @@ const EditEvent = () => {
           return;
         }
 
-        const [categorySnap, seasonSnap, participantSnap] = await Promise.all([
-          getDocs(collection(db, "events", eventId, "categories")),
-          getDocs(collection(db, "events", eventId, "seasons")),
-          getDocs(collection(db, "events", eventId, "participants")),
-        ]);
-        const categoryRows = categorySnap.docs.map((categoryDoc) => ({
-          id: categoryDoc.id,
-          ...categoryDoc.data(),
-        }));
-        setCategories(categoryRows);
-        setSeasonCount(seasonSnap.size);
-        setParticipantCount(participantSnap.size);
+        await refreshSetupSummary();
       } catch (err) {
         console.error("イベント編集データの取得に失敗:", err);
         setError("イベント編集データの取得に失敗しました。");
@@ -155,7 +169,7 @@ const EditEvent = () => {
     };
 
     fetchEventData();
-  }, [eventId, gymIds, hasAllGymAccess, profileLoading, profileError]);
+  }, [eventId, gymIds, hasAllGymAccess, profileLoading, profileError, refreshSetupSummary]);
 
   useEffect(() => {
     const tabParam = normalizeTab(searchParams.get("tab"));
@@ -236,6 +250,13 @@ const EditEvent = () => {
     }
   };
 
+  const handleTabSelect = (tabId) => {
+    setActiveTab(tabId);
+    refreshSetupSummary().catch((err) => {
+      console.error("設定進捗の更新に失敗:", err);
+    });
+  };
+
   if (loading || profileLoading) {
     return (
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
@@ -268,8 +289,14 @@ const EditEvent = () => {
   const summaryItems = [
     { label: "シーズン", value: seasonCount },
     { label: "カテゴリ", value: categories.length },
+    { label: "課題", value: taskCount },
     { label: "クライマー", value: participantCount },
   ];
+  const settingsProgress = buildSettingsProgress({
+    seasonCount,
+    categoryCount: categories.length,
+    taskCount,
+  });
   const tabClass = (isActive) =>
     `rounded-lg border px-3 py-2 text-sm font-medium transition ${
       isActive
@@ -282,6 +309,11 @@ const EditEvent = () => {
         ? "border-sky-300 bg-sky-50 text-sky-800"
         : "border-slate-300 bg-slate-50 text-slate-700 hover:bg-slate-100"
     }`;
+  const stepStatusClass = {
+    done: "border-emerald-200 bg-emerald-50 text-emerald-800",
+    todo: "border-sky-200 bg-sky-50 text-sky-800",
+    blocked: "border-slate-200 bg-slate-50 text-slate-600",
+  };
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#dbeafe_0%,_#f8fafc_45%,_#ecfeff_100%)]">
@@ -442,12 +474,40 @@ const EditEvent = () => {
         </section>
 
         <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <h3 className="text-base font-bold text-slate-900">設定進捗</h3>
+          <p className="mt-1 text-sm text-slate-600">
+            {settingsProgress.completed} / {settingsProgress.total} ステップ完了（{settingsProgress.percent}%）
+          </p>
+          <div className="mt-3 h-2 w-full rounded-full bg-slate-100">
+            <div
+              className="h-full rounded-full bg-emerald-500 transition-all"
+              style={{ width: `${settingsProgress.percent}%` }}
+            />
+          </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            {settingsProgress.steps.map((step) => (
+              <article
+                key={step.key}
+                className={`rounded-xl border px-3 py-3 ${stepStatusClass[step.status] || stepStatusClass.todo}`}
+              >
+                <p className="text-xs font-semibold tracking-wide">{step.label}</p>
+                <p className="mt-1 text-lg font-bold">
+                  {step.count}
+                  <span className="ml-1 text-sm font-medium">{step.unit}</span>
+                </p>
+                <p className="mt-1 text-xs">{step.hint}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="flex flex-wrap items-center gap-2">
             {TAB_CONFIG.map((tab) => (
               <button
                 key={tab.id}
                 type="button"
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => handleTabSelect(tab.id)}
                 className={tabClass(activeTab === tab.id)}
               >
                 {tab.label}
