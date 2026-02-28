@@ -4,6 +4,7 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import CreateEvent from "./pages/CreateEvent";
 import EditEvent from "./pages/EditEvent";
+import SeasonEdit from "./pages/SeasonEdit";
 import EventClimbers from "./pages/EventClimbers";
 import EventScores from "./pages/EventScores";
 import ScoreInput from "./pages/ScoreInput";
@@ -31,6 +32,7 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/create-event" element={<CreateEvent />} />
           <Route path="/events/:eventId/edit" element={<EditEvent />} />
+          <Route path="/events/:eventId/seasons/:seasonId/edit" element={<SeasonEdit />} />
           <Route path="/events/:eventId/climbers" element={<EventClimbers />} />
           <Route path="/events/:eventId/scores" element={<EventScores />} />
           <Route

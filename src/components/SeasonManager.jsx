@@ -29,7 +29,12 @@ const toInputDate = (value) => {
   return `${year}-${month}-${day}`;
 };
 
-const SeasonManager = ({ eventId, showCreateForm = true, refreshToken = 0 }) => {
+const SeasonManager = ({
+  eventId,
+  showCreateForm = true,
+  refreshToken = 0,
+  onEditSeason = null,
+}) => {
   const [seasonName, setSeasonName] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -169,7 +174,7 @@ const SeasonManager = ({ eventId, showCreateForm = true, refreshToken = 0 }) => 
               key={season.id}
               className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-sky-300"
             >
-              {editingSeasonId === season.id ? (
+              {editingSeasonId === season.id && typeof onEditSeason !== "function" ? (
                 <div className="grid gap-3 md:grid-cols-[1fr_auto_auto] md:items-end">
                   <input
                     type="text"
@@ -226,13 +231,23 @@ const SeasonManager = ({ eventId, showCreateForm = true, refreshToken = 0 }) => 
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-2 md:justify-end">
-                    <button
-                      type="button"
-                      onClick={() => handleStartEdit(season)}
-                      className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
-                    >
-                      編集
-                    </button>
+                    {typeof onEditSeason === "function" ? (
+                      <button
+                        type="button"
+                        onClick={() => onEditSeason(season.id)}
+                        className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                      >
+                        編集
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => handleStartEdit(season)}
+                        className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                      >
+                        編集
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => handleDeleteSeason(season.id)}

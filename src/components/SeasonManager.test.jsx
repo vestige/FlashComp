@@ -153,4 +153,29 @@ describe("SeasonManager", () => {
     });
     await waitFor(() => expect(screen.queryByText(/Season 1/)).not.toBeInTheDocument());
   });
+
+  it("calls onEditSeason when provided", async () => {
+    firestoreMocks.getDocs.mockResolvedValueOnce(
+      makeSnapshot([
+        {
+          id: "season-1",
+          name: "Season 1",
+          startDate: createTimestampValue("2026-03-01"),
+          endDate: createTimestampValue("2026-03-31"),
+        },
+      ])
+    );
+    const onEditSeason = vi.fn();
+
+    const user = userEvent.setup();
+    render(<SeasonManager eventId="event-1" onEditSeason={onEditSeason} />);
+
+    const rowEl = (await screen.findByText(/Season 1/)).closest("li");
+    const row = within(rowEl);
+    await user.click(row.getByRole("button", { name: "編集" }));
+
+    expect(onEditSeason).toHaveBeenCalledTimes(1);
+    expect(onEditSeason).toHaveBeenCalledWith("season-1");
+    expect(firestoreMocks.updateDoc).not.toHaveBeenCalled();
+  });
 });

@@ -611,7 +611,14 @@ const EditEvent = () => {
           <p className="mt-3 text-sm text-slate-600">{activeTabConfig?.hint}</p>
         </section>
 
-        {activeTab === "seasons" && <SeasonManager eventId={eventId} showCreateForm={false} refreshToken={seasonRefreshToken} />}
+        {activeTab === "seasons" && (
+          <SeasonManager
+            eventId={eventId}
+            showCreateForm={false}
+            refreshToken={seasonRefreshToken}
+            onEditSeason={(seasonId) => navigate(`/events/${eventId}/seasons/${seasonId}/edit`)}
+          />
+        )}
         {activeTab === "categories" && (
           <CategoryManager
             eventId={eventId}
