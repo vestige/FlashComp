@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { db } from "../firebase";
 import { Link } from "react-router-dom";
-import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
 import { usePageTitle } from "../hooks/usePageTitle";
 import { useOwnerProfile } from "../hooks/useOwnerProfile";
 
@@ -49,7 +49,7 @@ const getEventStatus = (event) => {
 
 const statusStyle = {
   live: "bg-red-50 text-red-600 border border-red-200",
-  upcoming: "bg-emerald-50 text-emerald-700 border border-emerald-200",
+  upcoming: "bg-sky-50 text-sky-700 border border-sky-200",
   completed: "bg-slate-100 text-slate-600 border border-slate-200",
   unknown: "bg-amber-50 text-amber-700 border border-amber-200",
 };
@@ -127,22 +127,6 @@ const Dashboard = () => {
     fetchEvents();
   }, [profileLoading, profileError, gymIds, hasAllGymAccess]);
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("このイベントを削除してもよろしいですか？")) return;
-    const target = events.find((event) => event.id === id);
-    if (!target || (!hasAllGymAccess && !gymIds.includes(target.gymId))) {
-      window.alert("このイベントを削除する権限がありません。");
-      return;
-    }
-
-    try {
-      await deleteDoc(doc(db, "events", id));
-      setEvents((prev) => prev.filter((event) => event.id !== id));
-    } catch (err) {
-      console.error("削除に失敗しました:", err);
-    }
-  };
-
   const gymNameById = new Map(gyms.map((gym) => [gym.id, gym.name || gym.id]));
   const ownerGymSummary = hasAllGymAccess
     ? "すべてのジム"
@@ -171,11 +155,6 @@ const Dashboard = () => {
     "inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100";
   const primaryActionClass =
     "inline-flex items-center gap-2 rounded-xl bg-emerald-800 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-900/15 transition hover:bg-emerald-900";
-  const dangerButtonClass =
-    "flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-medium text-rose-700 transition hover:bg-rose-50";
-  const settingsMenuItemClass =
-    "flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50";
-
   if (loading || profileLoading) {
     return (
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
@@ -281,6 +260,7 @@ const Dashboard = () => {
               {eventRows.map((event) => {
                 const status = event.status;
                 const isCompleted = status === "completed";
+                const isUpcoming = status === "upcoming";
                 const statusClass = statusStyle[status] || statusStyle.unknown;
                 const label = statusLabel[status] || statusLabel.unknown;
                 return (
@@ -289,14 +269,20 @@ const Dashboard = () => {
                     className={`group rounded-xl border p-5 shadow-sm transition ${
                       isCompleted
                         ? "border-slate-200 bg-slate-50/80 opacity-80 hover:opacity-100"
-                        : "border-slate-200 bg-white hover:border-emerald-300"
+                        : isUpcoming
+                          ? "border-sky-200 bg-sky-50/40 hover:border-sky-400"
+                          : "border-slate-200 bg-white hover:border-emerald-300"
                     }`}
                   >
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                       <div className="flex items-center gap-4">
                         <div
                           className={`h-16 w-16 shrink-0 rounded-lg text-center ${
-                            isCompleted ? "bg-slate-200 text-slate-600" : "bg-emerald-50 text-emerald-800"
+                            isCompleted
+                              ? "bg-slate-200 text-slate-600"
+                              : isUpcoming
+                                ? "bg-sky-100 text-sky-800"
+                                : "bg-emerald-50 text-emerald-800"
                           }`}
                         >
                           <p className="pt-1 text-[10px] font-bold tracking-wide">{formatMonth(event.startDate)}</p>
@@ -320,44 +306,23 @@ const Dashboard = () => {
                         </div>
                       </div>
                       <div className="flex flex-wrap gap-2 lg:justify-end">
+                        <Link to={`/events/${event.id}/edit`} className={subtleActionClass}>
+                          <Icon>
+                            <path d="M4 20h4l10-10-4-4L4 16v4Z" />
+                            <path d="M12 6l4 4" />
+                          </Icon>
+                          Event Settings
+                        </Link>
                         {!isCompleted && (
-                          <>
-                            <details className="relative">
-                              <summary className={`${subtleActionClass} cursor-pointer list-none [&::-webkit-details-marker]:hidden`}>
-                                <Icon>
-                                  <circle cx="12" cy="12" r="3.2" />
-                                  <path d="M19.4 15a1 1 0 0 0 .2 1.1l.1.1a2 2 0 0 1-2.8 2.8l-.1-.1a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.9V20a2 2 0 0 1-4 0v-.2a1 1 0 0 0-.6-.9 1 1 0 0 0-1.1.2l-.1.1a2 2 0 0 1-2.8-2.8l.1-.1a1 1 0 0 0 .2-1.1 1 1 0 0 0-.9-.6H4a2 2 0 0 1 0-4h.2a1 1 0 0 0 .9-.6 1 1 0 0 0-.2-1.1l-.1-.1a2 2 0 0 1 2.8-2.8l.1.1a1 1 0 0 0 1.1.2h.1a1 1 0 0 0 .6-.9V4a2 2 0 0 1 4 0v.2a1 1 0 0 0 .6.9h.1a1 1 0 0 0 1.1-.2l.1-.1a2 2 0 0 1 2.8 2.8l-.1.1a1 1 0 0 0-.2 1.1v.1a1 1 0 0 0 .9.6H20a2 2 0 0 1 0 4h-.2a1 1 0 0 0-.9.6Z" />
-                                </Icon>
-                                Settings
-                              </summary>
-                              <div className="absolute right-0 z-20 mt-2 w-52 rounded-lg border border-slate-200 bg-white p-2 shadow-lg">
-                                <Link to={`/events/${event.id}/edit`} className={settingsMenuItemClass}>
-                                  <Icon>
-                                    <path d="M4 20h4l10-10-4-4L4 16v4Z" />
-                                    <path d="M12 6l4 4" />
-                                  </Icon>
-                                  イベント設定
-                                </Link>
-                                <button type="button" onClick={() => handleDelete(event.id)} className={dangerButtonClass}>
-                                  <Icon>
-                                    <path d="M3 6h18" />
-                                    <path d="M8 6V4h8v2" />
-                                    <path d="M6 6l1 14h10l1-14" />
-                                  </Icon>
-                                  イベント削除
-                                </button>
-                              </div>
-                            </details>
-                            <Link to={`/events/${event.id}/climbers`} className={subtleActionClass}>
-                              <Icon>
-                                <circle cx="9" cy="8" r="2.5" />
-                                <circle cx="16" cy="9" r="2" />
-                                <path d="M4 19c0-2.7 2.2-5 5-5s5 2.3 5 5" />
-                                <path d="M14 19c0-1.9 1.6-3.5 3.5-3.5S21 17.1 21 19" />
-                              </Icon>
-                              Climbers
-                            </Link>
-                          </>
+                          <Link to={`/events/${event.id}/climbers`} className={subtleActionClass}>
+                            <Icon>
+                              <circle cx="9" cy="8" r="2.5" />
+                              <circle cx="16" cy="9" r="2" />
+                              <path d="M4 19c0-2.7 2.2-5 5-5s5 2.3 5 5" />
+                              <path d="M14 19c0-1.9 1.6-3.5 3.5-3.5S21 17.1 21 19" />
+                            </Icon>
+                            Climbers
+                          </Link>
                         )}
                         <Link to={`/events/${event.id}/scores`} className={subtleActionClass}>
                           <Icon>
