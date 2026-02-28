@@ -10,7 +10,13 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase";
 
-const CategoryManager = ({ eventId, categories, setCategories }) => {
+const CategoryManager = ({
+  eventId,
+  categories,
+  setCategories,
+  showCreateForm = true,
+  refreshToken = 0,
+}) => {
   const [categoryName, setCategoryName] = useState("");
   const [editingCategoryId, setEditingCategoryId] = useState("");
   const [editingCategoryName, setEditingCategoryName] = useState("");
@@ -27,7 +33,7 @@ const CategoryManager = ({ eventId, categories, setCategories }) => {
 
   useEffect(() => {
     fetchCategories();
-  }, [fetchCategories]);
+  }, [fetchCategories, refreshToken]);
 
   const handleAddCategory = async (e) => {
     e.preventDefault();
@@ -89,17 +95,19 @@ const CategoryManager = ({ eventId, categories, setCategories }) => {
 
   return (
     <div>
-      <h3>🏷 カテゴリ追加</h3>
-      <form onSubmit={handleAddCategory}>
-        <input
-          type="text"
-          placeholder="カテゴリ名"
-          value={categoryName}
-          onChange={(e) => setCategoryName(e.target.value)}
-          required
-        />
-        <button type="submit">追加</button>
-      </form>
+      <h3>{showCreateForm ? "🏷 カテゴリ追加" : "🏷 カテゴリ一覧"}</h3>
+      {showCreateForm && (
+        <form onSubmit={handleAddCategory}>
+          <input
+            type="text"
+            placeholder="カテゴリ名"
+            value={categoryName}
+            onChange={(e) => setCategoryName(e.target.value)}
+            required
+          />
+          <button type="submit">追加</button>
+        </form>
+      )}
       <ul>
         {categories.map((c) => (
           <li key={c.id}>

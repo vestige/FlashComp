@@ -22,6 +22,7 @@ import { useOwnerProfile } from "../hooks/useOwnerProfile";
 import { validateEventDraft } from "../lib/eventDraft";
 import { buildSettingsProgress } from "../lib/settingsProgress";
 import { validateSeasonDraft } from "../lib/seasonDraft";
+import { validateCategoryDraft } from "../lib/categoryDraft";
 
 const TAB_CONFIG = [
   { id: "seasons", label: "📅 シーズン", hint: "開催期間の分割を設定" },
@@ -91,6 +92,11 @@ const EditEvent = () => {
   const [seasonRefreshToken, setSeasonRefreshToken] = useState(0);
   const [seasonDraft, setSeasonDraft] = useState({ name: "", startDate: "", endDate: "" });
   const [seasonStatus, setSeasonStatus] = useState("");
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [isAddingCategory, setIsAddingCategory] = useState(false);
+  const [categoryRefreshToken, setCategoryRefreshToken] = useState(0);
+  const [categoryDraftName, setCategoryDraftName] = useState("");
+  const [categoryStatus, setCategoryStatus] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [deleteError, setDeleteError] = useState("");
@@ -291,6 +297,33 @@ const EditEvent = () => {
       setSeasonStatus("❌ シーズン追加に失敗しました。");
     } finally {
       setIsAddingSeason(false);
+    }
+  };
+
+  const handleCreateCategory = async (e) => {
+    e.preventDefault();
+    const validationError = validateCategoryDraft({ name: categoryDraftName });
+    if (validationError) {
+      setCategoryStatus(`❌ ${validationError}`);
+      return;
+    }
+
+    setIsAddingCategory(true);
+    setCategoryStatus("");
+    try {
+      await addDoc(collection(db, "events", eventId, "categories"), {
+        name: categoryDraftName.trim(),
+      });
+      setCategoryDraftName("");
+      setCategoryStatus("✅ カテゴリを追加しました。");
+      setCategoryRefreshToken((prev) => prev + 1);
+      await refreshSetupSummary();
+      setIsCategoryModalOpen(false);
+    } catch (err) {
+      console.error("カテゴリ追加に失敗:", err);
+      setCategoryStatus("❌ カテゴリ追加に失敗しました。");
+    } finally {
+      setIsAddingCategory(false);
     }
   };
 
@@ -562,6 +595,18 @@ const EditEvent = () => {
                 ＋ シーズン追加
               </button>
             )}
+            {activeTab === "categories" && (
+              <button
+                type="button"
+                onClick={() => {
+                  setCategoryStatus("");
+                  setIsCategoryModalOpen(true);
+                }}
+                className="inline-flex items-center rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-800 transition hover:bg-emerald-100"
+              >
+                ＋ カテゴリ追加
+              </button>
+            )}
           </div>
           <p className="mt-3 text-sm text-slate-600">{activeTabConfig?.hint}</p>
         </section>
@@ -572,6 +617,8 @@ const EditEvent = () => {
             eventId={eventId}
             categories={categories}
             setCategories={setCategories}
+            showCreateForm={false}
+            refreshToken={categoryRefreshToken}
           />
         )}
         {activeTab === "tasks" && (
@@ -692,6 +739,74 @@ const EditEvent = () => {
                     }`}
                   >
                     {seasonStatus}
+                  </p>
+                )}
+              </form>
+            </section>
+          </div>
+        )}
+
+        {isCategoryModalOpen && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/45 px-4 py-8"
+            role="dialog"
+            aria-modal="true"
+            aria-label="カテゴリ追加"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setIsCategoryModalOpen(false);
+            }}
+          >
+            <section className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-5 shadow-xl sm:p-6">
+              <div className="mb-4 flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-xl font-bold text-slate-900">カテゴリ追加</h3>
+                  <p className="mt-1 text-sm text-slate-600">参加カテゴリ名を追加します。</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsCategoryModalOpen(false)}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-600 transition hover:bg-slate-50"
+                  aria-label="close category modal"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <form onSubmit={handleCreateCategory} className="grid gap-4">
+                <div className="grid gap-2">
+                  <label className="text-sm font-semibold text-slate-700">カテゴリ名</label>
+                  <input
+                    type="text"
+                    value={categoryDraftName}
+                    onChange={(e) => setCategoryDraftName(e.target.value)}
+                    placeholder="例: Beginner"
+                    required
+                    className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                  />
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="submit"
+                    disabled={isAddingCategory}
+                    className="inline-flex items-center rounded-xl bg-emerald-800 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-emerald-900 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {isAddingCategory ? "追加中..." : "追加"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsCategoryModalOpen(false)}
+                    className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                  >
+                    キャンセル
+                  </button>
+                </div>
+                {categoryStatus && (
+                  <p
+                    className={`rounded-lg px-3 py-2 text-sm ${
+                      categoryStatus.startsWith("✅") ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"
+                    }`}
+                  >
+                    {categoryStatus}
                   </p>
                 )}
               </form>
