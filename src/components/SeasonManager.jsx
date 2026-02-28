@@ -21,7 +21,7 @@ const toInputDate = (value) => {
   return `${year}-${month}-${day}`;
 };
 
-const SeasonManager = ({ eventId }) => {
+const SeasonManager = ({ eventId, showCreateForm = true, refreshToken = 0 }) => {
   const [seasonName, setSeasonName] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -42,7 +42,7 @@ const SeasonManager = ({ eventId }) => {
 
   useEffect(() => {
     fetchSeasons();
-  }, [fetchSeasons]);
+  }, [fetchSeasons, refreshToken]);
 
   const handleAddSeason = async (e) => {
     e.preventDefault();
@@ -114,14 +114,18 @@ const SeasonManager = ({ eventId }) => {
 
   return (
     <div>
-      <h3>📅 シーズン追加</h3>
-      <form onSubmit={handleAddSeason}>
-        <input type="text" placeholder="シーズン名" value={seasonName} onChange={(e) => setSeasonName(e.target.value)} required />
-        <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} required />
-        <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} required />
-        <button type="submit">追加</button>
-      </form>
-      <p>{status}</p>
+      <h3>{showCreateForm ? "📅 シーズン追加" : "📅 シーズン一覧"}</h3>
+      {showCreateForm && (
+        <>
+          <form onSubmit={handleAddSeason}>
+            <input type="text" placeholder="シーズン名" value={seasonName} onChange={(e) => setSeasonName(e.target.value)} required />
+            <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} required />
+            <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} required />
+            <button type="submit">追加</button>
+          </form>
+          <p>{status}</p>
+        </>
+      )}
       <ul>
         {seasons.map((season) => (
           <li key={season.id}>
