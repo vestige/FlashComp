@@ -3,7 +3,6 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   Timestamp,
   collection,
-  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -16,6 +15,8 @@ import { usePageTitle } from "../hooks/usePageTitle";
 import { validateSeasonDraft, validateSeasonInEventRange } from "../lib/seasonDraft";
 import { formatSeasonDate, getSeasonStatus, seasonStatusLabel, seasonStatusStyle } from "../lib/seasonStatus";
 import RouteSelector from "../components/RouteSelector";
+import { parseDateInputAsLocalDate } from "../lib/dateInput";
+import { deleteSeasonCascade } from "../lib/eventDataCleanup";
 
 const toDate = (value) => {
   if (!value) return null;
@@ -148,10 +149,16 @@ const SeasonEdit = () => {
     setIsSaving(true);
     setStatus("");
     try {
+      const startLocalDate = parseDateInputAsLocalDate(normalizedDraft.startDate);
+      const endLocalDate = parseDateInputAsLocalDate(normalizedDraft.endDate);
+      if (!startLocalDate || !endLocalDate) {
+        setStatus("❌ 日付の形式が不正です");
+        return;
+      }
       const payload = {
         name: normalizedDraft.name,
-        startDate: Timestamp.fromDate(new Date(normalizedDraft.startDate)),
-        endDate: Timestamp.fromDate(new Date(normalizedDraft.endDate)),
+        startDate: Timestamp.fromDate(startLocalDate),
+        endDate: Timestamp.fromDate(endLocalDate),
         updatedAt: serverTimestamp(),
       };
       await updateDoc(doc(db, "events", eventId, "seasons", seasonId), payload);
@@ -177,7 +184,7 @@ const SeasonEdit = () => {
     setDeleteError("");
     setIsDeleting(true);
     try {
-      await deleteDoc(doc(db, "events", eventId, "seasons", seasonId));
+      await deleteSeasonCascade({ eventId, seasonId });
       navigate(`/events/${eventId}/edit?tab=seasons`, { replace: true });
     } catch (err) {
       console.error("シーズン削除に失敗:", err);

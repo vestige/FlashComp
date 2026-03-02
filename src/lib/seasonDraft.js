@@ -1,10 +1,12 @@
+import { parseDateInputAsLocalDate } from "./dateInput";
+
 export const validateSeasonDraft = ({ name, startDate, endDate }) => {
   if (!name || !name.trim()) return "シーズン名を入力してください";
   if (!startDate || !endDate) return "開始日と終了日を入力してください";
 
-  const start = new Date(startDate);
-  const end = new Date(endDate);
-  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+  const start = parseDateInputAsLocalDate(startDate);
+  const end = parseDateInputAsLocalDate(endDate);
+  if (!start || !end) {
     return "日付の形式が不正です";
   }
   if (start > end) return "開始日は終了日以前にしてください";
@@ -18,8 +20,8 @@ const parseAsDay = (value) => {
     const date = value.toDate();
     return new Date(date.getFullYear(), date.getMonth(), date.getDate());
   }
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return null;
+  const parsed = parseDateInputAsLocalDate(String(value));
+  if (!parsed) return null;
   return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
 };
 

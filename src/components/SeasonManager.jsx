@@ -5,7 +5,6 @@ import {
   collection,
   addDoc,
   getDocs,
-  deleteDoc,
   updateDoc,
   doc,
   Timestamp,
@@ -19,6 +18,8 @@ import {
   seasonStatusStyle,
 } from "../lib/seasonStatus";
 import { validateSeasonInEventRange } from "../lib/seasonDraft";
+import { parseDateInputAsLocalDate } from "../lib/dateInput";
+import { deleteSeasonCascade } from "../lib/eventDataCleanup";
 
 const toInputDate = (value) => {
   if (!value) return "";
@@ -62,10 +63,16 @@ const SeasonManager = ({
   const handleAddSeason = async (e) => {
     e.preventDefault();
     try {
+      const parsedStart = parseDateInputAsLocalDate(startDate);
+      const parsedEnd = parseDateInputAsLocalDate(endDate);
+      if (!parsedStart || !parsedEnd) {
+        setStatus("❌ 日付の形式が不正です");
+        return;
+      }
       await addDoc(collection(db, "events", eventId, "seasons"), {
         name: seasonName,
-        startDate: Timestamp.fromDate(new Date(startDate)),
-        endDate: Timestamp.fromDate(new Date(endDate)),
+        startDate: Timestamp.fromDate(parsedStart),
+        endDate: Timestamp.fromDate(parsedEnd),
       });
       setStatus("✅ シーズンを追加しました！");
       setSeasonName("");
@@ -82,7 +89,7 @@ const SeasonManager = ({
     const confirmDelete = window.confirm("本当にこのシーズンを削除しますか？");
     if (!confirmDelete) return;
     try {
-      await deleteDoc(doc(db, "events", eventId, "seasons", seasonId));
+      await deleteSeasonCascade({ eventId, seasonId });
       setSeasons((prev) => prev.filter((s) => s.id !== seasonId));
     } catch (err) {
       console.error("削除に失敗:", err);
@@ -110,10 +117,16 @@ const SeasonManager = ({
     }
 
     try {
+      const parsedStart = parseDateInputAsLocalDate(editForm.startDate);
+      const parsedEnd = parseDateInputAsLocalDate(editForm.endDate);
+      if (!parsedStart || !parsedEnd) {
+        alert("日付の形式が不正です。");
+        return;
+      }
       const payload = {
         name: editForm.name.trim(),
-        startDate: Timestamp.fromDate(new Date(editForm.startDate)),
-        endDate: Timestamp.fromDate(new Date(editForm.endDate)),
+        startDate: Timestamp.fromDate(parsedStart),
+        endDate: Timestamp.fromDate(parsedEnd),
       };
 
       await updateDoc(doc(db, "events", eventId, "seasons", seasonId), payload);

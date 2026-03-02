@@ -74,7 +74,8 @@ service cloud.firestore {
     // Owner/admin profile.
     // Note: To satisfy event write checks, users/{uid} should include role/gymIds.
     match /users/{userId} {
-      allow read: if isSignedIn();
+      allow read: if isSignedIn()
+        && (request.auth.uid == userId || isAdmin());
       allow create, update, delete: if isSignedIn()
         && (request.auth.uid == userId || isAdmin());
     }

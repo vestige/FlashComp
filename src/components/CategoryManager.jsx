@@ -4,11 +4,11 @@ import {
   collection,
   addDoc,
   getDocs,
-  deleteDoc,
   updateDoc,
   doc,
 } from "firebase/firestore";
 import { db } from "../firebase";
+import { deleteCategoryCascade } from "../lib/eventDataCleanup";
 
 const CategoryManager = ({
   eventId,
@@ -53,7 +53,7 @@ const CategoryManager = ({
     const confirmDelete = window.confirm("このカテゴリを削除してもよいですか？");
     if (!confirmDelete) return;
     try {
-      await deleteDoc(doc(db, "events", eventId, "categories", categoryId));
+      await deleteCategoryCascade({ eventId, categoryId });
       setCategories((prev) => prev.filter((c) => c.id !== categoryId));
     } catch (err) {
       console.error("削除に失敗:", err);

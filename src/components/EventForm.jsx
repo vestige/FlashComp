@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { db } from "../firebase";
 import { collection, addDoc, Timestamp } from "firebase/firestore";
+import { parseDateInputAsLocalDate } from "../lib/dateInput";
 
 export default function EventForm() {
   const [name, setName] = useState("");
@@ -13,10 +14,16 @@ export default function EventForm() {
     setStatus("保存中...");
 
     try {
+      const parsedStart = parseDateInputAsLocalDate(startDate);
+      const parsedEnd = parseDateInputAsLocalDate(endDate);
+      if (!parsedStart || !parsedEnd) {
+        setStatus("❌ 日付の形式が不正です");
+        return;
+      }
       await addDoc(collection(db, "events"), {
         name,
-        startDate: Timestamp.fromDate(new Date(startDate)),
-        endDate: Timestamp.fromDate(new Date(endDate)),
+        startDate: Timestamp.fromDate(parsedStart),
+        endDate: Timestamp.fromDate(parsedEnd),
         createdAt: Timestamp.now()
       });
       setStatus("✅ イベントを保存しました！");

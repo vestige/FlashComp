@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { collection, addDoc, serverTimestamp, Timestamp } from "firebase/firestore";
 import { db } from "../firebase";
 import { validateEventDraft } from "../lib/eventDraft";
+import { parseDateInputAsLocalDate } from "../lib/dateInput";
 
 const EventCreateForm = ({
   gyms,
@@ -37,8 +38,14 @@ const EventCreateForm = ({
     setSubmitting(true);
     setStatus("");
     try {
-      const start = Timestamp.fromDate(new Date(startDate));
-      const end = Timestamp.fromDate(new Date(endDate));
+      const startLocalDate = parseDateInputAsLocalDate(startDate);
+      const endLocalDate = parseDateInputAsLocalDate(endDate);
+      if (!startLocalDate || !endLocalDate) {
+        setStatus("❌ 日付の形式が不正です");
+        return;
+      }
+      const start = Timestamp.fromDate(startLocalDate);
+      const end = Timestamp.fromDate(endLocalDate);
       const ref = await addDoc(collection(db, "events"), {
         name: name.trim(),
         gymId,

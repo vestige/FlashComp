@@ -15,9 +15,13 @@ const firestoreMocks = vi.hoisted(() => ({
   updateDoc: vi.fn(),
   deleteDoc: vi.fn(),
 }));
+const cleanupMocks = vi.hoisted(() => ({
+  deleteCategoryCascade: vi.fn(),
+}));
 
 vi.mock("../firebase", () => firebaseMock);
 vi.mock("firebase/firestore", () => firestoreMocks);
+vi.mock("../lib/eventDataCleanup", () => cleanupMocks);
 
 const makeSnapshot = (rows) => ({
   docs: rows.map((row) => ({
@@ -40,6 +44,7 @@ describe("CategoryManager", () => {
     vi.clearAllMocks();
     window.alert = vi.fn();
     window.confirm = vi.fn(() => true);
+    cleanupMocks.deleteCategoryCascade.mockResolvedValue();
   });
 
   it("creates and reads categories", async () => {
@@ -92,8 +97,6 @@ describe("CategoryManager", () => {
     firestoreMocks.getDocs.mockResolvedValueOnce(
       makeSnapshot([{ id: "cat-1", name: "Beginner" }])
     );
-    firestoreMocks.deleteDoc.mockResolvedValueOnce();
-
     const user = userEvent.setup();
     render(<CategoryHarness />);
 
@@ -102,9 +105,10 @@ describe("CategoryManager", () => {
     await user.click(row.getByRole("button", { name: "削除" }));
 
     expect(window.confirm).toHaveBeenCalledTimes(1);
-    await waitFor(() => expect(firestoreMocks.deleteDoc).toHaveBeenCalledTimes(1));
-    expect(firestoreMocks.deleteDoc).toHaveBeenCalledWith({
-      path: "events/event-1/categories/cat-1",
+    await waitFor(() => expect(cleanupMocks.deleteCategoryCascade).toHaveBeenCalledTimes(1));
+    expect(cleanupMocks.deleteCategoryCascade).toHaveBeenCalledWith({
+      eventId: "event-1",
+      categoryId: "cat-1",
     });
     await waitFor(() => expect(screen.queryByText("Beginner")).not.toBeInTheDocument());
   });

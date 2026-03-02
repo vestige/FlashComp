@@ -15,9 +15,14 @@ const firestoreMocks = vi.hoisted(() => ({
   deleteDoc: vi.fn(),
   serverTimestamp: vi.fn(() => "mock-timestamp"),
 }));
+const cleanupMocks = vi.hoisted(() => ({
+  cleanupParticipantScoresOutsideCategory: vi.fn(),
+  deleteParticipantCascade: vi.fn(),
+}));
 
 vi.mock("../firebase", () => firebaseMock);
 vi.mock("firebase/firestore", () => firestoreMocks);
+vi.mock("../lib/eventDataCleanup", () => cleanupMocks);
 
 const categories = [
   { id: "cat-beginner", name: "Beginner" },
@@ -40,6 +45,8 @@ describe("ParticipantManager", () => {
     vi.clearAllMocks();
     window.alert = vi.fn();
     window.confirm = vi.fn(() => true);
+    cleanupMocks.cleanupParticipantScoresOutsideCategory.mockResolvedValue();
+    cleanupMocks.deleteParticipantCascade.mockResolvedValue();
   });
 
   it("registers a participant", async () => {
@@ -135,6 +142,12 @@ describe("ParticipantManager", () => {
         updatedAt: "mock-timestamp",
       }
     );
+    expect(cleanupMocks.cleanupParticipantScoresOutsideCategory).toHaveBeenCalledTimes(1);
+    expect(cleanupMocks.cleanupParticipantScoresOutsideCategory).toHaveBeenCalledWith({
+      eventId: "event-1",
+      participantId: "p-1",
+      keepCategoryId: "cat-open",
+    });
     await screen.findByText(/佐藤 花子A/);
   });
 
@@ -151,8 +164,6 @@ describe("ParticipantManager", () => {
         },
       ])
     );
-    firestoreMocks.deleteDoc.mockResolvedValueOnce();
-
     const user = userEvent.setup();
     render(<ParticipantManager eventId="event-1" categories={categories} />);
 
@@ -160,9 +171,10 @@ describe("ParticipantManager", () => {
     await user.click(screen.getByRole("button", { name: "削除" }));
 
     expect(window.confirm).toHaveBeenCalledTimes(1);
-    await waitFor(() => expect(firestoreMocks.deleteDoc).toHaveBeenCalledTimes(1));
-    expect(firestoreMocks.deleteDoc).toHaveBeenCalledWith({
-      path: "events/event-1/participants/p-1",
+    await waitFor(() => expect(cleanupMocks.deleteParticipantCascade).toHaveBeenCalledTimes(1));
+    expect(cleanupMocks.deleteParticipantCascade).toHaveBeenCalledWith({
+      eventId: "event-1",
+      participantId: "p-1",
     });
     await waitFor(() => expect(screen.queryByText(/田中 一郎/)).not.toBeInTheDocument());
   });

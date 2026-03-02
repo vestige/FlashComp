@@ -62,9 +62,16 @@ const ScoreInput = () => {
         const participantSnap = await getDoc(
           doc(db, "events", eventId, "participants", participantId)
         );
-        if (participantSnap.exists()) {
-          setParticipantName(participantSnap.data().name || "");
+        if (!participantSnap.exists()) {
+          setError("クライマーが見つかりません。");
+          return;
         }
+        const participantData = participantSnap.data();
+        if ((participantData.categoryId || "") !== categoryId) {
+          setError("クライマーのカテゴリと採点対象カテゴリが一致しません。");
+          return;
+        }
+        setParticipantName(participantData.name || "");
 
         const assignedTasks = await fetchAssignedTasksForCategory({
           eventId,

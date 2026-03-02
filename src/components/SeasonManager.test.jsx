@@ -17,9 +17,13 @@ const firestoreMocks = vi.hoisted(() => ({
     fromDate: vi.fn((date) => ({ toDate: () => date })),
   },
 }));
+const cleanupMocks = vi.hoisted(() => ({
+  deleteSeasonCascade: vi.fn(),
+}));
 
 vi.mock("../firebase", () => firebaseMock);
 vi.mock("firebase/firestore", () => firestoreMocks);
+vi.mock("../lib/eventDataCleanup", () => cleanupMocks);
 
 const makeSnapshot = (rows) => ({
   docs: rows.map((row) => ({
@@ -41,6 +45,7 @@ describe("SeasonManager", () => {
     vi.clearAllMocks();
     window.alert = vi.fn();
     window.confirm = vi.fn(() => true);
+    cleanupMocks.deleteSeasonCascade.mockResolvedValue();
   });
 
   it("creates and reads seasons", async () => {
@@ -137,8 +142,6 @@ describe("SeasonManager", () => {
         },
       ])
     );
-    firestoreMocks.deleteDoc.mockResolvedValueOnce();
-
     const user = userEvent.setup();
     render(<SeasonManager eventId="event-1" />);
 
@@ -147,9 +150,10 @@ describe("SeasonManager", () => {
     await user.click(row.getByRole("button", { name: "削除" }));
 
     expect(window.confirm).toHaveBeenCalledTimes(1);
-    await waitFor(() => expect(firestoreMocks.deleteDoc).toHaveBeenCalledTimes(1));
-    expect(firestoreMocks.deleteDoc).toHaveBeenCalledWith({
-      path: "events/event-1/seasons/season-1",
+    await waitFor(() => expect(cleanupMocks.deleteSeasonCascade).toHaveBeenCalledTimes(1));
+    expect(cleanupMocks.deleteSeasonCascade).toHaveBeenCalledWith({
+      eventId: "event-1",
+      seasonId: "season-1",
     });
     await waitFor(() => expect(screen.queryByText(/Season 1/)).not.toBeInTheDocument());
   });

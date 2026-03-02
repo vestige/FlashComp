@@ -4,12 +4,15 @@ import {
   collection,
   addDoc,
   getDocs,
-  deleteDoc,
   updateDoc,
   doc,
   serverTimestamp,
 } from "firebase/firestore";
 import { db } from "../firebase";
+import {
+  cleanupParticipantScoresOutsideCategory,
+  deleteParticipantCascade,
+} from "../lib/eventDataCleanup";
 
 const EMPTY_FORM = {
   name: "",
@@ -93,6 +96,8 @@ const ParticipantManager = ({ eventId, categories, refreshToken = 0 }) => {
     }
 
     try {
+      const before = participants.find((participant) => participant.id === participantId);
+      const previousCategoryId = before?.categoryId || "";
       const payload = {
         name: editForm.name.trim(),
         memberNo: editForm.memberNo.trim(),
@@ -103,6 +108,13 @@ const ParticipantManager = ({ eventId, categories, refreshToken = 0 }) => {
       };
 
       await updateDoc(doc(db, "events", eventId, "participants", participantId), payload);
+      if (previousCategoryId && previousCategoryId !== payload.categoryId) {
+        await cleanupParticipantScoresOutsideCategory({
+          eventId,
+          participantId,
+          keepCategoryId: payload.categoryId,
+        });
+      }
 
       setParticipants((prev) =>
         prev.map((participant) =>
@@ -122,7 +134,7 @@ const ParticipantManager = ({ eventId, categories, refreshToken = 0 }) => {
     const confirmDelete = window.confirm("このクライマーを削除してもよいですか？");
     if (!confirmDelete) return;
     try {
-      await deleteDoc(doc(db, "events", eventId, "participants", participantId));
+      await deleteParticipantCascade({ eventId, participantId });
       setParticipants((prev) => prev.filter((p) => p.id !== participantId));
     } catch (err) {
       console.error("クライマーの削除に失敗:", err);

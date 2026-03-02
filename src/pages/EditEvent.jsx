@@ -5,7 +5,6 @@ import { db } from "../firebase";
 import {
   addDoc,
   collection,
-  deleteDoc,
   getDocs,
   doc,
   getDoc,
@@ -22,6 +21,8 @@ import { validateEventDraft } from "../lib/eventDraft";
 import { buildSettingsProgress } from "../lib/settingsProgress";
 import { validateSeasonDraft, validateSeasonInEventRange } from "../lib/seasonDraft";
 import { validateCategoryDraft } from "../lib/categoryDraft";
+import { parseDateInputAsLocalDate } from "../lib/dateInput";
+import { deleteEventCascade } from "../lib/eventDataCleanup";
 
 const TAB_CONFIG = [
   { id: "seasons", label: "📅 シーズン", hint: "開催期間の分割を設定" },
@@ -220,10 +221,16 @@ const EditEvent = () => {
     setIsSavingEvent(true);
     setSaveStatus("");
     try {
+      const startLocalDate = parseDateInputAsLocalDate(eventDraft.startDate);
+      const endLocalDate = parseDateInputAsLocalDate(eventDraft.endDate);
+      if (!startLocalDate || !endLocalDate) {
+        setSaveStatus("❌ 日付の形式が不正です");
+        return;
+      }
       const payload = {
         name,
-        startDate: Timestamp.fromDate(new Date(eventDraft.startDate)),
-        endDate: Timestamp.fromDate(new Date(eventDraft.endDate)),
+        startDate: Timestamp.fromDate(startLocalDate),
+        endDate: Timestamp.fromDate(endLocalDate),
         updatedAt: serverTimestamp(),
       };
       await updateDoc(doc(db, "events", eventId), payload);
@@ -255,7 +262,7 @@ const EditEvent = () => {
     setDeleteError("");
     setIsDeleting(true);
     try {
-      await deleteDoc(doc(db, "events", eventId));
+      await deleteEventCascade({ eventId });
       navigate("/dashboard", { replace: true });
     } catch (err) {
       console.error("イベント削除に失敗:", err);
@@ -293,10 +300,16 @@ const EditEvent = () => {
     setIsAddingSeason(true);
     setSeasonStatus("");
     try {
+      const startLocalDate = parseDateInputAsLocalDate(seasonDraft.startDate);
+      const endLocalDate = parseDateInputAsLocalDate(seasonDraft.endDate);
+      if (!startLocalDate || !endLocalDate) {
+        setSeasonStatus("❌ 日付の形式が不正です");
+        return;
+      }
       await addDoc(collection(db, "events", eventId, "seasons"), {
         name: seasonDraft.name.trim(),
-        startDate: Timestamp.fromDate(new Date(seasonDraft.startDate)),
-        endDate: Timestamp.fromDate(new Date(seasonDraft.endDate)),
+        startDate: Timestamp.fromDate(startLocalDate),
+        endDate: Timestamp.fromDate(endLocalDate),
         createdAt: serverTimestamp(),
       });
       setSeasonDraft({ name: "", startDate: "", endDate: "" });

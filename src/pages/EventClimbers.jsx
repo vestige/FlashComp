@@ -13,8 +13,9 @@ import ParticipantManager from "../components/ParticipantManager";
 import { useOwnerProfile } from "../hooks/useOwnerProfile";
 import { usePageTitle } from "../hooks/usePageTitle";
 import { downloadCsv, parseCsv } from "../lib/csvUtils";
+import { cleanupParticipantScoresOutsideCategory } from "../lib/eventDataCleanup";
 
-const REQUIRED_IMPORT_COLUMNS = ["name", "memberNo", "age", "gender"];
+const REQUIRED_IMPORT_COLUMNS = ["name", "memberNo", "age", "gender", "categoryId"];
 
 const normalizeGender = (value) => {
   const raw = String(value || "").trim().toLowerCase();
@@ -278,6 +279,9 @@ const EventClimbers = () => {
       let batch = writeBatch(db);
       let opCount = 0;
       const participantsRef = collection(db, "events", eventId, "participants");
+      const existingParticipants = await fetchParticipants();
+      const existingById = new Map(existingParticipants.map((participant) => [participant.id, participant]));
+      const categoryChangedParticipants = new Map();
       const commitBatchIfNeeded = async (force = false) => {
         if (opCount >= 400 || (force && opCount > 0)) {
           await batch.commit();
@@ -289,6 +293,10 @@ const EventClimbers = () => {
       for (const row of importRows) {
         const ref = row.id ? doc(db, "events", eventId, "participants", row.id) : doc(participantsRef);
         if (row.id) {
+          const existing = existingById.get(row.id);
+          if (existing && existing.categoryId !== row.payload.categoryId) {
+            categoryChangedParticipants.set(row.id, row.payload.categoryId);
+          }
           batch.set(ref, { ...row.payload, updatedAt: serverTimestamp() }, { merge: true });
         } else {
           batch.set(ref, {
@@ -302,6 +310,13 @@ const EventClimbers = () => {
       }
 
       await commitBatchIfNeeded(true);
+      for (const [participantId, keepCategoryId] of categoryChangedParticipants.entries()) {
+        await cleanupParticipantScoresOutsideCategory({
+          eventId,
+          participantId,
+          keepCategoryId,
+        });
+      }
       setParticipantRefreshToken((prev) => prev + 1);
       setCsvStatus(`✅ クライマーCSVを取り込みました（${importRows.length}件）。`);
     } catch (err) {
