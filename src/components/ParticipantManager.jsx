@@ -26,7 +26,7 @@ const getGenderLabel = (gender) => {
   return "未設定";
 };
 
-const ParticipantManager = ({ eventId, categories }) => {
+const ParticipantManager = ({ eventId, categories, refreshToken = 0 }) => {
   const [participants, setParticipants] = useState([]);
   const [form, setForm] = useState(EMPTY_FORM);
   const [editingParticipantId, setEditingParticipantId] = useState("");
@@ -44,7 +44,7 @@ const ParticipantManager = ({ eventId, categories }) => {
 
   useEffect(() => {
     fetchParticipants();
-  }, [fetchParticipants]);
+  }, [fetchParticipants, refreshToken]);
 
   const handleAddParticipant = async (e) => {
     e.preventDefault();

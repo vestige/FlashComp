@@ -1,14 +1,22 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { doc, getDoc } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
 import ScoreManager from "../components/ScoreManager";
 import { useOwnerProfile } from "../hooks/useOwnerProfile";
 import { usePageTitle } from "../hooks/usePageTitle";
+import { downloadCsv } from "../lib/csvUtils";
+import { calculateRankingRows } from "../lib/rankingCsv";
 
 const EventScores = () => {
   const { eventId } = useParams();
   const [eventName, setEventName] = useState("");
+  const [seasons, setSeasons] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [participants, setParticipants] = useState([]);
+  const [selectedSeasonId, setSelectedSeasonId] = useState("all");
+  const [exportStatus, setExportStatus] = useState("");
+  const [exportingRank, setExportingRank] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [accessDenied, setAccessDenied] = useState(false);
@@ -52,6 +60,26 @@ const EventScores = () => {
           setAccessDenied(true);
           return;
         }
+
+        const [seasonSnap, categorySnap, participantSnap] = await Promise.all([
+          getDocs(collection(db, "events", eventId, "seasons")),
+          getDocs(collection(db, "events", eventId, "categories")),
+          getDocs(collection(db, "events", eventId, "participants")),
+        ]);
+        const seasonRows = seasonSnap.docs
+          .map((seasonDoc) => ({ id: seasonDoc.id, ...seasonDoc.data() }))
+          .sort((a, b) => (a.name || "").localeCompare(b.name || "", "ja"));
+        setSeasons(seasonRows);
+        setCategories(
+          categorySnap.docs
+            .map((categoryDoc) => ({ id: categoryDoc.id, ...categoryDoc.data() }))
+            .sort((a, b) => (a.name || "").localeCompare(b.name || "", "ja"))
+        );
+        setParticipants(
+          participantSnap.docs
+            .map((participantDoc) => ({ id: participantDoc.id, ...participantDoc.data() }))
+            .sort((a, b) => (a.name || "").localeCompare(b.name || "", "ja"))
+        );
       } catch (err) {
         console.error("スコア画面データの取得に失敗:", err);
         setError("スコア画面データの取得に失敗しました。");
@@ -62,6 +90,45 @@ const EventScores = () => {
 
     fetchData();
   }, [eventId, gymIds, hasAllGymAccess, profileLoading, profileError]);
+
+  useEffect(() => {
+    if (selectedSeasonId === "all") return;
+    const exists = seasons.some((season) => season.id === selectedSeasonId);
+    if (!exists) setSelectedSeasonId("all");
+  }, [selectedSeasonId, seasons]);
+
+  const exportRankingCsv = async () => {
+    setExportStatus("");
+    setExportingRank(true);
+    try {
+      const rows = await calculateRankingRows({
+        db,
+        eventId,
+        seasons,
+        categories,
+        participants,
+        selectedSeasonId,
+      });
+      const headers = [
+        "seasonScope",
+        "categoryId",
+        "categoryName",
+        "rank",
+        "participantId",
+        "participantName",
+        "memberNo",
+        "totalPoints",
+        "clearCount",
+      ];
+      downloadCsv(`${eventId}-ranking.csv`, headers, rows);
+      setExportStatus(`✅ 順位CSVを出力しました（${rows.length}件）。`);
+    } catch (err) {
+      console.error("順位CSV出力に失敗:", err);
+      setExportStatus("❌ 順位CSV出力に失敗しました。");
+    } finally {
+      setExportingRank(false);
+    }
+  };
 
   if (loading || profileLoading) {
     return (
@@ -118,10 +185,37 @@ const EventScores = () => {
             <Link to={`/events/${eventId}/scores`} className={quickLinkClass(true)}>
               📋 スコア管理
             </Link>
-            <Link to={`/events/${eventId}/data-io`} className={quickLinkClass(false)}>
-              ⇅ CSV入出力
-            </Link>
           </div>
+        </section>
+
+        <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <h3 className="text-base font-bold text-slate-900">スコアCSV</h3>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <label className="text-sm text-slate-700">
+              順位の対象:
+              <select
+                value={selectedSeasonId}
+                onChange={(e) => setSelectedSeasonId(e.target.value)}
+                className="ml-2 rounded-lg border border-slate-300 px-2 py-1 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+              >
+                <option value="all">総合（全シーズン）</option>
+                {seasons.map((season) => (
+                  <option key={season.id} value={season.id}>
+                    {season.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button
+              type="button"
+              onClick={exportRankingCsv}
+              disabled={exportingRank || seasons.length === 0 || categories.length === 0}
+              className="rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {exportingRank ? "順位を計算中..." : "順位CSVを出力"}
+            </button>
+          </div>
+          {exportStatus && <p className="mt-3 text-sm text-slate-600">{exportStatus}</p>}
         </section>
 
         <section className="mt-5 rounded-2xl border border-slate-200 bg-white p-1 shadow-sm sm:p-2">

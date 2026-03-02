@@ -72,7 +72,6 @@ const EditEvent = () => {
   const [seasons, setSeasons] = useState([]);
   const [seasonCount, setSeasonCount] = useState(0);
   const [taskCount, setTaskCount] = useState(0);
-  const [participantCount, setParticipantCount] = useState(0);
   const [eventGymId, setEventGymId] = useState("");
   const [eventDraft, setEventDraft] = useState({
     name: "",
@@ -111,10 +110,9 @@ const EditEvent = () => {
   usePageTitle(eventName ? `イベント編集: ${eventName}` : "イベント編集");
 
   const refreshSetupSummary = useCallback(async () => {
-    const [categorySnap, seasonSnap, participantSnap] = await Promise.all([
+    const [categorySnap, seasonSnap] = await Promise.all([
       getDocs(collection(db, "events", eventId, "categories")),
       getDocs(collection(db, "events", eventId, "seasons")),
-      getDocs(collection(db, "events", eventId, "participants")),
     ]);
     const taskSnaps = await Promise.all(
       seasonSnap.docs.map((seasonDoc) =>
@@ -135,7 +133,6 @@ const EditEvent = () => {
     setSeasons(seasonRows);
     setSeasonCount(seasonSnap.size);
     setTaskCount(nextTaskCount);
-    setParticipantCount(participantSnap.size);
   }, [eventId]);
 
   useEffect(() => {
@@ -371,12 +368,6 @@ const EditEvent = () => {
   }
 
   const activeTabConfig = TAB_CONFIG.find((tab) => tab.id === activeTab);
-  const summaryItems = [
-    { label: "シーズン", value: seasonCount },
-    { label: "カテゴリ", value: categories.length },
-    { label: "課題", value: taskCount },
-    { label: "クライマー", value: participantCount },
-  ];
   const settingsProgress = buildSettingsProgress({
     seasonCount,
     categoryCount: categories.length,
@@ -387,12 +378,6 @@ const EditEvent = () => {
       isActive
         ? "border-sky-300 bg-sky-50 text-sky-800"
         : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
-    }`;
-  const quickLinkClass = (active) =>
-    `inline-flex items-center rounded-lg border px-3 py-2 text-sm font-medium transition ${
-      active
-        ? "border-sky-300 bg-sky-50 text-sky-800"
-        : "border-slate-300 bg-slate-50 text-slate-700 hover:bg-slate-100"
     }`;
   const stepStatusClass = {
     done: "border-emerald-200 bg-emerald-50 text-emerald-800",
@@ -520,45 +505,6 @@ const EditEvent = () => {
         </section>
 
         <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <p className="text-sm text-slate-600">
-            現在の登録状況を見ながら、上から順に設定するとスムーズです。
-          </p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {summaryItems.map((item) => (
-              <span
-                key={item.label}
-                className="rounded-full border border-slate-300 bg-slate-50 px-3 py-1 text-sm text-slate-700"
-              >
-                {item.label}: {item.value}
-              </span>
-            ))}
-          </div>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Link to={`/events/${eventId}/edit`} className={quickLinkClass(true)}>
-              🛠 イベント設定
-            </Link>
-            <Link
-              to={`/events/${eventId}/climbers`}
-              className={quickLinkClass(false)}
-            >
-              👤 クライマー管理
-            </Link>
-            <Link
-              to={`/events/${eventId}/scores`}
-              className={quickLinkClass(false)}
-            >
-              📋 スコア管理
-            </Link>
-            <Link
-              to={`/events/${eventId}/data-io`}
-              className={quickLinkClass(false)}
-            >
-              ⇅ CSV入出力
-            </Link>
-          </div>
-        </section>
-
-        <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <h3 className="text-base font-bold text-slate-900">設定進捗</h3>
           <p className="mt-1 text-sm text-slate-600">
             {settingsProgress.completed} / {settingsProgress.total} ステップ完了（{settingsProgress.percent}%）
@@ -632,6 +578,7 @@ const EditEvent = () => {
             showCreateForm={false}
             refreshToken={seasonRefreshToken}
             onEditSeason={(seasonId) => navigate(`/events/${eventId}/seasons/${seasonId}/edit`)}
+            eventRange={eventDraft}
           />
         )}
         {activeTab === "categories" && (

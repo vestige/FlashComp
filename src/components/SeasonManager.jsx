@@ -18,6 +18,7 @@ import {
   seasonStatusLabel,
   seasonStatusStyle,
 } from "../lib/seasonStatus";
+import { validateSeasonInEventRange } from "../lib/seasonDraft";
 
 const toInputDate = (value) => {
   if (!value) return "";
@@ -34,6 +35,7 @@ const SeasonManager = ({
   showCreateForm = true,
   refreshToken = 0,
   onEditSeason = null,
+  eventRange = null,
 }) => {
   const [seasonName, setSeasonName] = useState("");
   const [startDate, setStartDate] = useState("");
@@ -168,11 +170,22 @@ const SeasonManager = ({
           const seasonStatus = getSeasonStatus(season);
           const statusClass = seasonStatusStyle[seasonStatus] || seasonStatusStyle.unknown;
           const statusLabel = seasonStatusLabel[seasonStatus] || seasonStatusLabel.unknown;
+          const rangeError = validateSeasonInEventRange({
+            startDate: season.startDate,
+            endDate: season.endDate,
+            eventStartDate: eventRange?.startDate,
+            eventEndDate: eventRange?.endDate,
+          });
+          const hasRangeError = Boolean(rangeError);
 
           return (
             <li
               key={season.id}
-              className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-sky-300"
+              className={`rounded-xl border bg-white p-4 shadow-sm transition ${
+                hasRangeError
+                  ? "border-amber-300 hover:border-amber-400"
+                  : "border-slate-200 hover:border-sky-300"
+              }`}
             >
               {editingSeasonId === season.id && typeof onEditSeason !== "function" ? (
                 <div className="grid gap-3 md:grid-cols-[1fr_auto_auto] md:items-end">
@@ -228,6 +241,11 @@ const SeasonManager = ({
                       <p className="mt-1 text-sm text-slate-500">
                         {formatSeasonDate(season.startDate)} - {formatSeasonDate(season.endDate)}
                       </p>
+                      {hasRangeError && (
+                        <p className="mt-1 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs text-amber-800">
+                          イベント期間外です。イベント期間またはシーズン期間を見直してください。
+                        </p>
+                      )}
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-2 md:justify-end">

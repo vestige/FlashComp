@@ -199,6 +199,9 @@ const SeasonEdit = () => {
   const formattedRange = useMemo(() => {
     return `${formatSeasonDate(savedSeason.startDate)} - ${formatSeasonDate(savedSeason.endDate)}`;
   }, [savedSeason.startDate, savedSeason.endDate]);
+  const formattedEventRange = useMemo(() => {
+    return `${formatSeasonDate(eventRange.startDate)} - ${formatSeasonDate(eventRange.endDate)}`;
+  }, [eventRange.startDate, eventRange.endDate]);
 
   if (loading || profileLoading) {
     return (
@@ -257,9 +260,6 @@ const SeasonEdit = () => {
             <Link to={`/events/${eventId}/scores`} className={quickLinkClass(false)}>
               📋 スコア管理
             </Link>
-            <Link to={`/events/${eventId}/data-io`} className={quickLinkClass(false)}>
-              ⇅ CSV入出力
-            </Link>
           </div>
         </section>
 
@@ -269,6 +269,10 @@ const SeasonEdit = () => {
             <span className={`rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${statusClass}`}>
               {seasonStatusText}
             </span>
+          </div>
+          <div className="mt-3 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3">
+            <p className="text-xs font-semibold tracking-wide text-sky-700">イベント開催期間</p>
+            <p className="mt-1 text-sm font-medium text-slate-900">{formattedEventRange}</p>
           </div>
 
           {!isEditing ? (

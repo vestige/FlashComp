@@ -79,12 +79,6 @@ const ScoreManager = ({ eventId }) => {
       <h2 className="text-2xl font-bold text-slate-900">📋 スコア採点</h2>
       <div className="mt-3 mb-4 flex flex-wrap gap-2">
         <Link
-          to={`/events/${eventId}/data-io`}
-          className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
-        >
-          CSV入出力
-        </Link>
-        <Link
           to={`/score-summary/${eventId}`}
           className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
         >

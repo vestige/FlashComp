@@ -178,4 +178,28 @@ describe("SeasonManager", () => {
     expect(onEditSeason).toHaveBeenCalledWith("season-1");
     expect(firestoreMocks.updateDoc).not.toHaveBeenCalled();
   });
+
+  it("shows warning when season is outside event range", async () => {
+    firestoreMocks.getDocs.mockResolvedValueOnce(
+      makeSnapshot([
+        {
+          id: "season-1",
+          name: "Season 1",
+          startDate: createTimestampValue("2026-03-01"),
+          endDate: createTimestampValue("2026-03-31"),
+        },
+      ])
+    );
+
+    render(
+      <SeasonManager
+        eventId="event-1"
+        showCreateForm={false}
+        eventRange={{ startDate: "2026-03-10", endDate: "2026-03-20" }}
+      />
+    );
+
+    await screen.findByText(/Season 1/);
+    expect(screen.getByText(/イベント期間外です/)).toBeInTheDocument();
+  });
 });

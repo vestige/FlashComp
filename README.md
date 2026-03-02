@@ -59,13 +59,14 @@ GymOwner access control fields used by app:
 
 ## CSV data IO (gymOwner operation)
 
-- Route: `/events/:eventId/data-io`
 - Access: event writable gymOwner/admin
 - Available operations:
-  - Climber CSV export/import
+  - Climber management (`/events/:eventId/climbers`)
+    - Climber CSV export/import
     - Required import columns: `name,memberNo,age,gender,categoryId`
-  - Ranking CSV export (all seasons or single season)
-  - Gender ratio CSV export (overall + category breakdown)
+    - Gender ratio CSV export (overall + category breakdown)
+  - Score management (`/events/:eventId/scores`)
+    - Ranking CSV export (all seasons or single season)
 
 ## Firestore security rules
 

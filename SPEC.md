@@ -1,6 +1,6 @@
 # FlashComp Data Spec
 
-最終更新: 2026-02-28
+最終更新: 2026-03-02
 
 ## 概要
 現行実装では、イベント配下に以下の構造を持ちます。
@@ -163,12 +163,13 @@ graph TD
     - `upcoming`: `Event Settings`（`/events/{eventId}/edit`）
     - `live`: `Scores`（`/events/{eventId}/scores`）
     - `completed`: `Public Ranking`（`/score-summary/{eventId}`）
-- 管理ページ共通（`EditEvent` / `EventClimbers` / `EventScores` / `EventDataIO`）:
-  - ページ上部に共通クイックナビ（`イベント設定` / `クライマー管理` / `スコア管理` / `CSV入出力`）
+- 管理ページ共通（`EventClimbers` / `EventScores`）:
+  - ページ上部に共通クイックナビ（`イベント設定` / `クライマー管理` / `スコア管理`）
   - 現在ページのみアクティブスタイルで表示
 - 設定画面（`/events/{eventId}/edit`）内のナビ:
   - イベント基本情報の編集（イベント名・開始日・終了日）
   - 設定進捗の可視化（シーズン / カテゴリ / 課題の3ステップ）
+  - シーズンカードで、イベント期間外のシーズンを警告表示する
   - シーズン追加は `EditEvent` 内モーダルで実行（`＋ シーズン追加`）
   - シーズン期間はイベント期間内のみ登録可能
   - シーズンタブはカード一覧表示（期間・状態バッジ・編集/削除）
@@ -181,16 +182,19 @@ graph TD
   - `戻る`（ダッシュボード）
 - シーズン編集画面（`/events/{eventId}/seasons/{seasonId}/edit`）:
   - シーズン名・期間の更新
+  - イベント開催期間を参照表示する
   - シーズン期間はイベント期間内のみ更新可能
   - シーズン課題の登録・編集・削除
   - カテゴリ採用課題の選択
   - シーズン削除（Confirmダイアログ）
 - クライマー画面（`/events/{eventId}/climbers`）:
   - クライマー登録・編集・削除
+  - クライマーCSV出力/取り込み
+  - 男女比CSV出力
   - `戻る`（ダッシュボード）
 - スコア画面（`/events/{eventId}/scores`）:
   - 採点対象の選択と採点画面遷移
-  - `CSV入出力`（`/events/{eventId}/data-io`）
+  - 順位CSV出力（全シーズン or 単一シーズン）
   - `公開ランキング`（`/score-summary/{eventId}`）
   - `戻る`（ダッシュボード）
 
