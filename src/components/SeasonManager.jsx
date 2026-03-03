@@ -20,6 +20,7 @@ import {
 import { validateSeasonInEventRange } from "../lib/seasonDraft";
 import { parseDateInputAsLocalDate } from "../lib/dateInput";
 import { deleteSeasonCascade } from "../lib/eventDataCleanup";
+import ConfirmDialog from "./ConfirmDialog";
 
 const toInputDate = (value) => {
   if (!value) return "";
@@ -45,6 +46,8 @@ const SeasonManager = ({
   const [seasons, setSeasons] = useState([]);
   const [editingSeasonId, setEditingSeasonId] = useState("");
   const [editForm, setEditForm] = useState({ name: "", startDate: "", endDate: "" });
+  const [pendingDeleteSeason, setPendingDeleteSeason] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchSeasons = useCallback(async () => {
     try {
@@ -85,14 +88,18 @@ const SeasonManager = ({
     }
   };
 
-  const handleDeleteSeason = async (seasonId) => {
-    const confirmDelete = window.confirm("本当にこのシーズンを削除しますか？");
-    if (!confirmDelete) return;
+  const handleDeleteSeason = async () => {
+    if (!pendingDeleteSeason) return;
+    const seasonId = pendingDeleteSeason.id;
+    setIsDeleting(true);
     try {
       await deleteSeasonCascade({ eventId, seasonId });
       setSeasons((prev) => prev.filter((s) => s.id !== seasonId));
+      setPendingDeleteSeason(null);
     } catch (err) {
       console.error("削除に失敗:", err);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -281,7 +288,7 @@ const SeasonManager = ({
                     )}
                     <button
                       type="button"
-                      onClick={() => handleDeleteSeason(season.id)}
+                      onClick={() => setPendingDeleteSeason(season)}
                       className="inline-flex items-center rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700 transition hover:bg-rose-100"
                     >
                       削除
@@ -293,6 +300,15 @@ const SeasonManager = ({
           );
         })}
       </ul>
+      <ConfirmDialog
+        open={Boolean(pendingDeleteSeason)}
+        title="シーズンを削除しますか？"
+        message={`「${pendingDeleteSeason?.name || "このシーズン"}」を削除します。元に戻せません。`}
+        confirmLabel="削除する"
+        onConfirm={handleDeleteSeason}
+        onCancel={() => setPendingDeleteSeason(null)}
+        busy={isDeleting}
+      />
     </div>
   );
 };

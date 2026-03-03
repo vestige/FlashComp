@@ -15,6 +15,7 @@ import { usePageTitle } from "../hooks/usePageTitle";
 import { validateSeasonDraft, validateSeasonInEventRange } from "../lib/seasonDraft";
 import { formatSeasonDate, getSeasonStatus, seasonStatusLabel, seasonStatusStyle } from "../lib/seasonStatus";
 import RouteSelector from "../components/RouteSelector";
+import ConfirmDialog from "../components/ConfirmDialog";
 import { parseDateInputAsLocalDate } from "../lib/dateInput";
 import { deleteSeasonCascade } from "../lib/eventDataCleanup";
 
@@ -49,6 +50,7 @@ const SeasonEdit = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [accessDenied, setAccessDenied] = useState(false);
@@ -174,13 +176,7 @@ const SeasonEdit = () => {
     }
   };
 
-  const handleDeleteSeason = async () => {
-    const targetName = seasonDraft.name || "このシーズン";
-    const ok = window.confirm(
-      `「${targetName}」を削除します。よろしいですか？\nこの操作は元に戻せません。`
-    );
-    if (!ok) return;
-
+  const confirmDeleteSeason = async () => {
     setDeleteError("");
     setIsDeleting(true);
     try {
@@ -191,6 +187,7 @@ const SeasonEdit = () => {
       setDeleteError("シーズン削除に失敗しました。");
     } finally {
       setIsDeleting(false);
+      setIsDeleteModalOpen(false);
     }
   };
 
@@ -408,7 +405,7 @@ const SeasonEdit = () => {
           <div className="mt-3">
             <button
               type="button"
-              onClick={handleDeleteSeason}
+              onClick={() => setIsDeleteModalOpen(true)}
               disabled={isDeleting}
               className="inline-flex items-center rounded-lg bg-rose-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-800 disabled:cursor-not-allowed disabled:opacity-60"
             >
@@ -416,6 +413,15 @@ const SeasonEdit = () => {
             </button>
           </div>
         </section>
+        <ConfirmDialog
+          open={isDeleteModalOpen}
+          title="シーズンを削除しますか？"
+          message={`「${seasonDraft.name || "このシーズン"}」を削除します。元に戻せません。`}
+          confirmLabel="シーズンを削除"
+          onConfirm={confirmDeleteSeason}
+          onCancel={() => setIsDeleteModalOpen(false)}
+          busy={isDeleting}
+        />
       </div>
     </div>
   );

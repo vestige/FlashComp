@@ -182,7 +182,15 @@ const ScoreSummary = () => {
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#dbeafe_0%,_#f8fafc_45%,_#ecfeff_100%)]">
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        <h2 className="text-2xl font-bold text-slate-900">🏆 クライマー向け結果ページ</h2>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <h2 className="text-2xl font-bold text-slate-900">🏆 クライマー向け結果ページ</h2>
+          <Link
+            to="/"
+            className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+          >
+            ← TOPへ戻る
+          </Link>
+        </div>
         <p className="mt-2 text-sm text-slate-600">確認したいイベントを選んでください。</p>
         <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm text-slate-700">
           <li>イベントを選ぶ</li>

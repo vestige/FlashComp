@@ -83,6 +83,7 @@ describe("ScoreSummary", () => {
     renderSummary("/score-summary?status=ongoing&q=Spring");
 
     await screen.findByText("🏆 クライマー向け結果ページ");
+    expect(screen.getByRole("link", { name: "← TOPへ戻る" })).toHaveAttribute("href", "/");
     expect(screen.getByDisplayValue("Spring")).toBeInTheDocument();
     expect(screen.getByLabelText(/開催状況:/)).toHaveValue("ongoing");
     expect(screen.getByText("表示 1 / 3 件")).toBeInTheDocument();

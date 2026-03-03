@@ -43,7 +43,6 @@ describe("CategoryManager", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     window.alert = vi.fn();
-    window.confirm = vi.fn(() => true);
     cleanupMocks.deleteCategoryCascade.mockResolvedValue();
   });
 
@@ -103,8 +102,9 @@ describe("CategoryManager", () => {
     const rowEl = (await screen.findByText("Beginner")).closest("li");
     const row = within(rowEl);
     await user.click(row.getByRole("button", { name: "削除" }));
+    expect(screen.getByText("カテゴリを削除しますか？")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "削除する" }));
 
-    expect(window.confirm).toHaveBeenCalledTimes(1);
     await waitFor(() => expect(cleanupMocks.deleteCategoryCascade).toHaveBeenCalledTimes(1));
     expect(cleanupMocks.deleteCategoryCascade).toHaveBeenCalledWith({
       eventId: "event-1",

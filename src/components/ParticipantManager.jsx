@@ -13,6 +13,7 @@ import {
   cleanupParticipantScoresOutsideCategory,
   deleteParticipantCascade,
 } from "../lib/eventDataCleanup";
+import ConfirmDialog from "./ConfirmDialog";
 
 const EMPTY_FORM = {
   name: "",
@@ -34,6 +35,8 @@ const ParticipantManager = ({ eventId, categories, refreshToken = 0 }) => {
   const [form, setForm] = useState(EMPTY_FORM);
   const [editingParticipantId, setEditingParticipantId] = useState("");
   const [editForm, setEditForm] = useState(EMPTY_FORM);
+  const [pendingDeleteParticipant, setPendingDeleteParticipant] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchParticipants = useCallback(async () => {
     try {
@@ -130,14 +133,18 @@ const ParticipantManager = ({ eventId, categories, refreshToken = 0 }) => {
     }
   };
 
-  const handleDeleteParticipant = async (participantId) => {
-    const confirmDelete = window.confirm("このクライマーを削除してもよいですか？");
-    if (!confirmDelete) return;
+  const handleDeleteParticipant = async () => {
+    if (!pendingDeleteParticipant) return;
+    const participantId = pendingDeleteParticipant.id;
+    setIsDeleting(true);
     try {
       await deleteParticipantCascade({ eventId, participantId });
       setParticipants((prev) => prev.filter((p) => p.id !== participantId));
+      setPendingDeleteParticipant(null);
     } catch (err) {
       console.error("クライマーの削除に失敗:", err);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -258,7 +265,7 @@ const ParticipantManager = ({ eventId, categories, refreshToken = 0 }) => {
                   <button type="button" onClick={() => startEditParticipant(p)}>
                     編集
                   </button>
-                  <button type="button" onClick={() => handleDeleteParticipant(p.id)}>
+                  <button type="button" onClick={() => setPendingDeleteParticipant(p)}>
                     削除
                   </button>
                 </>
@@ -267,6 +274,15 @@ const ParticipantManager = ({ eventId, categories, refreshToken = 0 }) => {
           );
         })}
       </ul>
+      <ConfirmDialog
+        open={Boolean(pendingDeleteParticipant)}
+        title="クライマーを削除しますか？"
+        message={`「${pendingDeleteParticipant?.name || "このクライマー"}」を削除します。元に戻せません。`}
+        confirmLabel="削除する"
+        onConfirm={handleDeleteParticipant}
+        onCancel={() => setPendingDeleteParticipant(null)}
+        busy={isDeleting}
+      />
     </div>
   );
 };

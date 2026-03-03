@@ -44,7 +44,6 @@ describe("SeasonManager", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     window.alert = vi.fn();
-    window.confirm = vi.fn(() => true);
     cleanupMocks.deleteSeasonCascade.mockResolvedValue();
   });
 
@@ -148,8 +147,9 @@ describe("SeasonManager", () => {
     const rowEl = (await screen.findByText(/Season 1/)).closest("li");
     const row = within(rowEl);
     await user.click(row.getByRole("button", { name: "削除" }));
+    expect(screen.getByText("シーズンを削除しますか？")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "削除する" }));
 
-    expect(window.confirm).toHaveBeenCalledTimes(1);
     await waitFor(() => expect(cleanupMocks.deleteSeasonCascade).toHaveBeenCalledTimes(1));
     expect(cleanupMocks.deleteSeasonCascade).toHaveBeenCalledWith({
       eventId: "event-1",

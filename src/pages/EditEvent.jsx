@@ -15,6 +15,7 @@ import {
 
 import SeasonManager from "../components/SeasonManager";
 import CategoryManager from "../components/CategoryManager";
+import ConfirmDialog from "../components/ConfirmDialog";
 import { usePageTitle } from "../hooks/usePageTitle";
 import { useOwnerProfile } from "../hooks/useOwnerProfile";
 import { validateEventDraft } from "../lib/eventDraft";
@@ -105,6 +106,7 @@ const EditEvent = () => {
   const [error, setError] = useState("");
   const [deleteError, setDeleteError] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [accessDenied, setAccessDenied] = useState(false);
   const {
     gymIds,
@@ -272,13 +274,7 @@ const EditEvent = () => {
     }
   };
 
-  const handleDeleteEvent = async () => {
-    const targetName = eventName || "このイベント";
-    const ok = window.confirm(
-      `「${targetName}」を削除します。よろしいですか？\nこの操作は元に戻せません。`
-    );
-    if (!ok) return;
-
+  const confirmDeleteEvent = async () => {
     setDeleteError("");
     setIsDeleting(true);
     try {
@@ -289,6 +285,7 @@ const EditEvent = () => {
       setDeleteError("イベント削除に失敗しました。");
     } finally {
       setIsDeleting(false);
+      setIsDeleteModalOpen(false);
     }
   };
 
@@ -661,7 +658,7 @@ const EditEvent = () => {
           <div className="mt-3">
             <button
               type="button"
-              onClick={handleDeleteEvent}
+              onClick={() => setIsDeleteModalOpen(true)}
               disabled={isDeleting}
               className="inline-flex items-center rounded-lg bg-rose-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-800 disabled:cursor-not-allowed disabled:opacity-60"
             >
@@ -829,6 +826,16 @@ const EditEvent = () => {
             </section>
           </div>
         )}
+
+        <ConfirmDialog
+          open={isDeleteModalOpen}
+          title="イベントを削除しますか？"
+          message={`「${eventName || "このイベント"}」を削除します。元に戻せません。`}
+          confirmLabel="イベントを削除"
+          onConfirm={confirmDeleteEvent}
+          onCancel={() => setIsDeleteModalOpen(false)}
+          busy={isDeleting}
+        />
       </div>
     </div>
   );

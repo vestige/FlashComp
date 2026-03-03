@@ -44,7 +44,6 @@ describe("ParticipantManager", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     window.alert = vi.fn();
-    window.confirm = vi.fn(() => true);
     cleanupMocks.cleanupParticipantScoresOutsideCategory.mockResolvedValue();
     cleanupMocks.deleteParticipantCascade.mockResolvedValue();
   });
@@ -169,8 +168,9 @@ describe("ParticipantManager", () => {
 
     await screen.findByText(/田中 一郎/);
     await user.click(screen.getByRole("button", { name: "削除" }));
+    expect(screen.getByText("クライマーを削除しますか？")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "削除する" }));
 
-    expect(window.confirm).toHaveBeenCalledTimes(1);
     await waitFor(() => expect(cleanupMocks.deleteParticipantCascade).toHaveBeenCalledTimes(1));
     expect(cleanupMocks.deleteParticipantCascade).toHaveBeenCalledWith({
       eventId: "event-1",

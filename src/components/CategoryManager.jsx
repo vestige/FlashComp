@@ -9,6 +9,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase";
 import { deleteCategoryCascade } from "../lib/eventDataCleanup";
+import ConfirmDialog from "./ConfirmDialog";
 
 const CategoryManager = ({
   eventId,
@@ -20,6 +21,8 @@ const CategoryManager = ({
   const [categoryName, setCategoryName] = useState("");
   const [editingCategoryId, setEditingCategoryId] = useState("");
   const [editingCategoryName, setEditingCategoryName] = useState("");
+  const [pendingDeleteCategory, setPendingDeleteCategory] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchCategories = useCallback(async () => {
     try {
@@ -49,14 +52,18 @@ const CategoryManager = ({
     }
   };
 
-  const handleDeleteCategory = async (categoryId) => {
-    const confirmDelete = window.confirm("このカテゴリを削除してもよいですか？");
-    if (!confirmDelete) return;
+  const handleDeleteCategory = async () => {
+    if (!pendingDeleteCategory) return;
+    const categoryId = pendingDeleteCategory.id;
+    setIsDeleting(true);
     try {
       await deleteCategoryCascade({ eventId, categoryId });
       setCategories((prev) => prev.filter((c) => c.id !== categoryId));
+      setPendingDeleteCategory(null);
     } catch (err) {
       console.error("削除に失敗:", err);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -125,12 +132,21 @@ const CategoryManager = ({
               <>
                 {c.name}
                 <button type="button" onClick={() => handleStartEdit(c)}>編集</button>
-                <button type="button" onClick={() => handleDeleteCategory(c.id)}>削除</button>
+                <button type="button" onClick={() => setPendingDeleteCategory(c)}>削除</button>
               </>
             )}
           </li>
         ))}
       </ul>
+      <ConfirmDialog
+        open={Boolean(pendingDeleteCategory)}
+        title="カテゴリを削除しますか？"
+        message={`「${pendingDeleteCategory?.name || "このカテゴリ"}」を削除します。元に戻せません。`}
+        confirmLabel="削除する"
+        onConfirm={handleDeleteCategory}
+        onCancel={() => setPendingDeleteCategory(null)}
+        busy={isDeleting}
+      />
     </div>
   );
 };
