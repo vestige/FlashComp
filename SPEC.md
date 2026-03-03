@@ -151,6 +151,26 @@ graph TD
   - 変更前: `S * C` 回のカテゴリ走査
   - 変更後: `S` 回のカテゴリ走査
 
+## Firestore読み取り最適化（第2弾: 2026-03-03）
+### 対象
+- `ParticipantScoreDetail`
+- `EventDataIO`
+
+### 実装内容
+- `ParticipantScoreDetail`
+  - 変更前: `participants` をイベント全件取得
+  - 変更後: 表示対象クライマーの `categoryId` で `where("categoryId", "==", ...)` 取得
+- `EventDataIO`
+  - `/events/{eventId}/data-io` は `EventClimbers` へのリダイレクトのみ（追加のFirestore読み取りなし）
+
+### 読み取り見積もり（概算）
+- 記号:
+  - `P`: イベント全体参加者数
+  - `Pc`: 対象カテゴリ参加者数
+- `ParticipantScoreDetail` 初期読み取り:
+  - 変更前: `P`
+  - 変更後: `Pc`
+
 ## 画面導線仕様（2026-02-28時点）
 運営側の導線は「入口を絞る」方針で以下に整理する。
 

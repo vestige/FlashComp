@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { collection, doc, getDoc, getDocs } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, query, where } from "firebase/firestore";
 import { db } from "../firebase";
 import { usePageTitle } from "../hooks/usePageTitle";
 import {
@@ -84,10 +84,9 @@ const ParticipantScoreDetail = () => {
       setLoading(true);
       setError("");
       try {
-        const [eventDocSnap, participantDocSnap, participantsSnap, seasonsSnap, categoriesSnap] = await Promise.all([
+        const [eventDocSnap, participantDocSnap, seasonsSnap, categoriesSnap] = await Promise.all([
           getDoc(doc(db, "events", eventId)),
           getDoc(doc(db, "events", eventId, "participants", participantId)),
-          getDocs(collection(db, "events", eventId, "participants")),
           getDocs(collection(db, "events", eventId, "seasons")),
           getDocs(collection(db, "events", eventId, "categories")),
         ]);
@@ -100,6 +99,16 @@ const ParticipantScoreDetail = () => {
           if (!cancelled) setError("クライマーが見つかりません。");
           return;
         }
+        const participantData = participantDocSnap.data();
+        const participantCategoryId = participantData.categoryId || "";
+
+        const participantsQueryRef = participantCategoryId
+          ? query(
+              collection(db, "events", eventId, "participants"),
+              where("categoryId", "==", participantCategoryId)
+            )
+          : collection(db, "events", eventId, "participants");
+        const participantsSnap = await getDocs(participantsQueryRef);
 
         const seasonRows = seasonsSnap.docs
           .map((s) => ({ id: s.id, ...s.data() }))
@@ -117,7 +126,7 @@ const ParticipantScoreDetail = () => {
             : "all";
 
         setEvent({ id: eventDocSnap.id, ...eventDocSnap.data() });
-        setParticipant({ id: participantDocSnap.id, ...participantDocSnap.data() });
+        setParticipant({ id: participantDocSnap.id, ...participantData });
         setAllParticipants(participantsSnap.docs.map((p) => ({ id: p.id, ...p.data() })));
         setSeasons(seasonRows);
         setCategories(categoryRows);

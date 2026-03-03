@@ -9,6 +9,14 @@ const firebaseMock = vi.hoisted(() => ({
 const firestoreMocks = vi.hoisted(() => ({
   collection: vi.fn((...segments) => ({ path: segments.slice(1).join("/") })),
   doc: vi.fn((...segments) => ({ path: segments.slice(1).join("/") })),
+  where: vi.fn((field, operator, value) => ({ field, operator, value })),
+  query: vi.fn((ref, ...conditions) => {
+    const categoryFilter = conditions.find(
+      (condition) => condition.field === "categoryId" && condition.operator === "=="
+    );
+    const categoryId = categoryFilter?.value || "";
+    return { path: `${ref.path}?categoryId=${categoryId}` };
+  }),
   getDoc: vi.fn(),
   getDocs: vi.fn(),
 }));
@@ -76,7 +84,7 @@ const mockFirestoreForDetail = ({ participantId }) => {
 
   firestoreMocks.getDocs.mockImplementation(async (ref) => {
     const map = {
-      "events/event-1/participants": makeSnapshot(participants),
+      "events/event-1/participants?categoryId=cat-1": makeSnapshot(participants),
       "events/event-1/seasons": makeSnapshot([{ id: "season-1", name: "Season 1" }]),
       "events/event-1/categories": makeSnapshot([{ id: "cat-1", name: "Beginner" }]),
       "events/event-1/seasons/season-1/tasks": makeSnapshot(tasks),
@@ -114,6 +122,7 @@ describe("ParticipantScoreDetail", () => {
 
     await screen.findByText(/FlashComp Spring 2026 - クライマー詳細/);
     await screen.findByText(/順位（Beginner）:/);
+    expect(firestoreMocks.where).toHaveBeenCalledWith("categoryId", "==", "cat-1");
 
     const rankRow = screen.getByText(/順位（Beginner）:/);
     expect(rankRow.textContent).toContain("2");
