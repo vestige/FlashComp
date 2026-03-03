@@ -31,6 +31,11 @@ const statusLabelMap = {
   upcoming: "開催予定",
   ended: "終了",
 };
+const statusStyleMap = {
+  ongoing: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  upcoming: "border-sky-200 bg-sky-50 text-sky-700",
+  ended: "border-slate-200 bg-slate-100 text-slate-600",
+};
 const statusOrderMap = {
   ongoing: 0,
   upcoming: 1,
@@ -182,69 +187,81 @@ const ScoreSummary = () => {
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#dbeafe_0%,_#f8fafc_45%,_#ecfeff_100%)]">
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <h2 className="text-2xl font-bold text-slate-900">🏆 クライマー向け結果ページ</h2>
-          <Link
-            to="/"
-            className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-          >
-            ← TOPへ戻る
-          </Link>
-        </div>
-        <p className="mt-2 text-sm text-slate-600">確認したいイベントを選んでください。</p>
-        <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm text-slate-700">
-          <li>イベントを選ぶ</li>
-          <li>ランキングから自分を検索する</li>
-          <li>「詳細を見る」でシーズン別の完登内訳を確認する</li>
-        </ol>
+        <div className="rounded-3xl border border-slate-200 bg-white/95 p-5 shadow-sm sm:p-6">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">Climber Portal</p>
+              <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
+                🏆 クライマー向け結果ページ
+              </h2>
+            </div>
+            <Link
+              to="/"
+              className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+            >
+              ← TOPへ戻る
+            </Link>
+          </div>
 
-        <div className="mt-4 flex flex-wrap items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <label className="text-sm text-slate-700">
-            イベント名:
-            <input
-              type="text"
-              value={keyword}
-              onChange={(e) => setKeyword(e.target.value)}
-              placeholder="例: Spring"
-              className="ml-2 rounded-lg border border-slate-300 px-2 py-1 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
-            />
-          </label>
-          <label className="text-sm text-slate-700">
-            開催状況:
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="ml-2 rounded-lg border border-slate-300 px-2 py-1 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
-            >
-              <option value="all">すべて</option>
-              <option value="ongoing">開催中</option>
-              <option value="upcoming">開催予定</option>
-              <option value="ended">終了</option>
-            </select>
-          </label>
-          <label className="text-sm text-slate-700">
-            ジム:
-            <select
-              value={gymFilter}
-              onChange={(e) => setGymFilter(e.target.value)}
-              className="ml-2 rounded-lg border border-slate-300 px-2 py-1 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
-            >
-              <option value="all">すべて</option>
-              {gyms.map((gym) => (
-                <option key={gym.id} value={gym.id}>
-                  {gym.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <button
-            type="button"
-            onClick={resetFilters}
-            className="rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
-          >
-            フィルターをリセット
-          </button>
-          <span className="ml-auto text-sm text-slate-600">
+          <p className="mt-3 text-sm text-slate-600">確認したいイベントを選んでください。</p>
+          <ol className="mt-3 grid gap-1.5 pl-5 text-sm text-slate-700 sm:grid-cols-3 sm:gap-3">
+            <li>イベントを選ぶ</li>
+            <li>ランキングから自分を検索する</li>
+            <li>「詳細を見る」でシーズン別の完登内訳を確認する</li>
+          </ol>
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-end justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <label className="text-sm text-slate-700">
+              イベント名:
+              <input
+                type="text"
+                value={keyword}
+                onChange={(e) => setKeyword(e.target.value)}
+                placeholder="例: Spring"
+                className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+              />
+            </label>
+            <label className="text-sm text-slate-700">
+              開催状況:
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+              >
+                <option value="all">すべて</option>
+                <option value="ongoing">開催中</option>
+                <option value="upcoming">開催予定</option>
+                <option value="ended">終了</option>
+              </select>
+            </label>
+            <label className="text-sm text-slate-700">
+              ジム:
+              <select
+                value={gymFilter}
+                onChange={(e) => setGymFilter(e.target.value)}
+                className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+              >
+                <option value="all">すべて</option>
+                {gyms.map((gym) => (
+                  <option key={gym.id} value={gym.id}>
+                    {gym.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <div className="flex items-end">
+              <button
+                type="button"
+                onClick={resetFilters}
+                className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+              >
+                フィルターをリセット
+              </button>
+            </div>
+          </div>
+          <span className="text-sm font-medium text-slate-600">
             表示 {filteredEvents.length} / {events.length} 件
           </span>
         </div>
@@ -257,17 +274,18 @@ const ScoreSummary = () => {
           <div className="mt-4 grid gap-3">
             {filteredEvents.map((event) => {
               const status = getEventStatus(event, Date.now());
+              const statusClass = statusStyleMap[status] || statusStyleMap.ended;
               return (
                 <section
                   key={event.id}
-                  className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+                  className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
                 >
-                  <h3 className="text-lg font-semibold text-slate-900">
-                    {event.name}
-                    <span className="ml-2 rounded-full border border-slate-300 bg-slate-50 px-2 py-0.5 text-xs text-slate-600">
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <h3 className="text-lg font-semibold text-slate-900">{event.name}</h3>
+                    <span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${statusClass}`}>
                       {statusLabelMap[status]}
                     </span>
-                  </h3>
+                  </div>
                   <p className="mt-2 text-sm text-slate-600">
                     開催期間: {toDateText(event.startDate)} 〜 {toDateText(event.endDate)}
                   </p>
@@ -276,7 +294,7 @@ const ScoreSummary = () => {
                   </p>
                   <Link
                     to={`/score-summary/${event.id}`}
-                    className="mt-2 inline-flex items-center rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-sm font-semibold text-sky-800 transition hover:bg-sky-100"
+                    className="mt-3 inline-flex items-center rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-sm font-semibold text-sky-800 transition hover:bg-sky-100"
                   >
                     このイベントのランキングを見る
                   </Link>
@@ -285,10 +303,11 @@ const ScoreSummary = () => {
             })}
           </div>
         )}
+
         <div className="mt-8">
           <Link
             to="/"
-            className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+            className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
           >
             ← Homeに戻る
           </Link>

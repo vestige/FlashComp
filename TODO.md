@@ -8,6 +8,8 @@
 - [x] P1 性能: Firestore最適化第2弾（`EventDataIO` / `ParticipantScoreDetail` の読み取り削減）
 - [x] P2 性能: ビルド警告の大きいチャンク対策（ルート単位の lazy 分割）
 - [ ] P2 UI: デザインをもっと洗練
+- [x] P2 UI(Phase1): クライマー向け3画面（`ScoreSummary` / `EventSummary` / `ParticipantScoreDetail`）のトーン統一
+- [ ] P2 UI(Phase2): 管理画面（`Dashboard` / `EditEvent` / `SeasonEdit` ほか）のトーン統一
 - [ ] 受け入れ確認: `npm run lint` / `npm run test:run` / `npm run build`
 
 ## 気になること
