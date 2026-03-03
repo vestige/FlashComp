@@ -10,7 +10,7 @@
 - [x] P2 UI: デザインをもっと洗練
 - [x] P2 UI(Phase1): クライマー向け3画面（`ScoreSummary` / `EventSummary` / `ParticipantScoreDetail`）のトーン統一
 - [x] P2 UI(Phase2): 管理画面（`Dashboard` / `EditEvent` / `SeasonEdit` ほか）のトーン統一
-- [ ] 受け入れ確認: `npm run lint` / `npm run test:run` / `npm run build`
+- [x] 受け入れ確認: `npm run lint` / `npm run test:run` / `npm run build`
 
 ## 気になること
 - [ ] 課題登録画面で保存やチェックボックスにチェックを入れるたびにメッセージが上に表示されるため、画面が動いた感じがしていやだ
