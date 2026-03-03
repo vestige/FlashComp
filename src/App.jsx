@@ -1,62 +1,71 @@
+import { Suspense, lazy } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Home from "./pages/Home";
-import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
-import CreateEvent from "./pages/CreateEvent";
-import EditEvent from "./pages/EditEvent";
-import SeasonEdit from "./pages/SeasonEdit";
-import EventClimbers from "./pages/EventClimbers";
-import EventScores from "./pages/EventScores";
-import ScoreInput from "./pages/ScoreInput";
-import EventDataIO from "./pages/EventDataIO";
-import ScoreSummary from "./pages/ScoreSummary";
-import EventSummary from "./pages/EventSummary"; // インポートを追加
-import ParticipantScoreDetail from "./pages/ParticipantScoreDetail";
-import SystemAdmin from "./pages/SystemAdmin";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ManagementLayout from "./components/ManagementLayout";
+
+const Home = lazy(() => import("./pages/Home"));
+const Login = lazy(() => import("./pages/Login"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const CreateEvent = lazy(() => import("./pages/CreateEvent"));
+const EditEvent = lazy(() => import("./pages/EditEvent"));
+const SeasonEdit = lazy(() => import("./pages/SeasonEdit"));
+const EventClimbers = lazy(() => import("./pages/EventClimbers"));
+const EventScores = lazy(() => import("./pages/EventScores"));
+const ScoreInput = lazy(() => import("./pages/ScoreInput"));
+const EventDataIO = lazy(() => import("./pages/EventDataIO"));
+const ScoreSummary = lazy(() => import("./pages/ScoreSummary"));
+const EventSummary = lazy(() => import("./pages/EventSummary"));
+const ParticipantScoreDetail = lazy(() => import("./pages/ParticipantScoreDetail"));
+const SystemAdmin = lazy(() => import("./pages/SystemAdmin"));
+
+const RouteLoadingFallback = () => (
+  <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+    <p className="text-sm text-slate-600">画面を読み込んでいます...</p>
+  </div>
+);
 
 function App() {
   return (
     <Router basename="/FlashComp">
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route
-          element={
-            <ProtectedRoute>
-              <ManagementLayout />
-            </ProtectedRoute>
-          }
-        >
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/create-event" element={<CreateEvent />} />
-          <Route path="/events/:eventId/edit" element={<EditEvent />} />
-          <Route path="/events/:eventId/seasons/:seasonId/edit" element={<SeasonEdit />} />
-          <Route path="/events/:eventId/climbers" element={<EventClimbers />} />
-          <Route path="/events/:eventId/scores" element={<EventScores />} />
+      <Suspense fallback={<RouteLoadingFallback />}>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
           <Route
-            path="/events/:eventId/scoreinput/:seasonId/:categoryId/:participantId"
-            element={<ScoreInput />}
+            element={
+              <ProtectedRoute>
+                <ManagementLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/create-event" element={<CreateEvent />} />
+            <Route path="/events/:eventId/edit" element={<EditEvent />} />
+            <Route path="/events/:eventId/seasons/:seasonId/edit" element={<SeasonEdit />} />
+            <Route path="/events/:eventId/climbers" element={<EventClimbers />} />
+            <Route path="/events/:eventId/scores" element={<EventScores />} />
+            <Route
+              path="/events/:eventId/scoreinput/:seasonId/:categoryId/:participantId"
+              element={<ScoreInput />}
+            />
+            <Route path="/events/:eventId/data-io" element={<EventDataIO />} />
+          </Route>
+          <Route
+            path="/system-admin"
+            element={
+              <ProtectedRoute>
+                <SystemAdmin />
+              </ProtectedRoute>
+            }
           />
-          <Route path="/events/:eventId/data-io" element={<EventDataIO />} />
-        </Route>
-        <Route
-          path="/system-admin"
-          element={
-            <ProtectedRoute>
-              <SystemAdmin />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="/score-summary" element={<ScoreSummary />} />
-        {/* 新しいルートを追加 */}
-        <Route path="/score-summary/:eventId" element={<EventSummary />} /> 
-        <Route
-          path="/score-summary/:eventId/participants/:participantId"
-          element={<ParticipantScoreDetail />}
-        />
-      </Routes>
+          <Route path="/score-summary" element={<ScoreSummary />} />
+          <Route path="/score-summary/:eventId" element={<EventSummary />} />
+          <Route
+            path="/score-summary/:eventId/participants/:participantId"
+            element={<ParticipantScoreDetail />}
+          />
+        </Routes>
+      </Suspense>
     </Router>
   );
 }

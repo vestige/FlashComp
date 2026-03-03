@@ -6,7 +6,7 @@
 - [x] P1 UX: クライマー向けページのイベント一覧から TOP に戻る導線を追加
 - [x] P1 安全性: 削除Confirmを専用モーダルに変更（誤操作防止）
 - [x] P1 性能: Firestore最適化第2弾（`EventDataIO` / `ParticipantScoreDetail` の読み取り削減）
-- [ ] P2 性能: ビルド警告の大きいチャンク対策（ルート単位の lazy 分割）
+- [x] P2 性能: ビルド警告の大きいチャンク対策（ルート単位の lazy 分割）
 - [ ] P2 UI: デザインをもっと洗練
 - [ ] 受け入れ確認: `npm run lint` / `npm run test:run` / `npm run build`
 
