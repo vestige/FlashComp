@@ -2,6 +2,7 @@ import { Suspense, lazy } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ManagementLayout from "./components/ManagementLayout";
+import AppShell from "./components/AppShell";
 
 const Home = lazy(() => import("./pages/Home"));
 const Login = lazy(() => import("./pages/Login"));
@@ -29,41 +30,43 @@ function App() {
     <Router basename="/FlashComp">
       <Suspense fallback={<RouteLoadingFallback />}>
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route
-            element={
-              <ProtectedRoute>
-                <ManagementLayout />
-              </ProtectedRoute>
-            }
-          >
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/create-event" element={<CreateEvent />} />
-            <Route path="/events/:eventId/edit" element={<EditEvent />} />
-            <Route path="/events/:eventId/seasons/:seasonId/edit" element={<SeasonEdit />} />
-            <Route path="/events/:eventId/climbers" element={<EventClimbers />} />
-            <Route path="/events/:eventId/scores" element={<EventScores />} />
+          <Route element={<AppShell />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
             <Route
-              path="/events/:eventId/scoreinput/:seasonId/:categoryId/:participantId"
-              element={<ScoreInput />}
+              element={
+                <ProtectedRoute>
+                  <ManagementLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/create-event" element={<CreateEvent />} />
+              <Route path="/events/:eventId/edit" element={<EditEvent />} />
+              <Route path="/events/:eventId/seasons/:seasonId/edit" element={<SeasonEdit />} />
+              <Route path="/events/:eventId/climbers" element={<EventClimbers />} />
+              <Route path="/events/:eventId/scores" element={<EventScores />} />
+              <Route
+                path="/events/:eventId/scoreinput/:seasonId/:categoryId/:participantId"
+                element={<ScoreInput />}
+              />
+              <Route path="/events/:eventId/data-io" element={<EventDataIO />} />
+            </Route>
+            <Route
+              path="/system-admin"
+              element={
+                <ProtectedRoute>
+                  <SystemAdmin />
+                </ProtectedRoute>
+              }
             />
-            <Route path="/events/:eventId/data-io" element={<EventDataIO />} />
+            <Route path="/score-summary" element={<ScoreSummary />} />
+            <Route path="/score-summary/:eventId" element={<EventSummary />} />
+            <Route
+              path="/score-summary/:eventId/participants/:participantId"
+              element={<ParticipantScoreDetail />}
+            />
           </Route>
-          <Route
-            path="/system-admin"
-            element={
-              <ProtectedRoute>
-                <SystemAdmin />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/score-summary" element={<ScoreSummary />} />
-          <Route path="/score-summary/:eventId" element={<EventSummary />} />
-          <Route
-            path="/score-summary/:eventId/participants/:participantId"
-            element={<ParticipantScoreDetail />}
-          />
         </Routes>
       </Suspense>
     </Router>
