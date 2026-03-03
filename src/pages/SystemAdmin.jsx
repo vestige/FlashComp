@@ -11,6 +11,16 @@ import {
 import { db } from "../firebase";
 import { usePageTitle } from "../hooks/usePageTitle";
 import { useOwnerProfile } from "../hooks/useOwnerProfile";
+import ManagementHero from "../components/ManagementHero";
+import {
+  inputFieldClass,
+  pageBackgroundClass,
+  pageContainerClass,
+  primaryButtonClass as sharedPrimaryButtonClass,
+  sectionCardClass,
+  sectionHeadingClass,
+  subtleButtonClass,
+} from "../components/uiStyles";
 
 const normalizeGymIds = (value) => {
   if (!Array.isArray(value)) return [];
@@ -57,6 +67,20 @@ const SystemAdmin = () => {
 
   const [ownerForm, setOwnerForm] = useState(defaultOwnerForm);
   const [editingOwnerId, setEditingOwnerId] = useState("");
+  const Icon = ({ children, className = "h-4 w-4" }) => (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      {children}
+    </svg>
+  );
 
   const eventCountByGym = useMemo(() => {
     const map = new Map();
@@ -297,72 +321,70 @@ const SystemAdmin = () => {
 
   if (profileLoading || loading) {
     return (
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        <p className="text-sm text-slate-600">システム管理データを読み込んでいます...</p>
+      <div className={pageBackgroundClass}>
+        <div className={pageContainerClass}>
+          <p className="text-sm text-slate-600">システム管理データを読み込んでいます...</p>
+        </div>
       </div>
     );
   }
 
   if (error || profileError) {
     return (
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-          {error || profileError}
-        </p>
-        <Link
-          to="/dashboard"
-          className="mt-4 inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
-        >
-          ← ダッシュボードに戻る
-        </Link>
+      <div className={pageBackgroundClass}>
+        <div className={pageContainerClass}>
+          <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            {error || profileError}
+          </p>
+          <Link to="/dashboard" className={`mt-4 ${subtleButtonClass}`}>
+            ← ダッシュボードに戻る
+          </Link>
+        </div>
       </div>
     );
   }
 
   if (role !== "admin") {
     return (
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-          このページはシステム管理者専用です。
-        </p>
-        <Link
-          to="/dashboard"
-          className="mt-4 inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
-        >
-          ← ダッシュボードに戻る
-        </Link>
+      <div className={pageBackgroundClass}>
+        <div className={pageContainerClass}>
+          <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+            このページはシステム管理者専用です。
+          </p>
+          <Link to="/dashboard" className={`mt-4 ${subtleButtonClass}`}>
+            ← ダッシュボードに戻る
+          </Link>
+        </div>
       </div>
     );
   }
 
-  const sectionClass = "rounded-2xl border border-slate-200 bg-white p-5 shadow-sm";
-  const inputClass =
-    "w-full max-w-[560px] rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100";
-  const actionButtonClass =
-    "rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100";
-  const primaryButtonClass =
-    "rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-sm font-semibold text-sky-800 transition hover:bg-sky-100";
   const dangerButtonClass =
     "rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700 transition hover:bg-rose-100";
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#dbeafe_0%,_#f8fafc_45%,_#ecfeff_100%)]">
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        <h2 className="text-2xl font-bold text-slate-900">システム管理者</h2>
-        <p className="mt-2 text-sm text-slate-600">ジム管理とオーナープロファイル管理を行います。</p>
-        <p className="mt-2">
-          <Link
-            to="/dashboard"
-            className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
-          >
-            ← オーナーダッシュボードに戻る
-          </Link>
-        </p>
+    <div className={pageBackgroundClass}>
+      <div className={pageContainerClass}>
+        <ManagementHero
+          eyebrow="Admin Console"
+          title="システム管理者"
+          description="ジム管理とオーナープロファイル管理を行います。"
+          backTo="/dashboard"
+          backLabel="← オーナーダッシュボードに戻る"
+        />
 
         {status && <p className="mt-4 text-sm text-slate-700">{status}</p>}
 
-        <section className={`${sectionClass} mt-4`}>
-          <h3 className="text-lg font-semibold text-slate-900">ジム登録</h3>
+        <section className={`mt-4 ${sectionCardClass}`}>
+          <h2 className={sectionHeadingClass}>
+            <Icon className="h-5 w-5 text-sky-600">
+              <path d="M4 19h16" />
+              <path d="M7 16V9" />
+              <path d="M12 16V5" />
+              <path d="M17 16v-6" />
+            </Icon>
+            ジム登録
+          </h2>
           <form onSubmit={handleCreateGym} className="mt-3 grid gap-2">
             <input
               type="text"
@@ -370,7 +392,7 @@ const SystemAdmin = () => {
               value={gymForm.id}
               onChange={(e) => setGymForm((prev) => ({ ...prev, id: e.target.value }))}
               required
-              className={inputClass}
+              className={`w-full max-w-[560px] ${inputFieldClass}`}
             />
             <input
               type="text"
@@ -378,30 +400,36 @@ const SystemAdmin = () => {
               value={gymForm.name}
               onChange={(e) => setGymForm((prev) => ({ ...prev, name: e.target.value }))}
               required
-              className={inputClass}
+              className={`w-full max-w-[560px] ${inputFieldClass}`}
             />
             <input
               type="text"
               placeholder="市区町村"
               value={gymForm.city}
               onChange={(e) => setGymForm((prev) => ({ ...prev, city: e.target.value }))}
-              className={inputClass}
+              className={`w-full max-w-[560px] ${inputFieldClass}`}
             />
             <input
               type="text"
               placeholder="都道府県"
               value={gymForm.prefecture}
               onChange={(e) => setGymForm((prev) => ({ ...prev, prefecture: e.target.value }))}
-              className={inputClass}
+              className={`w-full max-w-[560px] ${inputFieldClass}`}
             />
             <div>
-              <button type="submit" className={primaryButtonClass}>ジムを登録</button>
+              <button type="submit" className={sharedPrimaryButtonClass}>ジムを登録</button>
             </div>
           </form>
         </section>
 
-        <section className={`${sectionClass} mt-4`}>
-          <h3 className="text-lg font-semibold text-slate-900">登録済みジム</h3>
+        <section className={`mt-4 ${sectionCardClass}`}>
+          <h2 className={sectionHeadingClass}>
+            <Icon className="h-5 w-5 text-sky-600">
+              <rect x="3" y="5" width="18" height="16" rx="2" />
+              <path d="M16 3v4M8 3v4M3 11h18" />
+            </Icon>
+            登録済みジム
+          </h2>
           {gyms.length === 0 ? (
             <p className="mt-2 text-sm text-slate-600">ジムが未登録です。</p>
           ) : (
@@ -418,7 +446,7 @@ const SystemAdmin = () => {
                         [gym.id]: { ...prev[gym.id], name: e.target.value },
                       }))}
                       placeholder="ジム名"
-                      className={inputClass}
+                      className={`w-full max-w-[560px] ${inputFieldClass}`}
                     />
                     <input
                       type="text"
@@ -428,7 +456,7 @@ const SystemAdmin = () => {
                         [gym.id]: { ...prev[gym.id], city: e.target.value },
                       }))}
                       placeholder="市区町村"
-                      className={inputClass}
+                      className={`w-full max-w-[560px] ${inputFieldClass}`}
                     />
                     <input
                       type="text"
@@ -438,14 +466,14 @@ const SystemAdmin = () => {
                         [gym.id]: { ...prev[gym.id], prefecture: e.target.value },
                       }))}
                       placeholder="都道府県"
-                      className={inputClass}
+                      className={`w-full max-w-[560px] ${inputFieldClass}`}
                     />
                   </div>
                   <p className="mt-3 text-sm text-slate-600">
                     関連イベント数: {eventCountByGym.get(gym.id) || 0}
                   </p>
                   <div className="mt-2 flex flex-wrap gap-2">
-                    <button type="button" onClick={() => handleUpdateGym(gym.id)} className={actionButtonClass}>更新</button>
+                    <button type="button" onClick={() => handleUpdateGym(gym.id)} className={subtleButtonClass}>更新</button>
                     <button type="button" onClick={() => handleDeleteGym(gym.id)} className={dangerButtonClass}>削除</button>
                   </div>
                 </div>
@@ -454,15 +482,23 @@ const SystemAdmin = () => {
           )}
         </section>
 
-        <section className={`${sectionClass} mt-4`}>
-          <h3 className="text-lg font-semibold text-slate-900">ジムオーナープロファイル管理</h3>
+        <section className={`mt-4 ${sectionCardClass}`}>
+          <h2 className={sectionHeadingClass}>
+            <Icon className="h-5 w-5 text-sky-600">
+              <circle cx="9" cy="8" r="2.5" />
+              <circle cx="16" cy="9" r="2" />
+              <path d="M4 19c0-2.7 2.2-5 5-5s5 2.3 5 5" />
+              <path d="M14 19c0-1.9 1.6-3.5 3.5-3.5S21 17.1 21 19" />
+            </Icon>
+            ジムオーナープロファイル管理
+          </h2>
           <form onSubmit={handleSaveOwner} className="mt-3 grid gap-2">
             <input
               type="text"
               placeholder="プロファイルID（空欄ならメールから自動生成）"
               value={ownerForm.id}
               onChange={(e) => setOwnerForm((prev) => ({ ...prev, id: e.target.value }))}
-              className="w-full max-w-[700px] rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+              className={`w-full max-w-[700px] ${inputFieldClass}`}
             />
             <input
               type="email"
@@ -470,14 +506,14 @@ const SystemAdmin = () => {
               value={ownerForm.email}
               onChange={(e) => setOwnerForm((prev) => ({ ...prev, email: e.target.value }))}
               required
-              className="w-full max-w-[700px] rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+              className={`w-full max-w-[700px] ${inputFieldClass}`}
             />
             <input
               type="text"
               placeholder="表示名"
               value={ownerForm.name}
               onChange={(e) => setOwnerForm((prev) => ({ ...prev, name: e.target.value }))}
-              className="w-full max-w-[700px] rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+              className={`w-full max-w-[700px] ${inputFieldClass}`}
             />
             <div className="flex flex-wrap gap-4">
               <label className="inline-flex items-center gap-2 text-sm text-slate-700">
@@ -519,10 +555,10 @@ const SystemAdmin = () => {
             )}
 
             <div className="flex flex-wrap gap-2">
-              <button type="submit" className={primaryButtonClass}>
+              <button type="submit" className={sharedPrimaryButtonClass}>
                 {editingOwnerId ? `プロファイルを更新 (${editingOwnerId})` : "新規プロファイルを保存"}
               </button>
-              <button type="button" onClick={resetOwnerForm} className={actionButtonClass}>フォームをリセット</button>
+              <button type="button" onClick={resetOwnerForm} className={subtleButtonClass}>フォームをリセット</button>
             </div>
           </form>
 
@@ -547,7 +583,7 @@ const SystemAdmin = () => {
                     profileId: {userProfile.id} / gymIds: {JSON.stringify(normalizeGymIds(userProfile.gymIds))}
                   </p>
                   <div className="mt-2 flex flex-wrap gap-2">
-                    <button type="button" onClick={() => handleSelectOwnerForEdit(userProfile)} className={actionButtonClass}>編集</button>
+                    <button type="button" onClick={() => handleSelectOwnerForEdit(userProfile)} className={subtleButtonClass}>編集</button>
                     <button type="button" onClick={() => handleDeleteOwner(userProfile)} className={dangerButtonClass}>削除</button>
                   </div>
                 </div>

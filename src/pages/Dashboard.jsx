@@ -7,6 +7,15 @@ import { useOwnerProfile } from "../hooks/useOwnerProfile";
 import { getEventActionPlan } from "../lib/dashboardActions";
 import EventCreateForm from "../components/EventCreateForm";
 import ManagementHero from "../components/ManagementHero";
+import {
+  inputFieldClass,
+  pageBackgroundClass,
+  pageContainerClass,
+  primaryButtonClass,
+  sectionCardClass,
+  sectionHeadingClass,
+  subtleButtonClass,
+} from "../components/uiStyles";
 
 const toDate = (value) => {
   if (!value) return null;
@@ -134,6 +143,7 @@ const Dashboard = () => {
   const [gyms, setGyms] = useState([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [eventFilter, setEventFilter] = useState("active");
+  const [eventSearch, setEventSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const {
@@ -189,7 +199,10 @@ const Dashboard = () => {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [isCreateModalOpen]);
 
-  const gymNameById = new Map(gyms.map((gym) => [gym.id, gym.name || gym.id]));
+  const gymNameById = useMemo(
+    () => new Map(gyms.map((gym) => [gym.id, gym.name || gym.id])),
+    [gyms]
+  );
   const ownerGymSummary = hasAllGymAccess
     ? "すべてのジム"
     : gyms.length > 0
@@ -198,10 +211,18 @@ const Dashboard = () => {
 
   const eventRows = useMemo(() => {
     const withStatus = events.map((event) => ({ ...event, status: getEventStatus(event) }));
-    const filtered =
+    const byStatus =
       eventFilter === "active"
         ? withStatus.filter((event) => event.status === "live" || event.status === "upcoming")
         : withStatus;
+    const normalizedKeyword = eventSearch.trim().toLowerCase();
+    const filtered = normalizedKeyword
+      ? byStatus.filter((event) => {
+          const name = String(event.name || "").toLowerCase();
+          const gymName = String(gymNameById.get(event.gymId) || "").toLowerCase();
+          return name.includes(normalizedKeyword) || gymName.includes(normalizedKeyword);
+        })
+      : byStatus;
     const statusOrder = { live: 0, upcoming: 1, completed: 2, unknown: 3 };
     return filtered.sort((a, b) => {
       const priorityDiff = statusOrder[a.status] - statusOrder[b.status];
@@ -210,11 +231,8 @@ const Dashboard = () => {
       const bDate = toDate(b.startDate)?.getTime() || 0;
       return bDate - aDate;
     });
-  }, [events, eventFilter]);
+  }, [events, eventFilter, eventSearch, gymNameById]);
 
-  const sectionClass = "rounded-xl border border-slate-200 bg-white p-6 shadow-sm";
-  const subtleActionClass =
-    "inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100";
   const statusPrimaryActionClass = {
     upcoming:
       "inline-flex items-center gap-2 rounded-lg border border-sky-300 bg-sky-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-700",
@@ -225,8 +243,6 @@ const Dashboard = () => {
     unknown:
       "inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-slate-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800",
   };
-  const primaryActionClass =
-    "inline-flex items-center gap-2 rounded-xl bg-emerald-800 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-900/15 transition hover:bg-emerald-900";
   if (loading || profileLoading) {
     return (
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
@@ -246,59 +262,57 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#dbeafe_0%,_#f8fafc_45%,_#ecfeff_100%)]">
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+    <div className={pageBackgroundClass}>
+      <div className={pageContainerClass}>
         <div className="mb-8">
           <ManagementHero
             eyebrow="Gym Owner Console"
             title="Gym Owner Console"
-            description="クライミングコンペの大会運営とジムイベントを管理します。"
+            description="Manage your climbing competitions and gym events."
             meta={`担当ジム: ${ownerGymSummary}`}
             backTo="/"
-            backLabel="← Back to TOP"
-          />
-        </div>
-
-        <section className="mb-8">
-          <h2 className="mb-4 flex items-center gap-2 text-2xl font-bold text-slate-900">
-            <Icon className="h-5 w-5 text-emerald-700">
-              <circle cx="12" cy="12" r="3.2" />
-              <path d="M19.4 15a1 1 0 0 0 .2 1.1l.1.1a2 2 0 0 1-2.8 2.8l-.1-.1a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.9V20a2 2 0 0 1-4 0v-.2a1 1 0 0 0-.6-.9 1 1 0 0 0-1.1.2l-.1.1a2 2 0 0 1-2.8-2.8l.1-.1a1 1 0 0 0 .2-1.1 1 1 0 0 0-.9-.6H4a2 2 0 0 1 0-4h.2a1 1 0 0 0 .9-.6 1 1 0 0 0-.2-1.1l-.1-.1a2 2 0 0 1 2.8-2.8l.1.1a1 1 0 0 0 1.1.2h.1a1 1 0 0 0 .6-.9V4a2 2 0 0 1 4 0v.2a1 1 0 0 0 .6.9h.1a1 1 0 0 0 1.1-.2l.1-.1a2 2 0 0 1 2.8 2.8l-.1.1a1 1 0 0 0-.2 1.1v.1a1 1 0 0 0 .9.6H20a2 2 0 0 1 0 4h-.2a1 1 0 0 0-.9.6Z" />
-            </Icon>
-            Settings
-          </h2>
-          <div className={sectionClass}>
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="max-w-xl">
-              <p className="mt-2 text-sm text-slate-600">
-                ボルダー/リードの新規コンペを作成し、カテゴリや採点運用を設定します。
-              </p>
-            </div>
+            backLabel="↑ Back to TOP"
+          >
             {hasAllGymAccess || gymIds.length > 0 ? (
-              <button type="button" onClick={() => setIsCreateModalOpen(true)} className={primaryActionClass}>
+              <button type="button" onClick={() => setIsCreateModalOpen(true)} className={primaryButtonClass}>
                 <Icon className="h-4 w-4">
                   <path d="M12 5v14M5 12h14" />
                 </Icon>
                 Create New Event
               </button>
-            ) : (
-              <p className="text-sm text-slate-600">
-                担当ジムが未設定のため、イベントを作成できません。システム管理者に設定を依頼してください。
-              </p>
-            )}
-          </div>
-          </div>
-        </section>
+            ) : null}
+          </ManagementHero>
+          {!hasAllGymAccess && gymIds.length === 0 ? (
+            <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+              担当ジムが未設定のため、イベントを作成できません。システム管理者に設定を依頼してください。
+            </p>
+          ) : null}
+        </div>
 
-        <section>
-          <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-            <h2 className="flex items-center gap-2 text-2xl font-bold text-slate-900">
-              <Icon className="h-5 w-5 text-sky-600">
-                <rect x="3" y="5" width="18" height="16" rx="2" />
-                <path d="M16 3v4M8 3v4M3 11h18" />
+        <section className={sectionCardClass}>
+          <h2 className={sectionHeadingClass}>
+            <Icon className="h-5 w-5 text-sky-600">
+              <path d="M4 19h16" />
+              <path d="M7 16V9" />
+              <path d="M12 16V5" />
+              <path d="M17 16v-6" />
+            </Icon>
+            Event Controls
+          </h2>
+          <div className="flex flex-wrap items-center gap-3">
+            <label className="flex min-w-[280px] flex-1 items-center gap-2 text-sm text-slate-600">
+              <Icon className="h-4 w-4 text-slate-400">
+                <circle cx="11" cy="11" r="7" />
+                <path d="m20 20-3.5-3.5" />
               </Icon>
-              Registered Events
-            </h2>
+              <input
+                type="text"
+                value={eventSearch}
+                onChange={(e) => setEventSearch(e.target.value)}
+                placeholder="Search events..."
+                className={`w-full ${inputFieldClass}`}
+              />
+            </label>
             <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white p-1">
               <button
                 type="button"
@@ -320,6 +334,16 @@ const Dashboard = () => {
               </button>
             </div>
           </div>
+        </section>
+
+        <section className="mt-4">
+          <h2 className={sectionHeadingClass}>
+            <Icon className="h-5 w-5 text-sky-600">
+              <rect x="3" y="5" width="18" height="16" rx="2" />
+              <path d="M16 3v4M8 3v4M3 11h18" />
+            </Icon>
+            Registered Events
+          </h2>
 
           {!hasAllGymAccess && gymIds.length === 0 ? (
             <p className="text-sm text-slate-600">担当ジムが未設定です。</p>
@@ -391,7 +415,7 @@ const Dashboard = () => {
                         {secondaryActionKeys.map((actionKey) => {
                           const action = actionMeta[actionKey];
                           return (
-                            <Link key={actionKey} to={action.buildPath(event.id)} className={subtleActionClass}>
+                            <Link key={actionKey} to={action.buildPath(event.id)} className={subtleButtonClass}>
                               <Icon>{action.icon}</Icon>
                               {action.label}
                             </Link>

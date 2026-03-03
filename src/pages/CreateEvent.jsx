@@ -5,6 +5,13 @@ import { collection, getDocs } from "firebase/firestore";
 import { usePageTitle } from "../hooks/usePageTitle";
 import { useOwnerProfile } from "../hooks/useOwnerProfile";
 import EventCreateForm from "../components/EventCreateForm";
+import ManagementHero from "../components/ManagementHero";
+import {
+  pageBackgroundClass,
+  pageContainerNarrowClass,
+  sectionCardClass,
+  subtleButtonClass,
+} from "../components/uiStyles";
 
 function CreateEvent() {
   usePageTitle("イベント作成");
@@ -60,15 +67,12 @@ function CreateEvent() {
 
   if (error || profileError) {
     return (
-      <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#dbeafe_0%,_#f8fafc_45%,_#ecfeff_100%)]">
-        <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className={pageBackgroundClass}>
+        <div className={pageContainerNarrowClass}>
           <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
             {error || profileError}
           </p>
-          <Link
-            to="/dashboard"
-            className="mt-4 inline-flex items-center rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
-          >
+          <Link to="/dashboard" className={`mt-4 ${subtleButtonClass}`}>
             ← ダッシュボードへ戻る
           </Link>
         </div>
@@ -77,24 +81,17 @@ function CreateEvent() {
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#dbeafe_0%,_#f8fafc_45%,_#ecfeff_100%)]">
-      <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">Create New Event</h1>
-            <p className="mt-2 text-base text-slate-600">
-              大会の基本情報を設定し、新しいイベントを開始します。
-            </p>
-          </div>
-          <Link
-            to="/dashboard"
-            className="inline-flex items-center rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
-          >
-            ← ダッシュボードへ戻る
-          </Link>
-        </div>
+    <div className={pageBackgroundClass}>
+      <div className={pageContainerNarrowClass}>
+        <ManagementHero
+          eyebrow="Event Setup"
+          title="Create New Event"
+          description="大会の基本情報を設定し、新しいイベントを開始します。"
+          backTo="/dashboard"
+          backLabel="← ダッシュボードへ戻る"
+        />
 
-        <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <section className={`mt-4 ${sectionCardClass}`}>
           <EventCreateForm
             gyms={gyms}
             ownerUid={authUser?.uid || ""}

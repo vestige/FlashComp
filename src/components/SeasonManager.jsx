@@ -21,6 +21,13 @@ import { validateSeasonInEventRange } from "../lib/seasonDraft";
 import { parseDateInputAsLocalDate } from "../lib/dateInput";
 import { deleteSeasonCascade } from "../lib/eventDataCleanup";
 import ConfirmDialog from "./ConfirmDialog";
+import {
+  inputFieldClass,
+  primaryButtonClass,
+  sectionCardClass,
+  sectionHeadingClass,
+  subtleButtonClass,
+} from "./uiStyles";
 
 const toInputDate = (value) => {
   if (!value) return "";
@@ -148,8 +155,8 @@ const SeasonManager = ({
   };
 
   return (
-    <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-      <h3 className="text-base font-bold text-slate-900">{showCreateForm ? "📅 シーズン追加" : "📅 シーズン一覧"}</h3>
+    <div className={`mt-4 ${sectionCardClass}`}>
+      <h3 className={sectionHeadingClass}>{showCreateForm ? "📅 シーズン追加" : "📅 シーズン一覧"}</h3>
       {showCreateForm && (
         <>
           <form onSubmit={handleAddSeason} className="mt-3 grid gap-3 md:grid-cols-[1fr_auto_auto_auto] md:items-end">
@@ -159,25 +166,25 @@ const SeasonManager = ({
               value={seasonName}
               onChange={(e) => setSeasonName(e.target.value)}
               required
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+              className={inputFieldClass}
             />
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
               required
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+              className={inputFieldClass}
             />
             <input
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
               required
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+              className={inputFieldClass}
             />
             <button
               type="submit"
-              className="inline-flex items-center justify-center rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-900"
+              className={primaryButtonClass}
             >
               追加
             </button>
@@ -213,32 +220,32 @@ const SeasonManager = ({
                     type="text"
                     value={editForm.name}
                     onChange={(e) => setEditForm((prev) => ({ ...prev, name: e.target.value }))}
-                    className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                    className={inputFieldClass}
                   />
                   <input
                     type="date"
                     value={editForm.startDate}
                     onChange={(e) => setEditForm((prev) => ({ ...prev, startDate: e.target.value }))}
-                    className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                    className={inputFieldClass}
                   />
                   <input
                     type="date"
                     value={editForm.endDate}
                     onChange={(e) => setEditForm((prev) => ({ ...prev, endDate: e.target.value }))}
-                    className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                    className={inputFieldClass}
                   />
                   <div className="md:col-span-3 flex flex-wrap gap-2">
                     <button
                       type="button"
                       onClick={() => handleSaveEdit(season.id)}
-                      className="inline-flex items-center rounded-lg bg-emerald-800 px-3 py-2 text-sm font-semibold text-white transition hover:bg-emerald-900"
+                      className={primaryButtonClass}
                     >
                       保存
                     </button>
                     <button
                       type="button"
                       onClick={handleCancelEdit}
-                      className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                      className={subtleButtonClass}
                     >
                       キャンセル
                     </button>
@@ -273,7 +280,7 @@ const SeasonManager = ({
                       <button
                         type="button"
                         onClick={() => onEditSeason(season.id)}
-                        className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                        className={subtleButtonClass}
                       >
                         編集
                       </button>
@@ -281,7 +288,7 @@ const SeasonManager = ({
                       <button
                         type="button"
                         onClick={() => handleStartEdit(season)}
-                        className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                        className={subtleButtonClass}
                       >
                         編集
                       </button>

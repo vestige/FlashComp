@@ -10,6 +10,13 @@ import {
 import { db } from "../firebase";
 import { deleteCategoryCascade } from "../lib/eventDataCleanup";
 import ConfirmDialog from "./ConfirmDialog";
+import {
+  inputFieldClass,
+  primaryButtonClass,
+  sectionCardClass,
+  sectionHeadingClass,
+  subtleButtonClass,
+} from "./uiStyles";
 
 const CategoryManager = ({
   eventId,
@@ -101,43 +108,65 @@ const CategoryManager = ({
   };
 
   return (
-    <div>
-      <h3>{showCreateForm ? "🏷 カテゴリ追加" : "🏷 カテゴリ一覧"}</h3>
+    <div className={`mt-4 ${sectionCardClass}`}>
+      <h3 className={sectionHeadingClass}>{showCreateForm ? "🏷 カテゴリ追加" : "🏷 カテゴリ一覧"}</h3>
       {showCreateForm && (
-        <form onSubmit={handleAddCategory}>
+        <form onSubmit={handleAddCategory} className="mt-3 flex flex-wrap items-center gap-2">
           <input
             type="text"
             placeholder="カテゴリ名"
             value={categoryName}
             onChange={(e) => setCategoryName(e.target.value)}
             required
+            className={inputFieldClass}
           />
-          <button type="submit">追加</button>
+          <button type="submit" className={primaryButtonClass}>
+            追加
+          </button>
         </form>
       )}
-      <ul>
-        {categories.map((c) => (
-          <li key={c.id}>
-            {editingCategoryId === c.id ? (
-              <>
-                <input
-                  type="text"
-                  value={editingCategoryName}
-                  onChange={(e) => setEditingCategoryName(e.target.value)}
-                />
-                <button type="button" onClick={() => handleSaveEdit(c.id)}>保存</button>
-                <button type="button" onClick={handleCancelEdit}>キャンセル</button>
-              </>
-            ) : (
-              <>
-                {c.name}
-                <button type="button" onClick={() => handleStartEdit(c)}>編集</button>
-                <button type="button" onClick={() => setPendingDeleteCategory(c)}>削除</button>
-              </>
-            )}
-          </li>
-        ))}
-      </ul>
+      {categories.length === 0 ? (
+        <p className="mt-3 text-sm text-slate-600">カテゴリはまだ登録されていません。</p>
+      ) : (
+        <ul className="mt-4 grid gap-3">
+          {categories.map((c) => (
+            <li key={c.id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+              {editingCategoryId === c.id ? (
+                <div className="flex flex-wrap items-center gap-2">
+                  <input
+                    type="text"
+                    value={editingCategoryName}
+                    onChange={(e) => setEditingCategoryName(e.target.value)}
+                    className={inputFieldClass}
+                  />
+                  <button type="button" onClick={() => handleSaveEdit(c.id)} className={primaryButtonClass}>
+                    保存
+                  </button>
+                  <button type="button" onClick={handleCancelEdit} className={subtleButtonClass}>
+                    キャンセル
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-sm font-semibold text-slate-900">{c.name}</p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button type="button" onClick={() => handleStartEdit(c)} className={subtleButtonClass}>
+                      編集
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPendingDeleteCategory(c)}
+                      className="inline-flex items-center rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700 transition hover:bg-rose-100"
+                    >
+                      削除
+                    </button>
+                  </div>
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
       <ConfirmDialog
         open={Boolean(pendingDeleteCategory)}
         title="カテゴリを削除しますか？"

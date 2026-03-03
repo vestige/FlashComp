@@ -19,6 +19,15 @@ import ConfirmDialog from "../components/ConfirmDialog";
 import ManagementHero from "../components/ManagementHero";
 import { parseDateInputAsLocalDate } from "../lib/dateInput";
 import { deleteSeasonCascade } from "../lib/eventDataCleanup";
+import {
+  inputFieldClass,
+  pageBackgroundClass,
+  pageContainerClass,
+  primaryButtonClass,
+  sectionCardClass,
+  sectionHeadingClass,
+  subtleButtonClass,
+} from "../components/uiStyles";
 
 const toDate = (value) => {
   if (!value) return null;
@@ -210,35 +219,41 @@ const SeasonEdit = () => {
 
   if (loading || profileLoading) {
     return (
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        <p className="text-sm text-slate-600">シーズン編集データを読み込んでいます...</p>
+      <div className={pageBackgroundClass}>
+        <div className={pageContainerClass}>
+          <p className="text-sm text-slate-600">シーズン編集データを読み込んでいます...</p>
+        </div>
       </div>
     );
   }
 
   if (error || profileError) {
     return (
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-          {error || profileError}
-        </p>
+      <div className={pageBackgroundClass}>
+        <div className={pageContainerClass}>
+          <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            {error || profileError}
+          </p>
+        </div>
       </div>
     );
   }
 
   if (accessDenied) {
     return (
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-          このイベントを編集する権限がありません。
-        </p>
+      <div className={pageBackgroundClass}>
+        <div className={pageContainerClass}>
+          <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+            このイベントを編集する権限がありません。
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#dbeafe_0%,_#f8fafc_45%,_#ecfeff_100%)]">
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+    <div className={pageBackgroundClass}>
+      <div className={pageContainerClass}>
         <ManagementHero
           eyebrow="Season Settings"
           title={`📅 シーズン編集：${seasonDraft.name || "無題シーズン"}`}
@@ -247,8 +262,8 @@ const SeasonEdit = () => {
           backLabel="↩ シーズン一覧へ戻る"
         />
 
-        <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <h3 className="text-base font-bold text-slate-900">イベントメニュー</h3>
+        <section className={`mt-4 ${sectionCardClass}`}>
+          <h3 className={sectionHeadingClass}>イベントメニュー</h3>
           <div className="mt-3 flex flex-wrap gap-2">
             <Link to={`/events/${eventId}/edit`} className={quickLinkClass(true)}>
               🛠 イベント設定
@@ -262,7 +277,7 @@ const SeasonEdit = () => {
           </div>
         </section>
 
-        <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <section className={`mt-4 ${sectionCardClass}`}>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h3 className="text-lg font-bold text-slate-900">シーズン基本情報</h3>
             <span className={`rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${statusClass}`}>
@@ -295,7 +310,7 @@ const SeasonEdit = () => {
                   setIsEditing(true);
                   setStatus("");
                 }}
-                className="inline-flex items-center rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-slate-800"
+                className={subtleButtonClass}
               >
                 編集
               </button>
@@ -309,7 +324,7 @@ const SeasonEdit = () => {
                   value={seasonDraft.name}
                   onChange={(e) => setSeasonDraft((prev) => ({ ...prev, name: e.target.value }))}
                   required
-                  className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                  className={inputFieldClass}
                 />
               </div>
               <div className="grid gap-4 md:grid-cols-2">
@@ -320,7 +335,7 @@ const SeasonEdit = () => {
                     value={seasonDraft.startDate}
                     onChange={(e) => setSeasonDraft((prev) => ({ ...prev, startDate: e.target.value }))}
                     required
-                    className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                    className={inputFieldClass}
                   />
                 </div>
                 <div className="grid gap-2">
@@ -330,7 +345,7 @@ const SeasonEdit = () => {
                     value={seasonDraft.endDate}
                     onChange={(e) => setSeasonDraft((prev) => ({ ...prev, endDate: e.target.value }))}
                     required
-                    className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                    className={inputFieldClass}
                   />
                 </div>
               </div>
@@ -338,7 +353,7 @@ const SeasonEdit = () => {
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="inline-flex items-center rounded-xl bg-emerald-800 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-emerald-900 disabled:cursor-not-allowed disabled:opacity-60"
+                  className={`${primaryButtonClass} disabled:cursor-not-allowed disabled:opacity-60`}
                 >
                   {isSaving ? "更新中..." : "更新"}
                 </button>
@@ -349,7 +364,7 @@ const SeasonEdit = () => {
                     setIsEditing(false);
                     setStatus("");
                   }}
-                  className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                  className={subtleButtonClass}
                 >
                   キャンセル
                 </button>
@@ -368,8 +383,8 @@ const SeasonEdit = () => {
           )}
         </section>
 
-        <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <h3 className="text-base font-bold text-slate-900">課題設定</h3>
+        <section className={`mt-4 ${sectionCardClass}`}>
+          <h3 className={sectionHeadingClass}>課題設定</h3>
           {categories.length === 0 ? (
             <p className="mt-1 text-sm text-slate-600">
               先にイベント設定でカテゴリを登録してください。

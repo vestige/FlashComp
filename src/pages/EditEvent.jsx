@@ -29,6 +29,15 @@ import {
 import { validateCategoryDraft } from "../lib/categoryDraft";
 import { parseDateInputAsLocalDate } from "../lib/dateInput";
 import { deleteEventCascade } from "../lib/eventDataCleanup";
+import {
+  inputFieldClass,
+  pageBackgroundClass,
+  pageContainerClass,
+  primaryButtonClass,
+  sectionCardClass,
+  sectionHeadingClass,
+  subtleButtonClass,
+} from "../components/uiStyles";
 
 const TAB_CONFIG = [
   { id: "seasons", label: "📅 シーズン", hint: "開催期間の分割を設定" },
@@ -372,28 +381,34 @@ const EditEvent = () => {
 
   if (loading || profileLoading) {
     return (
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        <p className="text-sm text-slate-600">イベント編集データを読み込んでいます...</p>
+      <div className={pageBackgroundClass}>
+        <div className={pageContainerClass}>
+          <p className="text-sm text-slate-600">イベント編集データを読み込んでいます...</p>
+        </div>
       </div>
     );
   }
 
   if (error || profileError) {
     return (
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-          {error || profileError}
-        </p>
+      <div className={pageBackgroundClass}>
+        <div className={pageContainerClass}>
+          <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            {error || profileError}
+          </p>
+        </div>
       </div>
     );
   }
 
   if (accessDenied) {
     return (
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-          このイベントを編集する権限がありません。
-        </p>
+      <div className={pageBackgroundClass}>
+        <div className={pageContainerClass}>
+          <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+            このイベントを編集する権限がありません。
+          </p>
+        </div>
       </div>
     );
   }
@@ -417,8 +432,8 @@ const EditEvent = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#dbeafe_0%,_#f8fafc_45%,_#ecfeff_100%)]">
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+    <div className={pageBackgroundClass}>
+      <div className={pageContainerClass}>
         <ManagementHero
           eyebrow="Event Settings"
           title={`🛠 イベント設定：${eventName}`}
@@ -427,8 +442,8 @@ const EditEvent = () => {
           backLabel="↩ ダッシュボードへ戻る"
         />
 
-        <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <h3 className="text-lg font-bold text-slate-900">イベント基本情報</h3>
+        <section className={`mt-4 ${sectionCardClass}`}>
+          <h3 className={sectionHeadingClass}>イベント基本情報</h3>
           <p className="mt-1 text-sm text-slate-600">
             大会名と開催期間を更新できます。保存後すぐに各画面へ反映されます。
           </p>
@@ -456,7 +471,7 @@ const EditEvent = () => {
                     setIsEditingEventMeta(true);
                     setSaveStatus("");
                   }}
-                  className="inline-flex items-center rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-slate-800"
+                  className={subtleButtonClass}
                 >
                   編集
                 </button>
@@ -472,7 +487,7 @@ const EditEvent = () => {
                   onChange={(e) => setEventDraft((prev) => ({ ...prev, name: e.target.value }))}
                   placeholder="例: FlashComp Live 2026"
                   required
-                  className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                  className={inputFieldClass}
                 />
               </div>
               <div className="grid gap-4 md:grid-cols-2">
@@ -483,7 +498,7 @@ const EditEvent = () => {
                     value={eventDraft.startDate}
                     onChange={(e) => setEventDraft((prev) => ({ ...prev, startDate: e.target.value }))}
                     required
-                    className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                    className={inputFieldClass}
                   />
                 </div>
                 <div className="grid gap-2">
@@ -493,7 +508,7 @@ const EditEvent = () => {
                     value={eventDraft.endDate}
                     onChange={(e) => setEventDraft((prev) => ({ ...prev, endDate: e.target.value }))}
                     required
-                    className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                    className={inputFieldClass}
                   />
                 </div>
               </div>
@@ -501,7 +516,7 @@ const EditEvent = () => {
                 <button
                   type="submit"
                   disabled={isSavingEvent}
-                  className="inline-flex items-center rounded-xl bg-emerald-800 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-emerald-900/15 transition hover:bg-emerald-900 disabled:cursor-not-allowed disabled:opacity-60"
+                  className={`${primaryButtonClass} disabled:cursor-not-allowed disabled:opacity-60`}
                 >
                   {isSavingEvent ? "更新中..." : "更新"}
                 </button>
@@ -512,7 +527,7 @@ const EditEvent = () => {
                     setIsEditingEventMeta(false);
                     setSaveStatus("");
                   }}
-                  className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                  className={subtleButtonClass}
                 >
                   キャンセル
                 </button>
@@ -530,8 +545,8 @@ const EditEvent = () => {
           )}
         </section>
 
-        <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <h3 className="text-base font-bold text-slate-900">設定進捗</h3>
+        <section className={`mt-4 ${sectionCardClass}`}>
+          <h3 className={sectionHeadingClass}>設定進捗</h3>
           <p className="mt-1 text-sm text-slate-600">
             {settingsProgress.completed} / {settingsProgress.total} ステップ完了（{settingsProgress.percent}%）
           </p>
@@ -558,7 +573,7 @@ const EditEvent = () => {
           </div>
         </section>
 
-        <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <section className={`mt-4 ${sectionCardClass}`}>
           <div className="flex flex-wrap items-center gap-2">
             {TAB_CONFIG.map((tab) => (
               <button
@@ -577,7 +592,7 @@ const EditEvent = () => {
                   setSeasonStatus("");
                   setIsSeasonModalOpen(true);
                 }}
-                className="inline-flex items-center rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-800 transition hover:bg-emerald-100"
+                className={primaryButtonClass}
               >
                 ＋ シーズン追加
               </button>
@@ -589,7 +604,7 @@ const EditEvent = () => {
                   setCategoryStatus("");
                   setIsCategoryModalOpen(true);
                 }}
-                className="inline-flex items-center rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-800 transition hover:bg-emerald-100"
+                className={primaryButtonClass}
               >
                 ＋ カテゴリ追加
               </button>
@@ -617,8 +632,8 @@ const EditEvent = () => {
           />
         )}
         {activeTab === "tasks" && (
-          <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <h3 className="text-base font-bold text-slate-900">課題設定の導線</h3>
+          <section className={`mt-4 ${sectionCardClass}`}>
+            <h3 className={sectionHeadingClass}>課題設定の導線</h3>
             <p className="mt-1 text-sm text-slate-600">
               課題の追加・編集はシーズン編集ページで行います。対象シーズンを選択してください。
             </p>
@@ -700,7 +715,7 @@ const EditEvent = () => {
                     onChange={(e) => setSeasonDraft((prev) => ({ ...prev, name: e.target.value }))}
                     placeholder="例: Season 1"
                     required
-                    className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                    className={inputFieldClass}
                   />
                 </div>
                 <div className="grid gap-4 md:grid-cols-2">
@@ -711,7 +726,7 @@ const EditEvent = () => {
                       value={seasonDraft.startDate}
                       onChange={(e) => setSeasonDraft((prev) => ({ ...prev, startDate: e.target.value }))}
                       required
-                      className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                      className={inputFieldClass}
                     />
                   </div>
                   <div className="grid gap-2">
@@ -721,7 +736,7 @@ const EditEvent = () => {
                       value={seasonDraft.endDate}
                       onChange={(e) => setSeasonDraft((prev) => ({ ...prev, endDate: e.target.value }))}
                       required
-                      className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                      className={inputFieldClass}
                     />
                   </div>
                 </div>
@@ -729,14 +744,14 @@ const EditEvent = () => {
                   <button
                     type="submit"
                     disabled={isAddingSeason}
-                    className="inline-flex items-center rounded-xl bg-emerald-800 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-emerald-900 disabled:cursor-not-allowed disabled:opacity-60"
+                    className={`${primaryButtonClass} disabled:cursor-not-allowed disabled:opacity-60`}
                   >
                     {isAddingSeason ? "追加中..." : "追加"}
                   </button>
                   <button
                     type="button"
                     onClick={() => setIsSeasonModalOpen(false)}
-                    className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                    className={subtleButtonClass}
                   >
                     キャンセル
                   </button>
@@ -790,21 +805,21 @@ const EditEvent = () => {
                     onChange={(e) => setCategoryDraftName(e.target.value)}
                     placeholder="例: Beginner"
                     required
-                    className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                    className={inputFieldClass}
                   />
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <button
                     type="submit"
                     disabled={isAddingCategory}
-                    className="inline-flex items-center rounded-xl bg-emerald-800 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-emerald-900 disabled:cursor-not-allowed disabled:opacity-60"
+                    className={`${primaryButtonClass} disabled:cursor-not-allowed disabled:opacity-60`}
                   >
                     {isAddingCategory ? "追加中..." : "追加"}
                   </button>
                   <button
                     type="button"
                     onClick={() => setIsCategoryModalOpen(false)}
-                    className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                    className={subtleButtonClass}
                   >
                     キャンセル
                   </button>
