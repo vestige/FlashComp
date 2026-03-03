@@ -6,6 +6,7 @@ import { usePageTitle } from "../hooks/usePageTitle";
 import { useOwnerProfile } from "../hooks/useOwnerProfile";
 import { getEventActionPlan } from "../lib/dashboardActions";
 import EventCreateForm from "../components/EventCreateForm";
+import ManagementHero from "../components/ManagementHero";
 
 const toDate = (value) => {
   if (!value) return null;
@@ -247,17 +248,15 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#dbeafe_0%,_#f8fafc_45%,_#ecfeff_100%)]">
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">Gym Owner Console</h1>
-            <p className="mt-2 text-base text-slate-600">
-              クライミングコンペの大会運営とジムイベントを管理します。
-            </p>
-            <p className="mt-2 text-sm text-slate-500">担当ジム: {ownerGymSummary}</p>
-          </div>
-          <Link to="/" className={subtleActionClass}>
-            ← Back to TOP
-          </Link>
+        <div className="mb-8">
+          <ManagementHero
+            eyebrow="Gym Owner Console"
+            title="Gym Owner Console"
+            description="クライミングコンペの大会運営とジムイベントを管理します。"
+            meta={`担当ジム: ${ownerGymSummary}`}
+            backTo="/"
+            backLabel="← Back to TOP"
+          />
         </div>
 
         <section className="mb-8">

@@ -16,6 +16,7 @@ import {
 import SeasonManager from "../components/SeasonManager";
 import CategoryManager from "../components/CategoryManager";
 import ConfirmDialog from "../components/ConfirmDialog";
+import ManagementHero from "../components/ManagementHero";
 import { usePageTitle } from "../hooks/usePageTitle";
 import { useOwnerProfile } from "../hooks/useOwnerProfile";
 import { validateEventDraft } from "../lib/eventDraft";
@@ -418,18 +419,13 @@ const EditEvent = () => {
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#dbeafe_0%,_#f8fafc_45%,_#ecfeff_100%)]">
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-sky-700">Event Settings</p>
-            <h2 className="text-2xl font-bold text-slate-900">🛠 イベント設定：{eventName}</h2>
-          </div>
-          <Link
-            to="/dashboard"
-            className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-          >
-            ↩ ダッシュボードへ戻る
-          </Link>
-        </div>
+        <ManagementHero
+          eyebrow="Event Settings"
+          title={`🛠 イベント設定：${eventName}`}
+          description="大会情報・進捗・シーズン/カテゴリ設定を1画面で管理します。"
+          backTo="/dashboard"
+          backLabel="↩ ダッシュボードへ戻る"
+        />
 
         <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <h3 className="text-lg font-bold text-slate-900">イベント基本情報</h3>

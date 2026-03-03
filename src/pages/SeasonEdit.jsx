@@ -16,6 +16,7 @@ import { validateSeasonDraft, validateSeasonInEventRange } from "../lib/seasonDr
 import { formatSeasonDate, getSeasonStatus, seasonStatusLabel, seasonStatusStyle } from "../lib/seasonStatus";
 import RouteSelector from "../components/RouteSelector";
 import ConfirmDialog from "../components/ConfirmDialog";
+import ManagementHero from "../components/ManagementHero";
 import { parseDateInputAsLocalDate } from "../lib/dateInput";
 import { deleteSeasonCascade } from "../lib/eventDataCleanup";
 
@@ -238,19 +239,13 @@ const SeasonEdit = () => {
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#dbeafe_0%,_#f8fafc_45%,_#ecfeff_100%)]">
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-sky-700">Season Settings</p>
-            <h2 className="text-2xl font-bold text-slate-900">📅 シーズン編集：{seasonDraft.name || "無題シーズン"}</h2>
-            <p className="mt-1 text-sm text-slate-600">イベント: {eventName}</p>
-          </div>
-          <Link
-            to={`/events/${eventId}/edit?tab=seasons`}
-            className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-          >
-            ↩ シーズン一覧へ戻る
-          </Link>
-        </div>
+        <ManagementHero
+          eyebrow="Season Settings"
+          title={`📅 シーズン編集：${seasonDraft.name || "無題シーズン"}`}
+          description={`イベント: ${eventName}`}
+          backTo={`/events/${eventId}/edit?tab=seasons`}
+          backLabel="↩ シーズン一覧へ戻る"
+        />
 
         <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <h3 className="text-base font-bold text-slate-900">イベントメニュー</h3>
