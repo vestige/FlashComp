@@ -1,20 +1,39 @@
 // src/components/ScoreManager.jsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { db } from "../firebase";
 import { collection, getDocs, query, where } from "firebase/firestore";
-//import { Link } from "react-router-dom";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
+
+const SCORE_SEASON_PARAM = "scoreSeason";
+const SCORE_CATEGORY_PARAM = "scoreCategory";
 
 const ScoreManager = ({ eventId }) => {
   const [seasons, setSeasons] = useState([]);
   const [categories, setCategories] = useState([]);
   const [participants, setParticipants] = useState([]);
-  //const [selectedSeason, setSelectedSeason] = useState("");
-  //const [selectedCategory, setSelectedCategory] = useState("");
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const [selectedSeason, setSelectedSeason] = useState(location.state?.seasonId || "");
-  const [selectedCategory, setSelectedCategory] = useState(location.state?.categoryId || "");
+  const selectedSeason = searchParams.get(SCORE_SEASON_PARAM) || "";
+  const selectedCategory = searchParams.get(SCORE_CATEGORY_PARAM) || "";
+
+  const updateScoreSearchParams = useCallback(
+    ({ seasonId = selectedSeason, categoryId = selectedCategory }) => {
+      const next = new URLSearchParams(searchParams);
+      if (seasonId) next.set(SCORE_SEASON_PARAM, seasonId);
+      else next.delete(SCORE_SEASON_PARAM);
+
+      if (categoryId) next.set(SCORE_CATEGORY_PARAM, categoryId);
+      else next.delete(SCORE_CATEGORY_PARAM);
+
+      const hasDiff =
+        next.get(SCORE_SEASON_PARAM) !== searchParams.get(SCORE_SEASON_PARAM) ||
+        next.get(SCORE_CATEGORY_PARAM) !== searchParams.get(SCORE_CATEGORY_PARAM);
+      if (!hasDiff) return;
+      setSearchParams(next, { replace: true });
+    },
+    [searchParams, selectedSeason, selectedCategory, setSearchParams]
+  );
 
   useEffect(() => {
     const fetchSeasons = async () => {
@@ -66,13 +85,21 @@ const ScoreManager = ({ eventId }) => {
   }, [eventId, selectedCategory]);
 
   useEffect(() => {
-      if (location.state?.seasonId) {
-         setSelectedSeason(location.state.seasonId);
-      }
-      if (location.state?.categoryId) {
-         setSelectedCategory(location.state.categoryId);
-      }
-   }, [location.state]);
+    const fallbackSeason = location.state?.seasonId || "";
+    const fallbackCategory = location.state?.categoryId || "";
+    if (!fallbackSeason && !fallbackCategory) return;
+
+    const nextSeason = selectedSeason || fallbackSeason;
+    const nextCategory = selectedCategory || fallbackCategory;
+    if (nextSeason === selectedSeason && nextCategory === selectedCategory) return;
+
+    updateScoreSearchParams({ seasonId: nextSeason, categoryId: nextCategory });
+  }, [
+    location.state,
+    selectedSeason,
+    selectedCategory,
+    updateScoreSearchParams,
+  ]);
 
   return (
     <div className="p-4 sm:p-5">
@@ -91,7 +118,7 @@ const ScoreManager = ({ eventId }) => {
           シーズン選択:
           <select
             value={selectedSeason}
-            onChange={(e) => setSelectedSeason(e.target.value)}
+            onChange={(e) => updateScoreSearchParams({ seasonId: e.target.value })}
             className="mt-1 block w-full max-w-sm rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
           >
             <option value="">-- 選択してください --</option>
@@ -109,7 +136,7 @@ const ScoreManager = ({ eventId }) => {
           カテゴリ選択:
           <select
             value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
+            onChange={(e) => updateScoreSearchParams({ categoryId: e.target.value })}
             className="mt-1 block w-full max-w-sm rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
           >
             <option value="">-- 選択してください --</option>
@@ -129,6 +156,7 @@ const ScoreManager = ({ eventId }) => {
               <span className="font-medium">{p.name}</span>
               <Link
                 to={`/events/${eventId}/scoreinput/${selectedSeason}/${selectedCategory}/${p.id}`}
+                state={{ seasonId: selectedSeason, categoryId: selectedCategory }}
                 className="ml-3 inline-flex items-center rounded-lg border border-sky-200 bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-800 transition hover:bg-sky-100"
               >
                 📝 採点へ

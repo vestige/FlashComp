@@ -42,3 +42,40 @@ export const validateSeasonInEventRange = ({
   }
   return "";
 };
+
+export const findSeasonsOutsideEventRange = ({
+  seasons = [],
+  eventStartDate,
+  eventEndDate,
+}) => {
+  const eventStart = parseAsDay(eventStartDate);
+  const eventEnd = parseAsDay(eventEndDate);
+  if (!eventStart || !eventEnd) return [];
+
+  return seasons.filter((season) => {
+    const seasonStart = parseAsDay(season?.startDate);
+    const seasonEnd = parseAsDay(season?.endDate);
+    if (!seasonStart || !seasonEnd) return false;
+    return seasonStart < eventStart || seasonEnd > eventEnd;
+  });
+};
+
+export const validateEventRangeAgainstSeasons = ({
+  seasons = [],
+  eventStartDate,
+  eventEndDate,
+}) => {
+  const invalidSeasons = findSeasonsOutsideEventRange({
+    seasons,
+    eventStartDate,
+    eventEndDate,
+  });
+  if (invalidSeasons.length === 0) return "";
+
+  const preview = invalidSeasons
+    .slice(0, 2)
+    .map((season) => season?.name?.trim() || season?.id || "無題シーズン")
+    .join("、");
+  const suffix = invalidSeasons.length > 2 ? ` ほか${invalidSeasons.length - 2}件` : "";
+  return `既存シーズン（${preview}${suffix}）がイベント期間外になります。先にシーズン期間を調整してください`;
+};

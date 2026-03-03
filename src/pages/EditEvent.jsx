@@ -19,7 +19,11 @@ import { usePageTitle } from "../hooks/usePageTitle";
 import { useOwnerProfile } from "../hooks/useOwnerProfile";
 import { validateEventDraft } from "../lib/eventDraft";
 import { buildSettingsProgress } from "../lib/settingsProgress";
-import { validateSeasonDraft, validateSeasonInEventRange } from "../lib/seasonDraft";
+import {
+  validateEventRangeAgainstSeasons,
+  validateSeasonDraft,
+  validateSeasonInEventRange,
+} from "../lib/seasonDraft";
 import { validateCategoryDraft } from "../lib/categoryDraft";
 import { parseDateInputAsLocalDate } from "../lib/dateInput";
 import { deleteEventCascade } from "../lib/eventDataCleanup";
@@ -227,6 +231,22 @@ const EditEvent = () => {
         setSaveStatus("❌ 日付の形式が不正です");
         return;
       }
+
+      const seasonSnap = await getDocs(collection(db, "events", eventId, "seasons"));
+      const seasonRows = seasonSnap.docs.map((seasonDoc) => ({
+        id: seasonDoc.id,
+        ...seasonDoc.data(),
+      }));
+      const seasonRangeError = validateEventRangeAgainstSeasons({
+        seasons: seasonRows,
+        eventStartDate: eventDraft.startDate,
+        eventEndDate: eventDraft.endDate,
+      });
+      if (seasonRangeError) {
+        setSaveStatus(`❌ ${seasonRangeError}`);
+        return;
+      }
+
       const payload = {
         name,
         startDate: Timestamp.fromDate(startLocalDate),

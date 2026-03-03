@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { validateSeasonDraft, validateSeasonInEventRange } from "./seasonDraft";
+import {
+  findSeasonsOutsideEventRange,
+  validateEventRangeAgainstSeasons,
+  validateSeasonDraft,
+  validateSeasonInEventRange,
+} from "./seasonDraft";
 
 describe("validateSeasonDraft", () => {
   it("returns error when required fields are missing", () => {
@@ -59,6 +64,76 @@ describe("validateSeasonInEventRange", () => {
         endDate: "2026-03-31",
         eventStartDate: "2026-03-01",
         eventEndDate: "2026-03-31",
+      })
+    ).toBe("");
+  });
+});
+
+describe("findSeasonsOutsideEventRange", () => {
+  it("returns seasons that become out of event range", () => {
+    const outOfRange = findSeasonsOutsideEventRange({
+      eventStartDate: "2026-03-01",
+      eventEndDate: "2026-03-31",
+      seasons: [
+        { id: "s1", name: "Season 1", startDate: "2026-03-01", endDate: "2026-03-10" },
+        { id: "s2", name: "Season 2", startDate: "2026-02-28", endDate: "2026-03-15" },
+        { id: "s3", name: "Season 3", startDate: "2026-03-20", endDate: "2026-04-01" },
+      ],
+    });
+
+    expect(outOfRange.map((season) => season.id)).toEqual(["s2", "s3"]);
+  });
+
+  it("supports timestamp-like values", () => {
+    const makeTs = (value) => ({
+      toDate: () => new Date(`${value}T09:00:00`),
+    });
+    const outOfRange = findSeasonsOutsideEventRange({
+      eventStartDate: makeTs("2026-03-01"),
+      eventEndDate: makeTs("2026-03-31"),
+      seasons: [
+        {
+          id: "s1",
+          name: "Season 1",
+          startDate: makeTs("2026-03-05"),
+          endDate: makeTs("2026-03-20"),
+        },
+        {
+          id: "s2",
+          name: "Season 2",
+          startDate: makeTs("2026-02-25"),
+          endDate: makeTs("2026-03-10"),
+        },
+      ],
+    });
+
+    expect(outOfRange.map((season) => season.id)).toEqual(["s2"]);
+  });
+});
+
+describe("validateEventRangeAgainstSeasons", () => {
+  it("returns error message with conflicted season names", () => {
+    const error = validateEventRangeAgainstSeasons({
+      eventStartDate: "2026-03-01",
+      eventEndDate: "2026-03-31",
+      seasons: [
+        { id: "s1", name: "Season 1", startDate: "2026-02-28", endDate: "2026-03-10" },
+        { id: "s2", name: "Season 2", startDate: "2026-03-01", endDate: "2026-04-01" },
+        { id: "s3", name: "Season 3", startDate: "2026-02-25", endDate: "2026-04-02" },
+      ],
+    });
+
+    expect(error).toContain("Season 1");
+    expect(error).toContain("Season 2");
+    expect(error).toContain("ほか1件");
+  });
+
+  it("returns empty string when no conflict exists", () => {
+    expect(
+      validateEventRangeAgainstSeasons({
+        eventStartDate: "2026-03-01",
+        eventEndDate: "2026-03-31",
+        seasons: [{ id: "s1", name: "Season 1", startDate: "2026-03-01", endDate: "2026-03-31" }],
       })
     ).toBe("");
   });

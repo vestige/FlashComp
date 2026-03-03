@@ -192,6 +192,9 @@ const ScoreInput = () => {
   const statusClass = status.startsWith("✅")
     ? "rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700"
     : "rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700";
+  const backToScoresPath = `/events/${eventId}/scores?scoreSeason=${encodeURIComponent(
+    seasonId
+  )}&scoreCategory=${encodeURIComponent(categoryId)}`;
 
   if (loading || profileLoading) {
     return (
@@ -229,7 +232,7 @@ const ScoreInput = () => {
           <h2 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">📝 スコア入力</h2>
           <div className="mt-4">
             <Link
-              to={`/events/${eventId}/scores`}
+              to={backToScoresPath}
               state={{ seasonId, categoryId }}
               className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
             >
