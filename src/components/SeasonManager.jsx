@@ -45,6 +45,9 @@ const SeasonManager = ({
   refreshToken = 0,
   onEditSeason = null,
   eventRange = null,
+  showSectionHeader = true,
+  showSectionCard = true,
+  sectionTitle = null,
 }) => {
   const [seasonName, setSeasonName] = useState("");
   const [startDate, setStartDate] = useState("");
@@ -154,9 +157,13 @@ const SeasonManager = ({
     }
   };
 
+  const resolvedSectionTitle = sectionTitle || (showCreateForm ? "📅 シーズン追加" : "📅 シーズン一覧");
+  const wrapperClassName = showSectionCard ? `mt-4 ${sectionCardClass}` : "mt-0";
+  const listClassName = showSectionHeader || showCreateForm ? "mt-4 grid gap-3" : "grid gap-3";
+
   return (
-    <div className={`mt-4 ${sectionCardClass}`}>
-      <h3 className={sectionHeadingClass}>{showCreateForm ? "📅 シーズン追加" : "📅 シーズン一覧"}</h3>
+    <div className={wrapperClassName}>
+      {showSectionHeader ? <h3 className={sectionHeadingClass}>{resolvedSectionTitle}</h3> : null}
       {showCreateForm && (
         <>
           <form onSubmit={handleAddSeason} className="mt-3 grid gap-3 md:grid-cols-[1fr_auto_auto_auto] md:items-end">
@@ -192,7 +199,7 @@ const SeasonManager = ({
           {status && <p className="mt-3 text-sm text-slate-600">{status}</p>}
         </>
       )}
-      <ul className="mt-4 grid gap-3">
+      <ul className={listClassName}>
         {seasons.map((season) => {
           const seasonStatus = getSeasonStatus(season);
           const statusClass = seasonStatusStyle[seasonStatus] || seasonStatusStyle.unknown;

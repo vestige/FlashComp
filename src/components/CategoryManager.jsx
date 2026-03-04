@@ -24,6 +24,9 @@ const CategoryManager = ({
   setCategories,
   showCreateForm = true,
   refreshToken = 0,
+  showSectionHeader = true,
+  showSectionCard = true,
+  sectionTitle = null,
 }) => {
   const [categoryName, setCategoryName] = useState("");
   const [editingCategoryId, setEditingCategoryId] = useState("");
@@ -107,9 +110,13 @@ const CategoryManager = ({
     }
   };
 
+  const resolvedSectionTitle = sectionTitle || (showCreateForm ? "🏷 カテゴリ追加" : "🏷 カテゴリ一覧");
+  const wrapperClassName = showSectionCard ? `mt-4 ${sectionCardClass}` : "mt-0";
+  const listTopMarginClass = showSectionHeader || showCreateForm ? "mt-4" : "";
+
   return (
-    <div className={`mt-4 ${sectionCardClass}`}>
-      <h3 className={sectionHeadingClass}>{showCreateForm ? "🏷 カテゴリ追加" : "🏷 カテゴリ一覧"}</h3>
+    <div className={wrapperClassName}>
+      {showSectionHeader ? <h3 className={sectionHeadingClass}>{resolvedSectionTitle}</h3> : null}
       {showCreateForm && (
         <form onSubmit={handleAddCategory} className="mt-3 flex flex-wrap items-center gap-2">
           <input
@@ -126,9 +133,11 @@ const CategoryManager = ({
         </form>
       )}
       {categories.length === 0 ? (
-        <p className="mt-3 text-sm text-slate-600">カテゴリはまだ登録されていません。</p>
+        <p className={`${showSectionHeader || showCreateForm ? "mt-3 " : ""}text-sm text-slate-600`}>
+          カテゴリはまだ登録されていません。
+        </p>
       ) : (
-        <ul className="mt-4 grid gap-3">
+        <ul className={`${listTopMarginClass} grid gap-3`}>
           {categories.map((c) => (
             <li key={c.id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
               {editingCategoryId === c.id ? (
