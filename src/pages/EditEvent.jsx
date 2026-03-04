@@ -62,6 +62,21 @@ const formatDisplayDate = (value) => {
   return date.toLocaleDateString("ja-JP");
 };
 
+const PlusIcon = () => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className="h-4 w-4"
+    aria-hidden="true"
+  >
+    <path d="M12 5v14M5 12h14" />
+  </svg>
+);
+
 const EditEvent = () => {
   const { eventId } = useParams();
   const navigate = useNavigate();
@@ -376,8 +391,6 @@ const EditEvent = () => {
     todo: "border-sky-200 bg-sky-50 text-sky-800",
     blocked: "border-slate-200 bg-slate-50 text-slate-600",
   };
-  const plusBadgeClass =
-    "inline-flex h-5 w-5 items-center justify-center rounded-full border border-white/40 bg-white/15 text-xs font-bold leading-none";
   const seasonCreateButtonClass =
     "inline-flex items-center gap-2 rounded-xl border border-emerald-300 bg-emerald-700 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-800/15 transition hover:bg-emerald-800";
   const categoryCreateButtonClass =
@@ -540,9 +553,7 @@ const EditEvent = () => {
               }}
               className={seasonCreateButtonClass}
             >
-              <span aria-hidden="true" className={plusBadgeClass}>
-                +
-              </span>
+              <PlusIcon />
               Create New Season
             </button>
           </div>
@@ -568,9 +579,7 @@ const EditEvent = () => {
               }}
               className={categoryCreateButtonClass}
             >
-              <span aria-hidden="true" className={plusBadgeClass}>
-                +
-              </span>
+              <PlusIcon />
               Create New Category
             </button>
           </div>

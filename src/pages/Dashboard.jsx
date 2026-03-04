@@ -137,15 +137,6 @@ const Icon = ({ children, className = "h-4 w-4" }) => (
 const eventCreateButtonClass =
   "inline-flex items-center gap-2 rounded-xl border border-emerald-700 bg-emerald-800 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-900/15 transition hover:bg-emerald-900";
 
-const PlusBadge = () => (
-  <span
-    aria-hidden="true"
-    className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-white/40 bg-white/15 text-xs font-bold leading-none"
-  >
-    +
-  </span>
-);
-
 const Dashboard = () => {
   usePageTitle("ジムオーナー管理");
 
@@ -291,7 +282,9 @@ const Dashboard = () => {
           >
             {hasAllGymAccess || gymIds.length > 0 ? (
               <button type="button" onClick={() => setIsCreateModalOpen(true)} className={eventCreateButtonClass}>
-                <PlusBadge />
+                <Icon className="h-4 w-4">
+                  <path d="M12 5v14M5 12h14" />
+                </Icon>
                 Create New Event
               </button>
             ) : null}
