@@ -8,9 +8,14 @@ const ManagementHero = ({
   backTo = "",
   backLabel = "戻る",
   children = null,
+  surface = true,
 }) => {
+  const wrapperClassName = surface
+    ? "rounded-3xl border border-slate-200 bg-white/95 p-5 shadow-sm sm:p-7"
+    : "p-0";
+
   return (
-    <section className="rounded-3xl border border-slate-200 bg-white/95 p-5 shadow-sm sm:p-7">
+    <section className={wrapperClassName}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           {eyebrow ? (

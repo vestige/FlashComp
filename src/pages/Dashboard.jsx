@@ -12,7 +12,6 @@ import {
   pageBackgroundClass,
   pageContainerClass,
   primaryButtonClass,
-  sectionCardClass,
   sectionHeadingClass,
   subtleButtonClass,
 } from "../components/uiStyles";
@@ -209,6 +208,12 @@ const Dashboard = () => {
       ? gyms.map((gym) => gym.name || gym.id).join(" / ")
       : "未割り当て";
 
+  const filterCounts = useMemo(() => {
+    const withStatus = events.map((event) => ({ ...event, status: getEventStatus(event) }));
+    const active = withStatus.filter((event) => event.status === "live" || event.status === "upcoming").length;
+    return { active, all: withStatus.length };
+  }, [events]);
+
   const eventRows = useMemo(() => {
     const withStatus = events.map((event) => ({ ...event, status: getEventStatus(event) }));
     const byStatus =
@@ -266,12 +271,12 @@ const Dashboard = () => {
       <div className={pageContainerClass}>
         <div className="mb-8">
           <ManagementHero
-            eyebrow="Gym Owner Console"
-            title="Gym Owner Console"
+            title="Dashboard"
             description="Manage your climbing competitions and gym events."
             meta={`担当ジム: ${ownerGymSummary}`}
             backTo="/"
             backLabel="↑ Back to TOP"
+            surface={false}
           >
             {hasAllGymAccess || gymIds.length > 0 ? (
               <button type="button" onClick={() => setIsCreateModalOpen(true)} className={primaryButtonClass}>
@@ -289,16 +294,7 @@ const Dashboard = () => {
           ) : null}
         </div>
 
-        <section className={sectionCardClass}>
-          <h2 className={sectionHeadingClass}>
-            <Icon className="h-5 w-5 text-sky-600">
-              <path d="M4 19h16" />
-              <path d="M7 16V9" />
-              <path d="M12 16V5" />
-              <path d="M17 16v-6" />
-            </Icon>
-            Event Controls
-          </h2>
+        <section className="mb-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="flex flex-wrap items-center gap-3">
             <label className="flex min-w-[280px] flex-1 items-center gap-2 text-sm text-slate-600">
               <Icon className="h-4 w-4 text-slate-400">
@@ -309,7 +305,7 @@ const Dashboard = () => {
                 type="text"
                 value={eventSearch}
                 onChange={(e) => setEventSearch(e.target.value)}
-                placeholder="Search events..."
+                placeholder="Search events by name or location..."
                 className={`w-full ${inputFieldClass}`}
               />
             </label>
@@ -317,20 +313,20 @@ const Dashboard = () => {
               <button
                 type="button"
                 onClick={() => setEventFilter("active")}
-                className={`rounded-full px-3 py-1 text-xs font-bold transition ${
+                className={`rounded-full px-3 py-1 text-sm font-bold transition ${
                   eventFilter === "active" ? "bg-emerald-800 text-white" : "text-slate-500 hover:bg-slate-100"
                 }`}
               >
-                ACTIVE
+                Active ({filterCounts.active})
               </button>
               <button
                 type="button"
                 onClick={() => setEventFilter("all")}
-                className={`rounded-full px-3 py-1 text-xs font-bold transition ${
+                className={`rounded-full px-3 py-1 text-sm font-bold transition ${
                   eventFilter === "all" ? "bg-slate-900 text-white" : "text-slate-500 hover:bg-slate-100"
                 }`}
               >
-                ALL
+                All Events ({filterCounts.all})
               </button>
             </div>
           </div>
