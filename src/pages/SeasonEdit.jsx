@@ -53,7 +53,6 @@ const SeasonEdit = () => {
   const [savedSeason, setSavedSeason] = useState({ name: "", startDate: "", endDate: "" });
   const [eventRange, setEventRange] = useState({ startDate: "", endDate: "" });
   const [categories, setCategories] = useState([]);
-  const [taskCount, setTaskCount] = useState(0);
   const [status, setStatus] = useState("");
   const [deleteError, setDeleteError] = useState("");
   const [isEditing, setIsEditing] = useState(false);
@@ -86,11 +85,10 @@ const SeasonEdit = () => {
       try {
         const eventRef = doc(db, "events", eventId);
         const seasonRef = doc(db, "events", eventId, "seasons", seasonId);
-        const [eventSnap, seasonSnap, categorySnap, taskSnap] = await Promise.all([
+        const [eventSnap, seasonSnap, categorySnap] = await Promise.all([
           getDoc(eventRef),
           getDoc(seasonRef),
           getDocs(collection(db, "events", eventId, "categories")),
-          getDocs(collection(db, "events", eventId, "seasons", seasonId, "tasks")),
         ]);
 
         if (!eventSnap.exists()) {
@@ -122,7 +120,6 @@ const SeasonEdit = () => {
         };
         setSeasonDraft(nextDraft);
         setSavedSeason(nextDraft);
-        setTaskCount(taskSnap.size);
       } catch (err) {
         console.error("シーズン編集データの取得に失敗:", err);
         setError("シーズン編集データの取得に失敗しました。");
@@ -200,12 +197,6 @@ const SeasonEdit = () => {
     }
   };
 
-  const quickLinkClass = (active) =>
-    `inline-flex items-center rounded-lg border px-3 py-2 text-sm font-medium transition ${
-      active
-        ? "border-emerald-300 bg-emerald-50 text-emerald-800"
-        : "border-slate-300 bg-white text-slate-700 hover:border-emerald-200 hover:bg-emerald-50"
-    }`;
   const seasonPrimaryButtonClass =
     "inline-flex items-center gap-2 rounded-xl border border-emerald-300 bg-emerald-700 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-800/15 transition hover:bg-emerald-800";
   const seasonStatus = getSeasonStatus(savedSeason);
@@ -264,23 +255,6 @@ const SeasonEdit = () => {
         />
 
         <section className="mt-4">
-          <h2 className={sectionHeadingClass}>イベントメニュー</h2>
-          <div className={sectionCardClass}>
-            <div className="flex flex-wrap gap-2">
-            <Link to={`/events/${eventId}/edit`} className={quickLinkClass(true)}>
-              イベント設定
-            </Link>
-            <Link to={`/events/${eventId}/climbers`} className={quickLinkClass(false)}>
-              クライマー管理
-            </Link>
-            <Link to={`/events/${eventId}/scores`} className={quickLinkClass(false)}>
-              スコア管理
-            </Link>
-            </div>
-          </div>
-        </section>
-
-        <section className="mt-4">
           <h2 className={sectionHeadingClass}>シーズン基本情報</h2>
           <div className={sectionCardClass}>
             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -303,10 +277,6 @@ const SeasonEdit = () => {
                 <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
                   <p className="text-xs font-semibold tracking-wide text-slate-500">開催期間</p>
                   <p className="mt-1 text-sm font-medium text-slate-900">{formattedRange}</p>
-                </div>
-                <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                  <p className="text-xs font-semibold tracking-wide text-slate-500">登録済み課題</p>
-                  <p className="mt-1 text-sm font-medium text-slate-900">{taskCount} 件</p>
                 </div>
                 <button
                   type="button"
@@ -393,9 +363,17 @@ const SeasonEdit = () => {
           <h2 className={sectionHeadingClass}>課題設定</h2>
           <div className={sectionCardClass}>
             {categories.length === 0 ? (
-              <p className="text-sm text-slate-600">
-                先にイベント設定でカテゴリを登録してください。
-              </p>
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+                <p className="text-sm text-amber-800">
+                  カテゴリが未登録です。先にEvent Settingsでカテゴリを作成してください。
+                </p>
+                <Link
+                  to={`/events/${eventId}/edit#registered-categories`}
+                  className="inline-flex items-center rounded-lg border border-emerald-300 bg-white px-4 py-2 text-sm font-semibold text-emerald-800 transition hover:bg-emerald-50"
+                >
+                  カテゴリを登録する
+                </Link>
+              </div>
             ) : (
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
                 <RouteSelector

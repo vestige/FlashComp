@@ -31,6 +31,21 @@ const sortTasks = (rows) => {
   });
 };
 
+const PlusIcon = () => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className="h-4 w-4"
+    aria-hidden="true"
+  >
+    <path d="M12 5v14M5 12h14" />
+  </svg>
+);
+
 const RouteSelector = ({
   eventId: eventIdProp,
   categories: categoriesProp = [],
@@ -48,6 +63,8 @@ const RouteSelector = ({
   const [tasks, setTasks] = useState([]);
   const [assignedTaskIds, setAssignedTaskIds] = useState([]);
   const [status, setStatus] = useState("");
+  const addTaskButtonClass =
+    "inline-flex items-center gap-2 rounded-xl border border-emerald-300 bg-emerald-700 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-emerald-800/15 transition hover:bg-emerald-800";
 
   const assignedSet = useMemo(() => new Set(assignedTaskIds), [assignedTaskIds]);
 
@@ -271,7 +288,6 @@ const RouteSelector = ({
       <p className="mt-1 text-sm text-slate-600">
         先にシーズン共通の課題を作成し、カテゴリごとに採用する課題を選択します。
       </p>
-      {status && <p className="mt-2 text-sm text-slate-700">{status}</p>}
 
       <div className="mt-3 flex flex-wrap gap-3">
         {!hideSeasonSelector && (
@@ -311,20 +327,23 @@ const RouteSelector = ({
 
       {selectedSeason && (
         <>
-          <div className="mt-4 flex flex-wrap items-center gap-2">
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="text-sm text-slate-600">課題数: {tasks.length}</span>
+              {selectedCategory && (
+                <span className="text-sm text-slate-600">
+                  カテゴリ採用数: {assignedTaskIds.length}
+                </span>
+              )}
+            </div>
             <button
               type="button"
               onClick={handleAddTask}
-              className="rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-sm font-semibold text-sky-800 transition hover:bg-sky-100"
+              className={addTaskButtonClass}
             >
-              ＋ シーズン課題を追加
+              <PlusIcon />
+              課題を追加
             </button>
-            <span className="text-sm text-slate-600">課題数: {tasks.length}</span>
-            {selectedCategory && (
-              <span className="text-sm text-slate-600">
-                カテゴリ採用数: {assignedTaskIds.length}
-              </span>
-            )}
           </div>
 
           <table className="mt-4 w-full border-collapse text-sm">
@@ -448,7 +467,7 @@ const RouteSelector = ({
               {tasks.length === 0 && (
                 <tr>
                   <td colSpan={6} className="py-4 text-sm text-slate-500">
-                    課題がありません。まずは「＋ シーズン課題を追加」で登録してください。
+                    課題がありません。まずは「課題を追加」で登録してください。
                   </td>
                 </tr>
               )}
@@ -456,6 +475,22 @@ const RouteSelector = ({
           </table>
         </>
       )}
+
+      <div className="mt-3 min-h-6">
+        {status ? (
+          <p
+            className={`inline-flex rounded-lg px-3 py-1.5 text-sm ${
+              status.startsWith("✅")
+                ? "bg-emerald-50 text-emerald-700"
+                : status.startsWith("❌")
+                  ? "bg-rose-50 text-rose-700"
+                  : "bg-slate-100 text-slate-700"
+            }`}
+          >
+            {status}
+          </p>
+        ) : null}
+      </div>
     </div>
   );
 };

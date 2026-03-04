@@ -568,7 +568,7 @@ const EditEvent = () => {
           />
         </section>
 
-        <section className="mt-6">
+        <section id="registered-categories" className="mt-6">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-2xl font-bold text-slate-900">Registered Categories</h2>
             <button
