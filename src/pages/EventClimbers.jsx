@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import {
   collection,
   doc,
@@ -39,6 +39,7 @@ const EventClimbers = () => {
   const { eventId } = useParams();
   const [eventName, setEventName] = useState("");
   const [categories, setCategories] = useState([]);
+  const [participantCount, setParticipantCount] = useState(0);
   const [csvStatus, setCsvStatus] = useState("");
   const [importingCsv, setImportingCsv] = useState(false);
   const [participantRefreshToken, setParticipantRefreshToken] = useState(0);
@@ -51,7 +52,7 @@ const EventClimbers = () => {
     loading: profileLoading,
     error: profileError,
   } = useOwnerProfile();
-  usePageTitle(eventName ? `クライマー登録: ${eventName}` : "クライマー登録");
+  usePageTitle(eventName ? `Climber Settings | ${eventName}` : "Climber Settings");
 
   const Icon = ({ children, className = "h-4 w-4" }) => (
     <svg
@@ -68,12 +69,6 @@ const EventClimbers = () => {
     </svg>
   );
 
-  const quickLinkClass = (active) =>
-    `inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition ${
-      active
-        ? "border-sky-300 bg-sky-50 text-sky-800"
-        : "border-slate-300 bg-slate-50 text-slate-700 hover:bg-slate-100"
-    }`;
   const categoryById = useMemo(
     () => new Map(categories.map((category) => [category.id, category])),
     [categories]
@@ -81,9 +76,11 @@ const EventClimbers = () => {
 
   const fetchParticipants = useCallback(async () => {
     const participantSnap = await getDocs(collection(db, "events", eventId, "participants"));
-    return participantSnap.docs
+    const participants = participantSnap.docs
       .map((participantDoc) => ({ id: participantDoc.id, ...participantDoc.data() }))
       .sort((a, b) => (a.name || "").localeCompare(b.name || "", "ja"));
+    setParticipantCount(participants.length);
+    return participants;
   }, [eventId]);
 
   useEffect(() => {
@@ -114,6 +111,7 @@ const EventClimbers = () => {
 
         const categorySnap = await getDocs(collection(db, "events", eventId, "categories"));
         setCategories(categorySnap.docs.map((categoryDoc) => ({ id: categoryDoc.id, ...categoryDoc.data() })));
+        await fetchParticipants();
       } catch (err) {
         console.error("クライマーデータの取得に失敗:", err);
         setError("クライマーデータの取得に失敗しました。");
@@ -123,7 +121,7 @@ const EventClimbers = () => {
     };
 
     fetchData();
-  }, [eventId, gymIds, hasAllGymAccess, profileLoading, profileError]);
+  }, [eventId, gymIds, hasAllGymAccess, profileLoading, profileError, fetchParticipants]);
 
   const exportParticipantsCsv = async () => {
     setCsvStatus("");
@@ -388,52 +386,44 @@ const EventClimbers = () => {
   return (
     <div className={pageBackgroundClass}>
       <div className={pageContainerClass}>
-        <ManagementHero
-          eyebrow="Climber Management"
-          title={`クライマー登録：${eventName}`}
-          description="参加者情報の登録・CSV入出力・カテゴリ管理を行います。"
-          backTo="/dashboard"
-          backLabel="↩ ダッシュボードへ戻る"
-        />
+        <div className="mb-8">
+          <ManagementHero
+            eyebrow="Event Management"
+            title="Climber Settings"
+            description="参加者情報の登録・CSV入出力・カテゴリ管理を行います。"
+            meta={`Event: ${eventName || "-"}`}
+            backTo="/dashboard"
+            backLabel="↩ ダッシュボードへ戻る"
+            surface={false}
+          />
+        </div>
 
-        <section className={`mt-4 ${sectionCardClass}`}>
+        <section className="mt-4">
           <h2 className={sectionHeadingClass}>
             <Icon className="h-5 w-5 text-sky-600">
-              <rect x="3" y="5" width="18" height="16" rx="2" />
-              <path d="M16 3v4M8 3v4M3 11h18" />
+              <path d="M4 5h16v14H4z" />
+              <path d="M8 10h8" />
+              <path d="M8 14h5" />
             </Icon>
-            Event Menu
+            Summary
           </h2>
-          <div className="flex flex-wrap gap-2">
-            <Link to={`/events/${eventId}/edit`} className={quickLinkClass(false)}>
-              <Icon>
-                <path d="M4 20h4l10-10-4-4L4 16v4Z" />
-                <path d="M12 6l4 4" />
-              </Icon>
-              イベント設定
-            </Link>
-            <Link to={`/events/${eventId}/climbers`} className={quickLinkClass(true)}>
-              <Icon>
-                <circle cx="9" cy="8" r="2.5" />
-                <circle cx="16" cy="9" r="2" />
-                <path d="M4 19c0-2.7 2.2-5 5-5s5 2.3 5 5" />
-                <path d="M14 19c0-1.9 1.6-3.5 3.5-3.5S21 17.1 21 19" />
-              </Icon>
-              クライマー管理
-            </Link>
-            <Link to={`/events/${eventId}/scores`} className={quickLinkClass(false)}>
-              <Icon>
-                <path d="M4 19h16" />
-                <path d="M7 16V9" />
-                <path d="M12 16V5" />
-                <path d="M17 16v-6" />
-              </Icon>
-              スコア管理
-            </Link>
+          <div className={sectionCardClass}>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <article className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Event Name</p>
+                <p className="mt-1 text-lg font-bold text-slate-900">{eventName || "-"}</p>
+              </article>
+              <article className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+                  Registered Climbers
+                </p>
+                <p className="mt-1 text-lg font-bold text-slate-900">{participantCount}</p>
+              </article>
+            </div>
           </div>
         </section>
 
-        <section className={`mt-4 ${sectionCardClass}`}>
+        <section className="mt-4">
           <h2 className={sectionHeadingClass}>
             <Icon className="h-5 w-5 text-sky-600">
               <path d="M4 19h16" />
@@ -443,45 +433,52 @@ const EventClimbers = () => {
             </Icon>
             クライマーCSV
           </h2>
-          <p className="mt-1 text-sm text-slate-600">
-            クライマーCSVの出力/取り込みをこの画面で行います。必須列:
-            <span className="font-mono"> name,memberNo,age,gender,categoryId</span>
-          </p>
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={exportParticipantsCsv}
-              className={subtleButtonClass}
-            >
-              クライマーCSVを出力
-            </button>
-            <button
-              type="button"
-              onClick={exportGenderRatioCsv}
-              className={subtleButtonClass}
-            >
-              男女比CSVを出力
-            </button>
-            <label className={`text-sm text-slate-700 ${inputFieldClass}`}>
-              <input
-                type="file"
-                accept=".csv,text/csv"
-                onChange={handleImportParticipantsFile}
-                disabled={importingCsv}
-                className="text-sm"
-              />
-            </label>
-            <span className="text-sm text-slate-600">{importingCsv ? "取り込み中..." : ""}</span>
+          <div className={sectionCardClass}>
+            <p className="text-sm text-slate-600">
+              クライマーCSVの出力/取り込みをこの画面で行います。必須列:
+              <span className="font-mono"> name,memberNo,age,gender,categoryId</span>
+            </p>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={exportParticipantsCsv}
+                className={subtleButtonClass}
+              >
+                クライマーCSVを出力
+              </button>
+              <button
+                type="button"
+                onClick={exportGenderRatioCsv}
+                className={subtleButtonClass}
+              >
+                男女比CSVを出力
+              </button>
+              <label className={`text-sm text-slate-700 ${inputFieldClass}`}>
+                <input
+                  type="file"
+                  accept=".csv,text/csv"
+                  onChange={handleImportParticipantsFile}
+                  disabled={importingCsv}
+                  className="text-sm"
+                />
+              </label>
+              <span className="text-sm text-slate-600">{importingCsv ? "取り込み中..." : ""}</span>
+            </div>
+            {csvStatus && <p className="mt-3 text-sm text-slate-600">{csvStatus}</p>}
           </div>
-          {csvStatus && <p className="mt-3 text-sm text-slate-600">{csvStatus}</p>}
         </section>
 
-        <section className="mt-5 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
-          <ParticipantManager
-            eventId={eventId}
-            categories={categories}
-            refreshToken={participantRefreshToken}
-          />
+        <section className="mt-5">
+          <h2 className={sectionHeadingClass}>👤 Registered Climbers</h2>
+          <div className={sectionCardClass}>
+            <ParticipantManager
+              eventId={eventId}
+              categories={categories}
+              refreshToken={participantRefreshToken}
+              showSectionHeader={false}
+              onParticipantsCountChange={setParticipantCount}
+            />
+          </div>
         </section>
       </div>
     </div>

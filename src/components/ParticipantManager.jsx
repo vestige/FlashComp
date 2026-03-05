@@ -16,6 +16,40 @@ import {
 import ConfirmDialog from "./ConfirmDialog";
 import { inputFieldClass, sectionHeadingClass, subtleButtonClass } from "./uiStyles";
 
+const PencilIcon = ({ className = "h-5 w-5" }) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    aria-hidden="true"
+  >
+    <path d="m3 21 3.8-1 11-11a2.1 2.1 0 0 0-3-3l-11 11L3 21z" />
+    <path d="m14.5 6.5 3 3" />
+  </svg>
+);
+
+const TrashIcon = ({ className = "h-5 w-5" }) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    aria-hidden="true"
+  >
+    <path d="M3 6h18" />
+    <path d="M8 6V4h8v2" />
+    <path d="M6 6l1 14h10l1-14" />
+    <path d="M10 10v7M14 10v7" />
+  </svg>
+);
+
 const EMPTY_FORM = {
   name: "",
   memberNo: "",
@@ -31,7 +65,13 @@ const getGenderLabel = (gender) => {
   return "未設定";
 };
 
-const ParticipantManager = ({ eventId, categories, refreshToken = 0 }) => {
+const ParticipantManager = ({
+  eventId,
+  categories,
+  refreshToken = 0,
+  showSectionHeader = true,
+  onParticipantsCountChange = null,
+}) => {
   const [participants, setParticipants] = useState([]);
   const [form, setForm] = useState(EMPTY_FORM);
   const [editingParticipantId, setEditingParticipantId] = useState("");
@@ -57,6 +97,12 @@ const ParticipantManager = ({ eventId, categories, refreshToken = 0 }) => {
   useEffect(() => {
     fetchParticipants();
   }, [fetchParticipants, refreshToken]);
+
+  useEffect(() => {
+    if (typeof onParticipantsCountChange === "function") {
+      onParticipantsCountChange(participants.length);
+    }
+  }, [participants.length, onParticipantsCountChange]);
 
   const categoryById = useMemo(() => {
     return new Map(categories.map((category) => [category.id, category.name || category.id]));
@@ -180,9 +226,9 @@ const ParticipantManager = ({ eventId, categories, refreshToken = 0 }) => {
 
   return (
     <div>
-      <h3 className={sectionHeadingClass}>👤 Registered Climbers</h3>
+      {showSectionHeader ? <h3 className={sectionHeadingClass}>👤 Registered Climbers</h3> : null}
 
-      <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+      <div className={`${showSectionHeader ? "mt-3 " : ""}rounded-2xl border border-slate-200 bg-slate-50 p-4`}>
         <form onSubmit={handleAddParticipant} className="grid gap-3 md:grid-cols-[1.5fr_1fr_auto_auto_auto_auto] md:items-end">
           <input
             type="text"
@@ -280,15 +326,27 @@ const ParticipantManager = ({ eventId, categories, refreshToken = 0 }) => {
         </div>
 
         <div className="mt-4 overflow-x-auto">
-          <table className="w-full border-collapse text-sm">
+            <table className="w-full border-collapse text-sm">
             <thead>
               <tr>
-                <th className="border-b border-slate-200 py-2 text-left">名前</th>
-                <th className="border-b border-slate-200 py-2 text-left">会員番号</th>
-                <th className="border-b border-slate-200 py-2 text-left">年齢</th>
-                <th className="border-b border-slate-200 py-2 text-left">性別</th>
-                <th className="border-b border-slate-200 py-2 text-left">カテゴリ</th>
-                <th className="border-b border-slate-200 py-2 text-left">操作</th>
+                <th className="border-b border-slate-200 py-2 text-left text-xs font-bold tracking-wider text-slate-500">
+                  Name
+                </th>
+                <th className="border-b border-slate-200 py-2 text-left text-xs font-bold tracking-wider text-slate-500">
+                  Member No.
+                </th>
+                <th className="border-b border-slate-200 py-2 text-left text-xs font-bold tracking-wider text-slate-500">
+                  Age
+                </th>
+                <th className="border-b border-slate-200 py-2 text-left text-xs font-bold tracking-wider text-slate-500">
+                  Gender
+                </th>
+                <th className="border-b border-slate-200 py-2 text-left text-xs font-bold tracking-wider text-slate-500">
+                  Category
+                </th>
+                <th className="border-b border-slate-200 py-2 text-center text-xs font-bold tracking-wider text-slate-500">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -375,16 +433,22 @@ const ParticipantManager = ({ eventId, categories, refreshToken = 0 }) => {
                     <td className="py-2 text-slate-700">{getGenderLabel(participant.gender)}</td>
                     <td className="py-2 text-slate-700">{categoryById.get(participant.categoryId) || "未設定"}</td>
                     <td className="py-2">
-                      <div className="flex flex-wrap gap-2">
-                        <button type="button" onClick={() => startEditParticipant(participant)} className={subtleButtonClass}>
-                          編集
+                      <div className="flex items-center justify-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => startEditParticipant(participant)}
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                          aria-label="編集"
+                        >
+                          <PencilIcon />
                         </button>
                         <button
                           type="button"
                           onClick={() => setPendingDeleteParticipant(participant)}
-                          className="inline-flex items-center rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700 transition hover:bg-rose-100"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-rose-50 hover:text-rose-500"
+                          aria-label="削除"
                         >
-                          削除
+                          <TrashIcon />
                         </button>
                       </div>
                     </td>
