@@ -350,11 +350,12 @@ const ParticipantManager = ({
               </tr>
             </thead>
             <tbody>
-              {visibleParticipants.map((participant) => {
+              {visibleParticipants.map((participant, index) => {
                 const isEditing = editingParticipantId === participant.id;
+                const rowBgClass = index % 2 === 0 ? "bg-white" : "bg-slate-50";
                 if (isEditing) {
                   return (
-                    <tr key={participant.id}>
+                    <tr key={participant.id} className={rowBgClass}>
                       <td className="py-2">
                         <input
                           type="text"
@@ -425,9 +426,9 @@ const ParticipantManager = ({
                   );
                 }
 
-                return (
-                  <tr key={participant.id}>
-                    <td className="py-2 text-slate-900">{participant.name}</td>
+                  return (
+                    <tr key={participant.id} className={rowBgClass}>
+                      <td className="py-2 text-slate-900">{participant.name}</td>
                     <td className="py-2 text-slate-700">{participant.memberNo || "-"}</td>
                     <td className="py-2 text-slate-700">{participant.age || "-"}</td>
                     <td className="py-2 text-slate-700">{getGenderLabel(participant.gender)}</td>
