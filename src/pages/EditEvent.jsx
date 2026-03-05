@@ -1,5 +1,5 @@
 // src/pages/EditEvent.jsx
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
 import { db } from "../firebase";
 import {
@@ -80,11 +80,13 @@ const PlusIcon = () => (
 const EditEvent = () => {
   const { eventId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [eventName, setEventName] = useState("");
 
   const [categories, setCategories] = useState([]);
   const [seasonCount, setSeasonCount] = useState(0);
   const [taskCount, setTaskCount] = useState(0);
+  const [seasonTaskSummary, setSeasonTaskSummary] = useState([]);
   const [eventGymId, setEventGymId] = useState("");
   const [eventDraft, setEventDraft] = useState({
     name: "",
@@ -115,6 +117,7 @@ const EditEvent = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [accessDenied, setAccessDenied] = useState(false);
+  const [highlightedSectionId, setHighlightedSectionId] = useState("");
   const {
     gymIds,
     hasAllGymAccess,
@@ -128,12 +131,23 @@ const EditEvent = () => {
       getDocs(collection(db, "events", eventId, "categories")),
       getDocs(collection(db, "events", eventId, "seasons")),
     ]);
+    const seasonRows = seasonSnap.docs.map((seasonDoc) => ({
+      id: seasonDoc.id,
+      ...seasonDoc.data(),
+    }));
     const taskSnaps = await Promise.all(
-      seasonSnap.docs.map((seasonDoc) =>
-        getDocs(collection(db, "events", eventId, "seasons", seasonDoc.id, "tasks"))
+      seasonRows.map((season) =>
+        getDocs(collection(db, "events", eventId, "seasons", season.id, "tasks"))
       )
     );
     const nextTaskCount = taskSnaps.reduce((sum, taskSnap) => sum + taskSnap.size, 0);
+    const nextSeasonTaskSummary = seasonRows
+      .map((season, index) => ({
+        seasonId: season.id,
+        seasonName: String(season.name || ""),
+        taskCount: taskSnaps[index]?.size || 0,
+      }))
+      .sort((a, b) => a.seasonName.localeCompare(b.seasonName, "ja"));
     const categoryRows = categorySnap.docs.map((categoryDoc) => ({
       id: categoryDoc.id,
       ...categoryDoc.data(),
@@ -141,6 +155,7 @@ const EditEvent = () => {
     setCategories(categoryRows);
     setSeasonCount(seasonSnap.size);
     setTaskCount(nextTaskCount);
+    setSeasonTaskSummary(nextSeasonTaskSummary);
   }, [eventId]);
 
   useEffect(() => {
@@ -193,6 +208,23 @@ const EditEvent = () => {
 
     fetchEventData();
   }, [eventId, gymIds, hasAllGymAccess, profileLoading, profileError, refreshSetupSummary]);
+
+  useEffect(() => {
+    if (loading || profileLoading) return undefined;
+    const targetId = location.hash?.replace("#", "");
+    if (!targetId) return undefined;
+    const target = document.getElementById(targetId);
+    if (!target) return undefined;
+
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
+    setHighlightedSectionId(targetId);
+
+    const timerId = setTimeout(() => {
+      setHighlightedSectionId((current) => (current === targetId ? "" : current));
+    }, 1800);
+
+    return () => clearTimeout(timerId);
+  }, [location.hash, loading, profileLoading, categories.length, seasonCount]);
 
   const handleSaveEventMeta = async (e) => {
     e.preventDefault();
@@ -395,6 +427,10 @@ const EditEvent = () => {
     "inline-flex items-center gap-2 rounded-xl border border-emerald-300 bg-emerald-700 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-800/15 transition hover:bg-emerald-800";
   const categoryCreateButtonClass =
     "inline-flex items-center gap-2 rounded-xl border border-green-300 bg-green-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-green-800/15 transition hover:bg-green-700";
+  const seasonTaskCountBySeason = Object.fromEntries(
+    seasonTaskSummary.map((season) => [season.seasonId, season.taskCount])
+  );
+  const seasonsWithoutTasks = seasonTaskSummary.filter((season) => season.taskCount === 0);
 
   return (
     <div className={pageBackgroundClass}>
@@ -408,7 +444,7 @@ const EditEvent = () => {
         />
 
         <section className="mt-4">
-          <h2 className={sectionHeadingClass}>イベント基本情報</h2>
+          <h2 className={sectionHeadingClass}>📚Summary</h2>
           <div className={sectionCardClass}>
             <p className="text-sm text-slate-600">
             大会名と開催期間を更新できます。保存後すぐに各画面へ反映されます。
@@ -513,7 +549,7 @@ const EditEvent = () => {
         </section>
 
         <section className="mt-4">
-          <h2 className={sectionHeadingClass}>設定進捗</h2>
+          <h2 className={sectionHeadingClass}>👉Progress</h2>
           <div className={sectionCardClass}>
             <p className="text-sm text-slate-600">
             {settingsProgress.completed} / {settingsProgress.total} ステップ完了（{settingsProgress.percent}%）
@@ -539,12 +575,21 @@ const EditEvent = () => {
                 </article>
               ))}
             </div>
+            {seasonsWithoutTasks.length > 0 && (
+              <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                ⚠ 課題未設定シーズン:
+                {" "}
+                {seasonsWithoutTasks
+                  .map((season) => season.seasonName || "無題シーズン")
+                  .join(" / ")}
+              </p>
+            )}
           </div>
         </section>
 
         <section className="mt-6">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-2xl font-bold text-slate-900">Registered Seasons</h2>
+            <h2 className="text-2xl font-bold text-slate-900">📅Registered Seasons</h2>
             <button
               type="button"
               onClick={() => {
@@ -563,14 +608,22 @@ const EditEvent = () => {
             refreshToken={seasonRefreshToken}
             onEditSeason={(seasonId) => navigate(`/events/${eventId}/seasons/${seasonId}/edit`)}
             eventRange={eventDraft}
+            taskCountBySeason={seasonTaskCountBySeason}
             showSectionHeader={false}
             showSectionCard={false}
           />
         </section>
 
-        <section id="registered-categories" className="mt-6">
+        <section
+          id="registered-categories"
+          className={`mt-6 scroll-mt-24 rounded-2xl transition-all duration-300 ${
+            highlightedSectionId === "registered-categories"
+              ? "ring-2 ring-emerald-300 ring-offset-2 ring-offset-slate-50"
+              : ""
+          }`}
+        >
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-2xl font-bold text-slate-900">Registered Categories</h2>
+            <h2 className="text-2xl font-bold text-slate-900">👥Registered Categories</h2>
             <button
               type="button"
               onClick={() => {

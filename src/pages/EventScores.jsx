@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
 import ScoreManager from "../components/ScoreManager";
@@ -52,13 +52,6 @@ const EventScores = () => {
       {children}
     </svg>
   );
-
-  const quickLinkClass = (active) =>
-    `inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition ${
-      active
-        ? "border-sky-300 bg-sky-50 text-sky-800"
-        : "border-slate-300 bg-slate-50 text-slate-700 hover:bg-slate-100"
-    }`;
 
   useEffect(() => {
     if (profileLoading) return;
@@ -199,43 +192,6 @@ const EventScores = () => {
           backTo="/dashboard"
           backLabel="↩ ダッシュボードへ戻る"
         />
-
-        <section className={`mt-4 ${sectionCardClass}`}>
-          <h2 className={sectionHeadingClass}>
-            <Icon className="h-5 w-5 text-sky-600">
-              <rect x="3" y="5" width="18" height="16" rx="2" />
-              <path d="M16 3v4M8 3v4M3 11h18" />
-            </Icon>
-            Event Menu
-          </h2>
-          <div className="flex flex-wrap gap-2">
-            <Link to={`/events/${eventId}/edit`} className={quickLinkClass(false)}>
-              <Icon>
-                <path d="M4 20h4l10-10-4-4L4 16v4Z" />
-                <path d="M12 6l4 4" />
-              </Icon>
-              イベント設定
-            </Link>
-            <Link to={`/events/${eventId}/climbers`} className={quickLinkClass(false)}>
-              <Icon>
-                <circle cx="9" cy="8" r="2.5" />
-                <circle cx="16" cy="9" r="2" />
-                <path d="M4 19c0-2.7 2.2-5 5-5s5 2.3 5 5" />
-                <path d="M14 19c0-1.9 1.6-3.5 3.5-3.5S21 17.1 21 19" />
-              </Icon>
-              クライマー管理
-            </Link>
-            <Link to={`/events/${eventId}/scores`} className={quickLinkClass(true)}>
-              <Icon>
-                <path d="M4 19h16" />
-                <path d="M7 16V9" />
-                <path d="M12 16V5" />
-                <path d="M17 16v-6" />
-              </Icon>
-              スコア管理
-            </Link>
-          </div>
-        </section>
 
         <section className={`mt-4 ${sectionCardClass}`}>
           <h2 className={sectionHeadingClass}>

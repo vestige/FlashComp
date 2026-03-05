@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { collection, deleteDoc, doc, getDocs, setDoc } from "firebase/firestore";
 import { useParams } from "react-router-dom";
 import { db } from "../firebase";
@@ -17,6 +17,8 @@ const GRADE_OPTIONS = [
   "2段",
 ];
 
+const STATUS_DURATION_MS = 2000;
+
 const toTaskNo = (task) => {
   if (typeof task.taskNo === "number" && Number.isFinite(task.taskNo)) return task.taskNo;
   const match = String(task.name || "").match(/(\d+)/);
@@ -31,7 +33,7 @@ const sortTasks = (rows) => {
   });
 };
 
-const PlusIcon = () => (
+const PencilIcon = ({ className = "h-5 w-5" }) => (
   <svg
     viewBox="0 0 24 24"
     fill="none"
@@ -39,10 +41,45 @@ const PlusIcon = () => (
     strokeWidth="1.8"
     strokeLinecap="round"
     strokeLinejoin="round"
-    className="h-4 w-4"
+    className={className}
     aria-hidden="true"
   >
-    <path d="M12 5v14M5 12h14" />
+    <path d="m3 21 3.8-1 11-11a2.1 2.1 0 0 0-3-3l-11 11L3 21z" />
+    <path d="m14.5 6.5 3 3" />
+  </svg>
+);
+
+const TrashIcon = ({ className = "h-5 w-5" }) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    aria-hidden="true"
+  >
+    <path d="M3 6h18" />
+    <path d="M8 6V4h8v2" />
+    <path d="M6 6l1 14h10l1-14" />
+    <path d="M10 10v7M14 10v7" />
+  </svg>
+);
+
+const CheckCircleIcon = ({ checked, className = "h-6 w-6" }) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill={checked ? "currentColor" : "none"}
+    stroke="currentColor"
+    strokeWidth="1.8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    aria-hidden="true"
+  >
+    <circle cx="12" cy="12" r="9" />
+    {checked ? <path d="m8.2 12.2 2.5 2.4 5-5.2" /> : null}
   </svg>
 );
 
@@ -52,6 +89,7 @@ const RouteSelector = ({
   fixedSeasonId = "",
   hideSeasonSelector = false,
   title = "🧩 課題設定",
+  description = "先にシーズン共通の課題を作成し、カテゴリごとに採用する課題を選択します。",
 }) => {
   const params = useParams();
   const eventId = eventIdProp || params.eventId;
@@ -63,6 +101,7 @@ const RouteSelector = ({
   const [tasks, setTasks] = useState([]);
   const [assignedTaskIds, setAssignedTaskIds] = useState([]);
   const [status, setStatus] = useState("");
+  const statusTimeoutRef = useRef(null);
   const addTaskButtonClass =
     "inline-flex items-center gap-2 rounded-xl border border-emerald-300 bg-emerald-700 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-emerald-800/15 transition hover:bg-emerald-800";
 
@@ -137,8 +176,19 @@ const RouteSelector = ({
     fetchAssignments();
   }, [eventId, selectedSeason, selectedCategory]);
 
-  const clearStatusLater = () => {
-    setTimeout(() => setStatus(""), 2000);
+  useEffect(() => {
+    return () => {
+      if (statusTimeoutRef.current) clearTimeout(statusTimeoutRef.current);
+    };
+  }, []);
+
+  const showStatus = (message) => {
+    setStatus(message);
+    if (statusTimeoutRef.current) clearTimeout(statusTimeoutRef.current);
+    statusTimeoutRef.current = setTimeout(() => {
+      setStatus("");
+      statusTimeoutRef.current = null;
+    }, STATUS_DURATION_MS);
   };
 
   const taskDocRef = (taskId) =>
@@ -164,10 +214,30 @@ const RouteSelector = ({
     return candidate;
   };
 
+  const formatTaskNo = (task) => {
+    const no = toTaskNo(task);
+    if (!Number.isFinite(no) || no === Number.MAX_SAFE_INTEGER) return "--";
+    return String(no).padStart(2, "0");
+  };
+
+  const validateTask = (task) => {
+    if (!task.name?.trim()) return "課題名を入力してください";
+    if (!task.grade) return "グレードを選択してください";
+    return "";
+  };
+
+  const toPayload = (task) => ({
+    name: task.name.trim(),
+    taskNo: Number(task.taskNo) || toTaskNo(task),
+    grade: task.grade,
+    points: Number(task.points) || 1,
+    isBonus: Boolean(task.isBonus),
+    isActive: true,
+  });
+
   const handleAddTask = () => {
     if (!selectedSeason) {
-      setStatus("❌ 先にシーズンを選択してください");
-      clearStatusLater();
+      showStatus("❌ 先にシーズンを選択してください");
       return;
     }
 
@@ -208,44 +278,28 @@ const RouteSelector = ({
 
   const handleSaveTask = async (index) => {
     const task = tasks[index];
-    if (!task.name?.trim()) {
-      setStatus("❌ 課題名は必須です");
-      clearStatusLater();
-      return;
-    }
-    if (!task.grade) {
-      setStatus("❌ グレードを設定してください");
-      clearStatusLater();
+    const validationMessage = validateTask(task);
+    if (validationMessage) {
+      showStatus(`❌ ${validationMessage}`);
       return;
     }
 
-    const payload = {
-      name: task.name.trim(),
-      taskNo: Number(task.taskNo) || toTaskNo(task),
-      grade: task.grade,
-      points: Number(task.points) || 1,
-      isBonus: Boolean(task.isBonus),
-      isActive: true,
-    };
-
+    const payload = toPayload(task);
     await setDoc(taskDocRef(task.id), payload, { merge: true });
 
     const mergedTask = { ...task, ...payload, isEditing: false, isNew: false };
-
     setTasks((prev) => {
       const next = [...prev];
       next[index] = mergedTask;
       return sortTasks(next);
     });
-    setStatus(`✅ ${payload.name} を保存しました`);
-    clearStatusLater();
+    showStatus(`✅ 「${payload.name}」を保存しました`);
   };
 
   const handleDeleteTask = async (index) => {
     const task = tasks[index];
 
     await deleteDoc(taskDocRef(task.id));
-
     await Promise.all(
       categories.map(async (category) => {
         await deleteDoc(assignmentDocRef(category.id, task.id));
@@ -254,15 +308,13 @@ const RouteSelector = ({
 
     setTasks((prev) => prev.filter((_, i) => i !== index));
     setAssignedTaskIds((prev) => prev.filter((taskId) => taskId !== task.id));
-    setStatus("🗑️ 課題を削除しました");
-    clearStatusLater();
+    showStatus("🗑️ 課題を削除しました");
   };
 
   const handleToggleAssignment = async (task, checked) => {
     if (!selectedCategory) return;
     if (!task.grade) {
-      setStatus("❌ 先に課題を保存してください");
-      clearStatusLater();
+      showStatus("❌ 先に課題を保存してください");
       return;
     }
 
@@ -272,22 +324,22 @@ const RouteSelector = ({
         taskNo: toTaskNo(task),
       });
       setAssignedTaskIds((prev) => Array.from(new Set([...prev, task.id])));
-      setStatus(`✅ ${task.name} をカテゴリに追加しました`);
+      showStatus(`✅ 「${task.name}」をカテゴリに追加しました`);
     } else {
       await deleteDoc(assignmentDocRef(selectedCategory, task.id));
       setAssignedTaskIds((prev) => prev.filter((id) => id !== task.id));
-      setStatus(`🗑️ ${task.name} をカテゴリから外しました`);
+      showStatus(`🗑️ 「${task.name}」をカテゴリから外しました`);
     }
-
-    clearStatusLater();
   };
 
   return (
     <div>
-      <h3 className="text-xl font-bold text-slate-900">{title}</h3>
-      <p className="mt-1 text-sm text-slate-600">
-        先にシーズン共通の課題を作成し、カテゴリごとに採用する課題を選択します。
-      </p>
+      {title ? <h3 className="text-xl font-bold text-slate-900">{title}</h3> : null}
+      {description ? (
+        <p className={`${title ? "mt-1 " : ""}text-sm text-slate-600`}>
+          {description}
+        </p>
+      ) : null}
 
       <div className="mt-3 flex flex-wrap gap-3">
         {!hideSeasonSelector && (
@@ -326,35 +378,46 @@ const RouteSelector = ({
       </div>
 
       {selectedSeason && (
-        <>
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-3">
-              <span className="text-sm text-slate-600">課題数: {tasks.length}</span>
-              {selectedCategory && (
-                <span className="text-sm text-slate-600">
-                  カテゴリ採用数: {assignedTaskIds.length}
+              {selectedCategory ? (
+                <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700">
+                  Total Routes: {assignedTaskIds.length}
                 </span>
-              )}
+              ) : null}
+              <span className="text-sm text-slate-500">Season Routes: {tasks.length}</span>
             </div>
             <button
               type="button"
               onClick={handleAddTask}
               className={addTaskButtonClass}
             >
-              <PlusIcon />
-              課題を追加
+              + Create Route
             </button>
           </div>
 
           <table className="mt-4 w-full border-collapse text-sm">
             <thead>
               <tr>
-                <th className="border-b border-slate-200 py-2 text-left">課題名</th>
-                <th className="border-b border-slate-200 py-2 text-left">グレード</th>
-                <th className="border-b border-slate-200 py-2 text-left">ポイント</th>
-                <th className="border-b border-slate-200 py-2 text-left">ボーナス</th>
-                <th className="border-b border-slate-200 py-2 text-left">カテゴリ採用</th>
-                <th className="border-b border-slate-200 py-2 text-left">操作</th>
+                <th className="border-b border-slate-200 py-3 text-left text-xs font-bold tracking-wider text-slate-500">
+                  Route Name (No.)
+                </th>
+                <th className="border-b border-slate-200 py-3 text-left text-xs font-bold tracking-wider text-slate-500">
+                  Grade (級)
+                </th>
+                <th className="border-b border-slate-200 py-3 pr-2 text-right text-xs font-bold tracking-wider text-slate-500">
+                  Points
+                </th>
+                <th className="border-b border-slate-200 py-3 text-center text-xs font-bold tracking-wider text-slate-500">
+                  Bonus
+                </th>
+                <th className="border-b border-slate-200 py-3 text-center text-xs font-bold tracking-wider text-slate-500">
+                  Adoption
+                </th>
+                <th className="border-b border-slate-200 py-3 text-center text-xs font-bold tracking-wider text-slate-500">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -369,7 +432,12 @@ const RouteSelector = ({
                         className="w-full rounded-lg border border-slate-300 px-2 py-1 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
                       />
                     ) : (
-                      task.name
+                      <div className="flex items-center gap-3 rounded-lg bg-slate-100 px-3 py-2 font-semibold text-slate-800">
+                        <span className="inline-flex min-w-10 items-center justify-center rounded-lg bg-slate-200 px-2 py-1 text-base font-extrabold text-slate-700">
+                          {formatTaskNo(task)}
+                        </span>
+                        <span>{task.name}</span>
+                      </div>
                     )}
                   </td>
                   <td className="py-2">
@@ -387,24 +455,28 @@ const RouteSelector = ({
                         ))}
                       </select>
                     ) : (
-                      task.grade || "-"
+                      <div className="rounded-lg bg-slate-100 px-3 py-2 text-slate-700">{task.grade || "-"}</div>
                     )}
                   </td>
-                  <td className="py-2">
+                  <td className="py-2 text-right">
                     {task.isEditing ? (
-                      <input
-                        type="number"
-                        min="1"
-                        step="1"
-                        value={Number(task.points) || 1}
-                        onChange={(e) => handleTaskChange(index, "points", e.target.value)}
-                        className="w-24 rounded-lg border border-slate-300 px-2 py-1 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
-                      />
+                      <div className="flex justify-end">
+                        <input
+                          type="number"
+                          min="1"
+                          step="1"
+                          value={Number(task.points) || 1}
+                          onChange={(e) => handleTaskChange(index, "points", e.target.value)}
+                          className="w-24 rounded-lg border border-slate-300 px-2 py-1 text-right outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                        />
+                      </div>
                     ) : (
-                      Number(task.points) || 1
+                      <div className="rounded-lg bg-slate-100 px-3 py-2 font-bold text-emerald-700">
+                        {Number(task.points) || 1}
+                      </div>
                     )}
                   </td>
-                  <td className="py-2">
+                  <td className="py-2 text-center">
                     {task.isEditing ? (
                       <input
                         type="checkbox"
@@ -412,22 +484,33 @@ const RouteSelector = ({
                         onChange={(e) => handleTaskChange(index, "isBonus", e)}
                       />
                     ) : task.isBonus ? (
-                      "✅"
+                      <span className="inline-flex justify-center text-emerald-900">
+                        <CheckCircleIcon checked />
+                      </span>
                     ) : (
-                      "-"
+                      <span className="inline-flex justify-center text-slate-300">
+                        <CheckCircleIcon checked={false} />
+                      </span>
                     )}
                   </td>
-                  <td className="py-2">
-                    <input
-                      type="checkbox"
+                  <td className="py-2 text-center">
+                    <button
+                      type="button"
                       disabled={!selectedCategory || !task.grade}
-                      checked={selectedCategory ? assignedSet.has(task.id) : false}
-                      onChange={(e) => handleToggleAssignment(task, e.target.checked)}
-                    />
+                      onClick={() => handleToggleAssignment(task, !assignedSet.has(task.id))}
+                      className={`inline-flex items-center justify-center rounded-full transition ${
+                        !selectedCategory || !task.grade
+                          ? "cursor-not-allowed text-slate-300"
+                          : "text-emerald-900 hover:text-emerald-700"
+                      }`}
+                      aria-label={assignedSet.has(task.id) ? "採用を解除" : "採用する"}
+                    >
+                      <CheckCircleIcon checked={assignedSet.has(task.id)} />
+                    </button>
                   </td>
-                  <td className="py-2">
+                  <td className="py-2 text-center">
                     {task.isEditing ? (
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap justify-center gap-2">
                         <button
                           type="button"
                           onClick={() => handleSaveTask(index)}
@@ -444,20 +527,22 @@ const RouteSelector = ({
                         </button>
                       </div>
                     ) : (
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex items-center justify-center gap-2">
                         <button
                           type="button"
                           onClick={() => toggleEdit(index)}
-                          className="rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                          aria-label="編集"
                         >
-                          編集
+                          <PencilIcon />
                         </button>
                         <button
                           type="button"
                           onClick={() => handleDeleteTask(index)}
-                          className="rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-medium text-rose-700 transition hover:bg-rose-100"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-rose-50 hover:text-rose-500"
+                          aria-label="削除"
                         >
-                          削除
+                          <TrashIcon />
                         </button>
                       </div>
                     )}
@@ -467,13 +552,13 @@ const RouteSelector = ({
               {tasks.length === 0 && (
                 <tr>
                   <td colSpan={6} className="py-4 text-sm text-slate-500">
-                    課題がありません。まずは「課題を追加」で登録してください。
+                    課題がありません。まずは「+ Create Route」で登録してください。
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
-        </>
+        </div>
       )}
 
       <div className="mt-3 min-h-6">

@@ -57,8 +57,25 @@ const AppShell = () => {
     navigate("/", { replace: true });
   };
 
+  const handleToggleUserMenu = () => {
+    setIsUserMenuOpen((prev) => {
+      const next = !prev;
+      if (next) setIsMenuOpen(false);
+      return next;
+    });
+  };
+
+  const handleToggleMenu = () => {
+    setIsMenuOpen((prev) => {
+      const next = !prev;
+      if (next) setIsUserMenuOpen(false);
+      return next;
+    });
+  };
+
   const handlePortalNavigation = (path, redirectAfterLoginPath) => {
     setIsMenuOpen(false);
+    setIsUserMenuOpen(false);
     if (redirectAfterLoginPath && !currentUser) {
       navigate("/login", {
         state: { from: { pathname: redirectAfterLoginPath } },
@@ -91,7 +108,7 @@ const AppShell = () => {
               <div className="relative">
                 <button
                   type="button"
-                  onClick={() => setIsUserMenuOpen((prev) => !prev)}
+                  onClick={handleToggleUserMenu}
                   className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-300 bg-white text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                   aria-label="user menu"
                   aria-expanded={isUserMenuOpen}
@@ -114,7 +131,7 @@ const AppShell = () => {
             )}
             <button
               type="button"
-              onClick={() => setIsMenuOpen((prev) => !prev)}
+              onClick={handleToggleMenu}
               className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-700 transition hover:bg-slate-50"
               aria-label="menu"
               aria-expanded={isMenuOpen}

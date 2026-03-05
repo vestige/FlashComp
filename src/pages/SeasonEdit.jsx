@@ -255,7 +255,7 @@ const SeasonEdit = () => {
         />
 
         <section className="mt-4">
-          <h2 className={sectionHeadingClass}>シーズン基本情報</h2>
+          <h2 className={sectionHeadingClass}>📚Summary</h2>
           <div className={sectionCardClass}>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-sm text-slate-600">シーズン情報と開催期間を編集できます。</p>
@@ -360,7 +360,7 @@ const SeasonEdit = () => {
         </section>
 
         <section className="mt-4">
-          <h2 className={sectionHeadingClass}>課題設定</h2>
+          <h2 className={sectionHeadingClass}>💛Registered Routes</h2>
           <div className={sectionCardClass}>
             {categories.length === 0 ? (
               <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
@@ -381,7 +381,8 @@ const SeasonEdit = () => {
                   categories={categories}
                   fixedSeasonId={seasonId}
                   hideSeasonSelector
-                  title="このシーズンの課題設定"
+                  title=""
+                  description=""
                 />
               </div>
             )}

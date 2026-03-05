@@ -48,6 +48,7 @@ const SeasonManager = ({
   showSectionHeader = true,
   showSectionCard = true,
   sectionTitle = null,
+  taskCountBySeason = null,
 }) => {
   const [seasonName, setSeasonName] = useState("");
   const [startDate, setStartDate] = useState("");
@@ -211,6 +212,9 @@ const SeasonManager = ({
             eventEndDate: eventRange?.endDate,
           });
           const hasRangeError = Boolean(rangeError);
+          const seasonTaskCount = Number.isFinite(Number(taskCountBySeason?.[season.id]))
+            ? Number(taskCountBySeason[season.id])
+            : null;
 
           return (
             <li
@@ -275,6 +279,15 @@ const SeasonManager = ({
                       <p className="mt-1 text-sm text-slate-500">
                         {formatSeasonDate(season.startDate)} - {formatSeasonDate(season.endDate)}
                       </p>
+                      {seasonTaskCount !== null && (
+                        <p
+                          className={`mt-1 text-xs ${
+                            seasonTaskCount === 0 ? "text-amber-700" : "text-slate-500"
+                          }`}
+                        >
+                          💛 Registered Routes: {seasonTaskCount}
+                        </p>
+                      )}
                       {hasRangeError && (
                         <p className="mt-1 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs text-amber-800">
                           イベント期間外です。イベント期間またはシーズン期間を見直してください。
