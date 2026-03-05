@@ -352,7 +352,7 @@ const ParticipantManager = ({
             <tbody>
               {visibleParticipants.map((participant, index) => {
                 const isEditing = editingParticipantId === participant.id;
-                const rowBgClass = index % 2 === 0 ? "bg-white" : "bg-slate-50";
+                const rowBgClass = `${index % 2 === 0 ? "bg-white" : "bg-slate-50"} hover:bg-sky-100 transition-colors`;
                 if (isEditing) {
                   return (
                     <tr key={participant.id} className={rowBgClass}>
