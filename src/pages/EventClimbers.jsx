@@ -52,7 +52,7 @@ const EventClimbers = () => {
     loading: profileLoading,
     error: profileError,
   } = useOwnerProfile();
-  usePageTitle(eventName ? `Climber Settings | ${eventName}` : "Climber Settings");
+  usePageTitle("Climber Settings");
 
   const Icon = ({ children, className = "h-4 w-4" }) => (
     <svg
@@ -388,10 +388,8 @@ const EventClimbers = () => {
       <div className={pageContainerClass}>
         <div className="mb-8">
           <ManagementHero
-            eyebrow="Event Management"
             title="Climber Settings"
             description="参加者情報の登録・CSV入出力・カテゴリ管理を行います。"
-            meta={`Event: ${eventName || "-"}`}
             backTo="/dashboard"
             backLabel="↩ ダッシュボードへ戻る"
             surface={false}
