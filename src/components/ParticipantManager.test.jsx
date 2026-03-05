@@ -110,8 +110,7 @@ describe("ParticipantManager", () => {
     render(<ParticipantManager eventId="event-1" categories={categories} />);
 
     await screen.findByText(/佐藤 花子/);
-    const listItem = screen.getByText(/佐藤 花子/).closest("li");
-    const row = within(listItem);
+    const row = within(screen.getByRole("row", { name: /佐藤 花子/ }));
 
     await user.click(row.getByRole("button", { name: "編集" }));
 
@@ -167,7 +166,8 @@ describe("ParticipantManager", () => {
     render(<ParticipantManager eventId="event-1" categories={categories} />);
 
     await screen.findByText(/田中 一郎/);
-    await user.click(screen.getByRole("button", { name: "削除" }));
+    const row = within(screen.getByRole("row", { name: /田中 一郎/ }));
+    await user.click(row.getByRole("button", { name: "削除" }));
     expect(screen.getByText("クライマーを削除しますか？")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "削除する" }));
 
