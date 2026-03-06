@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import {
   collection,
   doc,
@@ -17,11 +17,62 @@ import {
 } from "../lib/taskAssignments";
 import ManagementHero from "../components/ManagementHero";
 import {
+  inputFieldClass,
   pageBackgroundClass,
   pageContainerClass,
   sectionCardClass,
   sectionHeadingClass,
+  subtleButtonClass,
+  subtlePillButtonClass,
 } from "../components/uiStyles";
+
+const CheckAllIcon = ({ className = "h-4 w-4" }) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    aria-hidden="true"
+  >
+    <path d="M20 6 9 17l-5-5" />
+  </svg>
+);
+
+const ResetIcon = ({ className = "h-4 w-4" }) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    aria-hidden="true"
+  >
+    <path d="M21 12a9 9 0 1 1-2.64-6.36" />
+    <path d="M21 3v6h-6" />
+  </svg>
+);
+
+const SaveIcon = ({ className = "h-4 w-4" }) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    aria-hidden="true"
+  >
+    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z" />
+    <path d="M17 21v-8H7v8" />
+    <path d="M7 3v5h6" />
+  </svg>
+);
 
 const ScoreInput = () => {
   const { eventId, seasonId, categoryId, participantId } = useParams();
@@ -319,22 +370,22 @@ const ScoreInput = () => {
               <button
                 type="button"
                 onClick={() => setViewMode("simple")}
-                className={`rounded-full border px-3 py-1.5 text-sm font-medium transition ${
-                  viewMode === "simple"
-                    ? "border-sky-300 bg-sky-50 text-sky-800"
-                    : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                className={`${subtlePillButtonClass} ${
+                  viewMode === "simple" ? "border-sky-300 bg-sky-50 text-sky-800" : ""
                 }`}
+                aria-pressed={viewMode === "simple"}
+                aria-label="簡易表示を選択"
               >
                 簡易表示
               </button>
               <button
                 type="button"
                 onClick={() => setViewMode("detail")}
-                className={`rounded-full border px-3 py-1.5 text-sm font-medium transition ${
-                  viewMode === "detail"
-                    ? "border-sky-300 bg-sky-50 text-sky-800"
-                    : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                className={`${subtlePillButtonClass} ${
+                  viewMode === "detail" ? "border-sky-300 bg-sky-50 text-sky-800" : ""
                 }`}
+                aria-pressed={viewMode === "detail"}
+                aria-label="詳細表示を選択"
               >
                 詳細表示
               </button>
@@ -354,7 +405,7 @@ const ScoreInput = () => {
                   value={taskKeyword}
                   onChange={(e) => setTaskKeyword(e.target.value)}
                   placeholder="No.01"
-                  className="w-32 rounded-lg border border-slate-300 px-2 py-1 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                  className={`${inputFieldClass} w-32`}
                 />
               </label>
             </div>
@@ -362,15 +413,19 @@ const ScoreInput = () => {
               <button
                 type="button"
                 onClick={() => applyBulkToVisible(true)}
-                className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700 transition hover:bg-emerald-100"
+                className="inline-flex items-center gap-2 rounded-lg border border-emerald-300 bg-emerald-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-800"
+                aria-label="表示中の課題をすべて完登にする"
               >
+                <CheckAllIcon />
                 表示中をすべて完登
               </button>
               <button
                 type="button"
                 onClick={() => applyBulkToVisible(false)}
-                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                className={`${subtleButtonClass} text-sm`}
+                aria-label="表示中の課題をすべて未完登にする"
               >
+                <ResetIcon />
                 表示中をすべて未完登
               </button>
             </div>
@@ -445,9 +500,11 @@ const ScoreInput = () => {
           <button
             type="button"
             onClick={handleSave}
-            className="inline-flex items-center rounded-lg border border-sky-200 bg-sky-50 px-4 py-2 text-sm font-semibold text-sky-800 transition hover:bg-sky-100"
+            className="inline-flex items-center gap-2 rounded-lg border border-sky-300 bg-sky-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-800"
+            aria-label="採点を保存"
           >
-            💾 保存
+            <SaveIcon />
+            保存
           </button>
           {hasUnsavedChanges ? (
             <p className="text-sm text-amber-700">※保存していない変更があります。</p>
