@@ -9,7 +9,8 @@
 - [x] Climber Settings : CVS出力、入力は作成の前におく
 - [x] Climber Settings : 男女比の出力はいったん削除
 - [x] Climber Settings : クライマーCSVセクションは消す
-- [ ] Score Management :  みためをそろえる
+- [x] Score Management :  みためをそろえる
+- [x] Score Management :  表示項目・デフォルト選択の調整（Summary、イベント期間、Activeシーズン初期選択、登録順ソート、会員番号/完登数表示）
 - [ ] DashBoard : Event Settings > Detail
 - [ ] DashBoard : Public Ranking > Result
 - [ ] Result : 統計データにする、可視化できるグラフ表示にする。どんなのがいいかな？
@@ -25,4 +26,3 @@
 #### ↑ができたら、また、詳細にする
 - [] Ranking
 - [] Score
-

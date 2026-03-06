@@ -4,54 +4,55 @@ import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
 import ScoreManager from "../components/ScoreManager";
 import ManagementHero from "../components/ManagementHero";
+import { formatSeasonDate } from "../lib/seasonStatus";
 import { useOwnerProfile } from "../hooks/useOwnerProfile";
 import { usePageTitle } from "../hooks/usePageTitle";
-import { downloadCsv } from "../lib/csvUtils";
-import { calculateRankingRows } from "../lib/rankingCsv";
 import {
-  inputFieldClass,
   pageBackgroundClass,
   pageContainerClass,
   sectionCardClass,
-  sectionCardDenseClass,
   sectionHeadingClass,
-  subtleButtonClass,
 } from "../components/uiStyles";
+
+const toDate = (value) => {
+  if (!value) return null;
+  if (typeof value.toDate === "function") return value.toDate();
+  if (typeof value.seconds === "number") return new Date(value.seconds * 1000);
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
+const getTimestamp = (value) => {
+  const date = toDate(value);
+  return date ? date.getTime() : null;
+};
+
+const sortByRegistrationOrder = (rows) => {
+  return [...rows].sort((a, b) => {
+    const aAt = getTimestamp(a.createdAt);
+    const bAt = getTimestamp(b.createdAt);
+    if (aAt !== null && bAt !== null) return aAt - bAt;
+    if (aAt !== null) return -1;
+    if (bAt !== null) return 1;
+    return 0;
+  });
+};
 
 const EventScores = () => {
   const { eventId } = useParams();
-  const [eventName, setEventName] = useState("");
   const [seasons, setSeasons] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [participants, setParticipants] = useState([]);
-  const [selectedSeasonId, setSelectedSeasonId] = useState("all");
-  const [exportStatus, setExportStatus] = useState("");
-  const [exportingRank, setExportingRank] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [accessDenied, setAccessDenied] = useState(false);
+  const [eventStartDate, setEventStartDate] = useState("");
+  const [eventEndDate, setEventEndDate] = useState("");
   const {
     gymIds,
     hasAllGymAccess,
     loading: profileLoading,
     error: profileError,
   } = useOwnerProfile();
-  usePageTitle(eventName ? `スコア: ${eventName}` : "スコア");
-
-  const Icon = ({ children, className = "h-4 w-4" }) => (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-      aria-hidden="true"
-    >
-      {children}
-    </svg>
-  );
+  usePageTitle("Score Management");
 
   useEffect(() => {
     if (profileLoading) return;
@@ -73,31 +74,21 @@ const EventScores = () => {
         }
 
         const eventData = eventSnap.data();
-        setEventName(eventData.name || "");
+        setEventStartDate(eventData.startDate || "");
+        setEventEndDate(eventData.endDate || "");
         if (!hasAllGymAccess && !gymIds.includes(eventData.gymId)) {
           setAccessDenied(true);
           return;
         }
 
-        const [seasonSnap, categorySnap, participantSnap] = await Promise.all([
-          getDocs(collection(db, "events", eventId, "seasons")),
-          getDocs(collection(db, "events", eventId, "categories")),
-          getDocs(collection(db, "events", eventId, "participants")),
-        ]);
-        const seasonRows = seasonSnap.docs
-          .map((seasonDoc) => ({ id: seasonDoc.id, ...seasonDoc.data() }))
-          .sort((a, b) => (a.name || "").localeCompare(b.name || "", "ja"));
-        setSeasons(seasonRows);
-        setCategories(
-          categorySnap.docs
-            .map((categoryDoc) => ({ id: categoryDoc.id, ...categoryDoc.data() }))
-            .sort((a, b) => (a.name || "").localeCompare(b.name || "", "ja"))
+        const seasonSnap = await getDocs(collection(db, "events", eventId, "seasons"));
+        const seasonsData = sortByRegistrationOrder(
+          seasonSnap.docs.map((seasonDoc) => ({
+            id: seasonDoc.id,
+            ...seasonDoc.data(),
+          }))
         );
-        setParticipants(
-          participantSnap.docs
-            .map((participantDoc) => ({ id: participantDoc.id, ...participantDoc.data() }))
-            .sort((a, b) => (a.name || "").localeCompare(b.name || "", "ja"))
-        );
+        setSeasons(seasonsData);
       } catch (err) {
         console.error("スコア画面データの取得に失敗:", err);
         setError("スコア画面データの取得に失敗しました。");
@@ -109,44 +100,11 @@ const EventScores = () => {
     fetchData();
   }, [eventId, gymIds, hasAllGymAccess, profileLoading, profileError]);
 
-  useEffect(() => {
-    if (selectedSeasonId === "all") return;
-    const exists = seasons.some((season) => season.id === selectedSeasonId);
-    if (!exists) setSelectedSeasonId("all");
-  }, [selectedSeasonId, seasons]);
-
-  const exportRankingCsv = async () => {
-    setExportStatus("");
-    setExportingRank(true);
-    try {
-      const rows = await calculateRankingRows({
-        db,
-        eventId,
-        seasons,
-        categories,
-        participants,
-        selectedSeasonId,
-      });
-      const headers = [
-        "seasonScope",
-        "categoryId",
-        "categoryName",
-        "rank",
-        "participantId",
-        "participantName",
-        "memberNo",
-        "totalPoints",
-        "clearCount",
-      ];
-      downloadCsv(`${eventId}-ranking.csv`, headers, rows);
-      setExportStatus(`✅ 順位CSVを出力しました（${rows.length}件）。`);
-    } catch (err) {
-      console.error("順位CSV出力に失敗:", err);
-      setExportStatus("❌ 順位CSV出力に失敗しました。");
-    } finally {
-      setExportingRank(false);
-    }
-  };
+  const activeSeasonCountText = String(seasons.length);
+  const eventPeriodText =
+    eventStartDate || eventEndDate
+      ? `${formatSeasonDate(eventStartDate)} - ${formatSeasonDate(eventEndDate)}`
+      : "-";
 
   if (loading || profileLoading) {
     return (
@@ -186,53 +144,34 @@ const EventScores = () => {
     <div className={pageBackgroundClass}>
       <div className={pageContainerClass}>
         <ManagementHero
-          eyebrow="Score Management"
-          title={`スコア管理：${eventName}`}
-          description="シーズン別/総合のスコア入力と順位CSV出力を行います。"
+          title="Score Management"
+          description="採点対象の選択とスコア入力を行います。"
           backTo="/dashboard"
           backLabel="↩ ダッシュボードへ戻る"
+          surface={false}
         />
 
-        <section className={`mt-4 ${sectionCardClass}`}>
-          <h2 className={sectionHeadingClass}>
-            <Icon className="h-5 w-5 text-sky-600">
-              <path d="M4 19h16" />
-              <path d="M8 14h8" />
-              <path d="M8 10h8" />
-              <path d="M8 6h8" />
-            </Icon>
-            スコアCSV
-          </h2>
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <label className="text-sm text-slate-700">
-              順位の対象:
-              <select
-                value={selectedSeasonId}
-                onChange={(e) => setSelectedSeasonId(e.target.value)}
-                className={`ml-2 ${inputFieldClass}`}
-              >
-                <option value="all">総合（全シーズン）</option>
-                {seasons.map((season) => (
-                  <option key={season.id} value={season.id}>
-                    {season.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <button
-              type="button"
-              onClick={exportRankingCsv}
-              disabled={exportingRank || seasons.length === 0 || categories.length === 0}
-              className={`${subtleButtonClass} disabled:cursor-not-allowed disabled:opacity-60`}
-            >
-              {exportingRank ? "順位を計算中..." : "順位CSVを出力"}
-            </button>
+        <section className="mt-4">
+          <h2 className={sectionHeadingClass}>Summary</h2>
+          <div className={sectionCardClass}>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <article className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Season Count</p>
+                <p className="mt-1 text-lg font-bold text-slate-900">{activeSeasonCountText}</p>
+              </article>
+              <article className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Event Period</p>
+                <p className="mt-1 text-lg font-bold text-slate-900">{eventPeriodText}</p>
+              </article>
+            </div>
           </div>
-          {exportStatus && <p className="mt-3 text-sm text-slate-600">{exportStatus}</p>}
         </section>
 
-        <section className={`mt-5 ${sectionCardDenseClass} sm:p-2`}>
-          <ScoreManager eventId={eventId} />
+        <section className="mt-5">
+          <h2 className={sectionHeadingClass}>📋 Registered Climbers</h2>
+          <div className={sectionCardClass}>
+            <ScoreManager eventId={eventId} />
+          </div>
         </section>
       </div>
     </div>

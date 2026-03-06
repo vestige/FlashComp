@@ -37,9 +37,14 @@ const makeSnapshot = (rows) => ({
 const setupFirestore = () => {
   const map = {
     "events/event-1/seasons": makeSnapshot([{ id: "season-1", name: "Season 1" }]),
+    "events/event-1/seasons/season-1/tasks": makeSnapshot([]),
+    "events/event-1/seasons/season-1/categoryTaskMap/cat-1/assignments": makeSnapshot([]),
+    "events/event-1/seasons/season-1/categories/cat-1/participants": makeSnapshot([
+      { id: "p1", scores: {} },
+    ]),
     "events/event-1/categories": makeSnapshot([{ id: "cat-1", name: "Beginner" }]),
     "events/event-1/participants?categoryId=cat-1": makeSnapshot([
-      { id: "p1", name: "Aoi", categoryId: "cat-1" },
+      { id: "p1", name: "Aoi", memberNo: "M-1", categoryId: "cat-1" },
     ]),
   };
   firestoreMocks.getDocs.mockImplementation(async (ref) => map[ref.path] || makeSnapshot([]));
@@ -88,6 +93,7 @@ describe("ScoreManager", () => {
     await waitFor(() => expect(screen.getByLabelText(/シーズン選択:/)).toHaveValue("season-1"));
     expect(screen.getByLabelText(/カテゴリ選択:/)).toHaveValue("cat-1");
     expect(screen.getByText("Aoi")).toBeInTheDocument();
+    expect(screen.getByText("M-1")).toBeInTheDocument();
   });
 
   it("keeps selected season/category after navigating to score input and back", async () => {
@@ -97,7 +103,7 @@ describe("ScoreManager", () => {
 
     await user.selectOptions(await screen.findByLabelText(/シーズン選択:/), "season-1");
     await user.selectOptions(screen.getByLabelText(/カテゴリ選択:/), "cat-1");
-    const inputLink = await screen.findByRole("link", { name: /採点へ/ });
+    const inputLink = await screen.findByRole("link", { name: /採点画面へ:/ });
     expect(inputLink).toHaveAttribute("href", "/events/event-1/scoreinput/season-1/cat-1/p1");
 
     await user.click(inputLink);
