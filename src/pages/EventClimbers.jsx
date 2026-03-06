@@ -394,10 +394,6 @@ const EventClimbers = () => {
           <h2 className={sectionHeadingClass}>👤 Registered Climbers</h2>
           <div className={sectionCardClass}>
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-              <p className="text-sm text-slate-600">
-                クライマーCSVの出力/取り込みを行います。必須列:
-                <span className="font-mono"> name,memberNo,age,gender,categoryId</span>
-              </p>
               <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
                 <button
                   type="button"
@@ -426,8 +422,12 @@ const EventClimbers = () => {
                     className="sr-only"
                   />
                 </label>
-                <span className="text-sm text-slate-600">{importingCsv ? "取り込み中..." : ""}</span>
+                  <span className="text-sm text-slate-600">{importingCsv ? "取り込み中..." : ""}</span>
               </div>
+              <p className="mt-3 text-right text-sm text-slate-600">
+                クライマーCSVの出力/取り込みを行います。必須列:
+                <span className="font-mono"> name,memberNo,age,gender,categoryId</span>
+              </p>
               {csvStatus && <p className="mt-3 text-sm text-slate-600">{csvStatus}</p>}
             </div>
 
