@@ -1,9 +1,10 @@
-// src/pages/ScoreInput.jsx
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
+  collection,
   doc,
   getDoc,
+  getDocs,
   setDoc,
   serverTimestamp,
 } from "firebase/firestore";
@@ -14,12 +15,25 @@ import {
   fetchAssignedTasksForCategory,
   getScoreValueByTask,
 } from "../lib/taskAssignments";
+import ManagementHero from "../components/ManagementHero";
+import {
+  pageBackgroundClass,
+  pageContainerClass,
+  sectionCardClass,
+  sectionHeadingClass,
+} from "../components/uiStyles";
 
 const ScoreInput = () => {
   const { eventId, seasonId, categoryId, participantId } = useParams();
   const [tasks, setTasks] = useState([]);
   const [participantName, setParticipantName] = useState("");
+  const [participantInfo, setParticipantInfo] = useState({
+    memberNo: "-",
+    grade: "-",
+    categoryName: "-",
+  });
   const [scores, setScores] = useState({});
+  const [savedScores, setSavedScores] = useState({});
   const [viewMode, setViewMode] = useState("simple");
   const [showOnlyUncleared, setShowOnlyUncleared] = useState(true);
   const [taskKeyword, setTaskKeyword] = useState("");
@@ -34,7 +48,20 @@ const ScoreInput = () => {
     loading: profileLoading,
     error: profileError,
   } = useOwnerProfile();
-  usePageTitle(participantName ? `スコア入力: ${participantName}` : "スコア入力");
+
+  usePageTitle("Score Input");
+
+  const taskScoreEquals = (baseScores, nextScores, task) => {
+    return getScoreValueByTask(baseScores, task) === getScoreValueByTask(nextScores, task);
+  };
+
+  const hasUnsavedChanges = tasks.some((task) => !taskScoreEquals(savedScores, scores, task));
+
+  const resolveScoreKey = (task, scoreMap = {}) => {
+    if (task?.id && task.id in scoreMap) return task.id;
+    if (task?.name && task.name in scoreMap) return task.name;
+    return task?.name || task?.id || "";
+  };
 
   useEffect(() => {
     if (profileLoading) return;
@@ -59,24 +86,37 @@ const ScoreInput = () => {
           return;
         }
 
-        const participantSnap = await getDoc(
-          doc(db, "events", eventId, "participants", participantId)
-        );
+        const [participantSnap, assignedTasks, categorySnap] = await Promise.all([
+          getDoc(doc(db, "events", eventId, "participants", participantId)),
+          fetchAssignedTasksForCategory({
+            eventId,
+            seasonId,
+            categoryId,
+          }),
+          getDocs(collection(db, "events", eventId, "categories")),
+        ]);
+
         if (!participantSnap.exists()) {
           setError("クライマーが見つかりません。");
           return;
         }
+
         const participantData = participantSnap.data();
         if ((participantData.categoryId || "") !== categoryId) {
           setError("クライマーのカテゴリと採点対象カテゴリが一致しません。");
           return;
         }
-        setParticipantName(participantData.name || "");
 
-        const assignedTasks = await fetchAssignedTasksForCategory({
-          eventId,
-          seasonId,
-          categoryId,
+        const categoryNameMap = new Map(categorySnap.docs.map((categoryDoc) => [
+          categoryDoc.id,
+          categoryDoc.data().name || "",
+        ]));
+
+        setParticipantName(participantData.name || "");
+        setParticipantInfo({
+          memberNo: participantData.memberNo || "-",
+          grade: participantData.grade || "-",
+          categoryName: categoryNameMap.get(participantData.categoryId) || participantData.categoryId || "-",
         });
         setTasks(assignedTasks);
 
@@ -93,10 +133,13 @@ const ScoreInput = () => {
             participantId
           )
         );
-        if (scoresSnap.exists()) {
-          const data = scoresSnap.data();
-          if (data.scores) setScores(data.scores);
-          if (data.updatedAt) setUpdatedAt(data.updatedAt.toDate());
+        const nextScores = scoresSnap.exists() ? scoresSnap.data().scores || {} : {};
+        setScores(nextScores);
+        setSavedScores(nextScores);
+        if (scoresSnap.exists() && scoresSnap.data().updatedAt) {
+          setUpdatedAt(scoresSnap.data().updatedAt.toDate());
+        } else {
+          setUpdatedAt(null);
         }
       } catch (err) {
         console.error("データの取得に失敗:", err);
@@ -117,12 +160,6 @@ const ScoreInput = () => {
     profileLoading,
     profileError,
   ]);
-
-  const resolveScoreKey = (task, scoreMap = {}) => {
-    if (task?.id && task.id in scoreMap) return task.id;
-    if (task?.name && task.name in scoreMap) return task.name;
-    return task?.name || task?.id || "";
-  };
 
   const handleToggleScore = (task) => {
     setScores((prev) => {
@@ -162,6 +199,11 @@ const ScoreInput = () => {
   const handleSave = async () => {
     if (accessDenied) return;
 
+    if (!hasUnsavedChanges) {
+      setStatus("保存する変更がありません。");
+      return;
+    }
+
     try {
       await setDoc(
         doc(
@@ -181,6 +223,8 @@ const ScoreInput = () => {
         },
         { merge: true }
       );
+      setSavedScores({ ...scores });
+      setUpdatedAt(new Date());
       setStatus("✅ 保存しました");
       setTimeout(() => setStatus(""), 2000);
     } catch (err) {
@@ -191,14 +235,17 @@ const ScoreInput = () => {
 
   const statusClass = status.startsWith("✅")
     ? "rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700"
-    : "rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700";
+    : status.startsWith("❌")
+      ? "rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700"
+      : "rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700";
+
   const backToScoresPath = `/events/${eventId}/scores?scoreSeason=${encodeURIComponent(
     seasonId
   )}&scoreCategory=${encodeURIComponent(categoryId)}`;
 
   if (loading || profileLoading) {
     return (
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className={pageContainerClass}>
         <p className="text-sm text-slate-600">採点画面を読み込んでいます...</p>
       </div>
     );
@@ -206,7 +253,7 @@ const ScoreInput = () => {
 
   if (error || profileError) {
     return (
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className={pageContainerClass}>
         <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
           {error || profileError}
         </p>
@@ -216,7 +263,7 @@ const ScoreInput = () => {
 
   if (accessDenied) {
     return (
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className={pageContainerClass}>
         <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
           このイベントの採点を行う権限がありません。
         </p>
@@ -225,30 +272,45 @@ const ScoreInput = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#dbeafe_0%,_#f8fafc_45%,_#ecfeff_100%)]">
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        <header className="rounded-3xl border border-slate-200 bg-white px-6 py-6 shadow-sm">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">Score Input</p>
-          <h2 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">📝 スコア入力</h2>
-          <div className="mt-4">
-            <Link
-              to={backToScoresPath}
-              state={{ seasonId, categoryId }}
-              className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
-            >
-              ↩ スコア入口に戻る
-            </Link>
+    <div className={pageBackgroundClass}>
+      <div className={pageContainerClass}>
+        <ManagementHero
+          eyebrow="Score Input"
+          title="Score Input"
+          description={`クライマー「${participantName || "-"}」の採点を入力します。`}
+          backTo={backToScoresPath}
+          backLabel="↩ スコア一覧へ戻る"
+          surface={false}
+        />
+
+        <section className="mt-4">
+          <h2 className={sectionHeadingClass}>Summary</h2>
+          <div className={sectionCardClass}>
+            <div className="grid gap-3 md:grid-cols-2">
+              <article className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Climber</p>
+                <p className="mt-1 text-lg font-bold text-slate-900">{participantName || "-"}</p>
+                <p className="mt-1 text-sm text-slate-600">会員番号: {participantInfo.memberNo}</p>
+                <p className="mt-1 text-sm text-slate-600">級: {participantInfo.grade}</p>
+                <p className="mt-1 text-sm text-slate-600">カテゴリ: {participantInfo.categoryName}</p>
+              </article>
+              <article className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Progress</p>
+                <p className="mt-1 text-sm text-slate-600">
+                  完登 {clearCount} / 全{tasks.length}（未完登 {remainingCount}）
+                </p>
+                <p className="mt-2 text-xs text-slate-500">最終更新: {updatedAt ? updatedAt.toLocaleString() : "未保存"}</p>
+                <p
+                  className={`mt-2 inline-flex rounded-full px-2 py-0.5 text-xs font-bold ${
+                    hasUnsavedChanges ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"
+                  }`}
+                >
+                  {hasUnsavedChanges ? "保存前の変更あり" : "保存済み"}
+                </p>
+              </article>
+            </div>
           </div>
-          <p className="mt-4 text-sm text-slate-700">クライマー: {participantName}</p>
-          <p className="mt-1 text-sm text-slate-600">
-            完登 {clearCount} / 全{tasks.length}（未完登 {remainingCount}）
-          </p>
-          {updatedAt && (
-            <p className="mt-1 text-xs italic text-slate-500">
-              最終更新: {updatedAt.toLocaleString()}
-            </p>
-          )}
-        </header>
+        </section>
 
         <section className="mt-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex flex-wrap items-center gap-2">
@@ -319,15 +381,18 @@ const ScoreInput = () => {
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {visibleTasks.map((task) => {
                 const isCleared = getScoreValueByTask(scores, task);
+                const isDirty = !taskScoreEquals(savedScores, scores, task);
                 return (
                   <button
                     key={task.id || task.name}
                     type="button"
                     onClick={() => handleToggleScore(task)}
                     className={`min-h-[96px] rounded-xl border p-3 text-left transition ${
-                      isCleared
-                        ? "border-emerald-300 bg-emerald-50"
-                        : "border-slate-300 bg-white hover:bg-slate-50"
+                      isDirty
+                        ? "border-amber-300 bg-amber-50"
+                        : isCleared
+                          ? "border-emerald-300 bg-emerald-50"
+                          : "border-slate-300 bg-white hover:bg-slate-50"
                     }`}
                   >
                     <div className="font-semibold text-slate-900">{task.name || task.id}</div>
@@ -344,34 +409,34 @@ const ScoreInput = () => {
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-[520px] w-full border-collapse">
-              <thead>
-                <tr>
+                <thead>
+                  <tr>
                     <th className="border-b border-slate-200 pb-2 text-left text-sm font-semibold text-slate-700">課題</th>
                     <th className="border-b border-slate-200 pb-2 text-left text-sm font-semibold text-slate-700">級</th>
                     <th className="border-b border-slate-200 pb-2 text-right text-sm font-semibold text-slate-700">点数</th>
                     <th className="border-b border-slate-200 pb-2 text-center text-sm font-semibold text-slate-700">完登</th>
-                </tr>
-              </thead>
-              <tbody>
-                {visibleTasks.map((task) => (
-                  <tr key={task.id || task.name}>
+                  </tr>
+                </thead>
+                <tbody>
+                  {visibleTasks.map((task) => (
+                    <tr key={task.id || task.name}>
                       <td className="py-2 text-sm text-slate-800">{task.name || task.id}</td>
                       <td className="py-2 text-sm text-slate-700">{task.grade || "-"}</td>
                       <td className="py-2 text-right text-sm text-slate-700">{task.points ?? "-"}</td>
                       <td className="py-2 text-center">
-                      <input
-                        type="checkbox"
-                        checked={getScoreValueByTask(scores, task)}
-                        onChange={() => handleToggleScore(task)}
+                        <input
+                          type="checkbox"
+                          checked={getScoreValueByTask(scores, task)}
+                          onChange={() => handleToggleScore(task)}
                           className="size-4 rounded border-slate-300"
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </section>
 
         <div className="mt-5 flex flex-wrap items-center gap-3">
@@ -382,6 +447,9 @@ const ScoreInput = () => {
           >
             💾 保存
           </button>
+          {hasUnsavedChanges ? (
+            <p className="text-sm text-amber-700">※保存していない変更があります。</p>
+          ) : null}
           {status && <span className={statusClass}>{status}</span>}
         </div>
       </div>
