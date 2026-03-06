@@ -27,6 +27,13 @@ const getTimestamp = (value) => {
   return date ? date.getTime() : null;
 };
 
+const getSeasonPeriodText = (season) => {
+  const start = formatSeasonDate(season.startDate);
+  const end = formatSeasonDate(season.endDate);
+  if (start === "-" && end === "-") return "期間未設定";
+  return `${start} - ${end}`;
+};
+
 const sortByRegistrationOrder = (rows) => {
   return [...rows].sort((a, b) => {
     const aAt = getTimestamp(a.createdAt);
@@ -154,7 +161,7 @@ const EventScores = () => {
         <section className="mt-4">
           <h2 className={sectionHeadingClass}>Summary</h2>
           <div className={sectionCardClass}>
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-3 md:grid-cols-3">
               <article className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Season Count</p>
                 <p className="mt-1 text-lg font-bold text-slate-900">{activeSeasonCountText}</p>
@@ -162,6 +169,23 @@ const EventScores = () => {
               <article className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Event Period</p>
                 <p className="mt-1 text-lg font-bold text-slate-900">{eventPeriodText}</p>
+              </article>
+              <article className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+                  Registered Seasons
+                </p>
+                {seasons.length > 0 ? (
+                  <ul className="mt-2 space-y-1 text-sm text-slate-700">
+                    {seasons.map((season) => (
+                      <li key={season.id} className="rounded-md border border-slate-200 bg-white px-2 py-1">
+                        <p className="font-semibold text-slate-900">{season.name || season.id}</p>
+                        <p className="text-xs text-slate-500">{getSeasonPeriodText(season)}</p>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="mt-1 text-sm text-slate-500">登録されているシーズンはありません。</p>
+                )}
               </article>
             </div>
           </div>

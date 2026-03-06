@@ -51,8 +51,11 @@ const ScoreIcon = ({ className = "h-4 w-4" }) => (
     className={className}
     aria-hidden="true"
   >
-    <path d="M4 12h16" />
-    <path d="M8 12l4 4 4-4" />
+    <path d="M5 5h14v14H5z" />
+    <path d="M8 9h8" />
+    <path d="M8 13h8" />
+    <path d="M8 17h4" />
+    <path d="M11 8l1.5 1.5 3.5-3.5" />
   </svg>
 );
 
@@ -208,15 +211,6 @@ const ScoreManager = ({ eventId }) => {
 
   return (
     <div>
-      <div className="mb-4">
-        <Link
-          to={`/score-summary/${eventId}`}
-          className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
-        >
-          公開ランキング
-        </Link>
-      </div>
-
       <div className="grid gap-3 md:grid-cols-2">
         <label className="text-sm font-medium text-slate-700">
           シーズン選択:
