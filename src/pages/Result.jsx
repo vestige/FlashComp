@@ -56,6 +56,27 @@ const countClearedTasks = (scoreMap, taskByScoreKey) => {
   return count;
 };
 
+const getGenderTotal = (genderCounts) => {
+  if (!genderCounts) return 0;
+  return (
+    Number(genderCounts.male || 0) +
+    Number(genderCounts.female || 0) +
+    Number(genderCounts.other || 0) +
+    Number(genderCounts.unknown || 0)
+  );
+};
+
+const genderBarParts = (genderCounts) => {
+  const total = getGenderTotal(genderCounts);
+  if (total === 0) return [];
+  return [
+    { key: "male", label: "Male", count: genderCounts.male || 0, className: "bg-sky-500" },
+    { key: "female", label: "Female", count: genderCounts.female || 0, className: "bg-rose-500" },
+    { key: "other", label: "Other", count: genderCounts.other || 0, className: "bg-violet-500" },
+    { key: "unknown", label: "Unknown", count: genderCounts.unknown || 0, className: "bg-slate-400" },
+  ].filter((part) => part.count > 0);
+};
+
 const Result = () => {
   const { eventId } = useParams();
   const [eventName, setEventName] = useState("");
@@ -243,6 +264,66 @@ const Result = () => {
     return `M ${formatPercent(male / total)} / F ${formatPercent(female / total)}`;
   }, [summary]);
 
+  const seasonCompletionRows = useMemo(
+    () =>
+      seasonMetrics.map((season) => ({
+        key: season.seasonId,
+        label: season.seasonName,
+        rate: season.completionRate,
+        subLabel: `${season.completedCount} / ${season.possibleCount}`,
+      })),
+    [seasonMetrics]
+  );
+
+  const categoryParticipantRows = useMemo(
+    () =>
+      [...categoryMetrics]
+        .sort((a, b) => b.participantCount - a.participantCount)
+        .map((category) => ({
+          key: category.categoryId,
+          label: category.categoryName,
+          value: category.participantCount,
+        })),
+    [categoryMetrics]
+  );
+
+  const maxParticipantCount = useMemo(() => {
+    if (categoryParticipantRows.length === 0) return 1;
+    return Math.max(1, ...categoryParticipantRows.map((row) => row.value));
+  }, [categoryParticipantRows]);
+
+  const categoryCompletionRows = useMemo(
+    () =>
+      [...categoryMetrics]
+        .sort((a, b) => b.completionRate - a.completionRate)
+        .map((category) => ({
+          key: category.categoryId,
+          label: category.categoryName,
+          rate: category.completionRate,
+          subLabel: `${category.completedCount} / ${category.possibleCount}`,
+        })),
+    [categoryMetrics]
+  );
+
+  const genderRows = useMemo(() => {
+    const rows = [];
+    if (summary) {
+      rows.push({
+        key: "overall",
+        label: "Overall",
+        genderCounts: summary.genderCounts,
+      });
+    }
+    for (const category of categoryMetrics) {
+      rows.push({
+        key: category.categoryId,
+        label: category.categoryName,
+        genderCounts: category.genderCounts,
+      });
+    }
+    return rows;
+  }, [summary, categoryMetrics]);
+
   if (loading || profileLoading) {
     return (
       <div className={pageBackgroundClass}>
@@ -326,6 +407,144 @@ const Result = () => {
                 <p className="mt-1 text-lg font-black text-slate-900">{genderRatioText}</p>
               </article>
             </div>
+          </div>
+        </section>
+
+        <section className="mt-5">
+          <h2 className={sectionHeadingClass}>Charts</h2>
+          <div className="grid gap-4 xl:grid-cols-2">
+            <article className={sectionCardClass}>
+              <h3 className="text-lg font-bold text-slate-900">Season Completion Rate</h3>
+              {seasonCompletionRows.length === 0 ? (
+                <p className="mt-3 text-sm text-slate-600">シーズンデータがありません。</p>
+              ) : (
+                <div className="mt-4 grid gap-3">
+                  {seasonCompletionRows.map((row) => (
+                    <div key={row.key}>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="font-semibold text-slate-700">{row.label}</span>
+                        <span className="text-slate-600">{formatPercent(row.rate)}</span>
+                      </div>
+                      <div className="mt-1 h-2.5 rounded-full bg-slate-100">
+                        <div
+                          className="h-full rounded-full bg-sky-500"
+                          style={{ width: `${Math.max(row.rate > 0 ? 6 : 0, row.rate * 100)}%` }}
+                        />
+                      </div>
+                      <p className="mt-1 text-xs text-slate-500">{row.subLabel}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </article>
+
+            <article className={sectionCardClass}>
+              <h3 className="text-lg font-bold text-slate-900">Participants by Category</h3>
+              {categoryParticipantRows.length === 0 ? (
+                <p className="mt-3 text-sm text-slate-600">カテゴリデータがありません。</p>
+              ) : (
+                <div className="mt-4 grid gap-3">
+                  {categoryParticipantRows.map((row) => (
+                    <div key={row.key}>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="font-semibold text-slate-700">{row.label}</span>
+                        <span className="text-slate-600">{row.value}人</span>
+                      </div>
+                      <div className="mt-1 h-2.5 rounded-full bg-slate-100">
+                        <div
+                          className="h-full rounded-full bg-emerald-500"
+                          style={{
+                            width: `${Math.max(
+                              row.value > 0 ? 6 : 0,
+                              (row.value / maxParticipantCount) * 100
+                            )}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </article>
+
+            <article className={sectionCardClass}>
+              <h3 className="text-lg font-bold text-slate-900">Completion by Category</h3>
+              {categoryCompletionRows.length === 0 ? (
+                <p className="mt-3 text-sm text-slate-600">カテゴリデータがありません。</p>
+              ) : (
+                <div className="mt-4 grid gap-3">
+                  {categoryCompletionRows.map((row) => (
+                    <div key={row.key}>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="font-semibold text-slate-700">{row.label}</span>
+                        <span className="text-slate-600">{formatPercent(row.rate)}</span>
+                      </div>
+                      <div className="mt-1 h-2.5 rounded-full bg-slate-100">
+                        <div
+                          className="h-full rounded-full bg-indigo-500"
+                          style={{ width: `${Math.max(row.rate > 0 ? 6 : 0, row.rate * 100)}%` }}
+                        />
+                      </div>
+                      <p className="mt-1 text-xs text-slate-500">{row.subLabel}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </article>
+
+            <article className={sectionCardClass}>
+              <h3 className="text-lg font-bold text-slate-900">Gender Composition</h3>
+              <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-600">
+                <span className="inline-flex items-center gap-1">
+                  <span className="h-2.5 w-2.5 rounded-full bg-sky-500" />
+                  Male
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  <span className="h-2.5 w-2.5 rounded-full bg-rose-500" />
+                  Female
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  <span className="h-2.5 w-2.5 rounded-full bg-violet-500" />
+                  Other
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  <span className="h-2.5 w-2.5 rounded-full bg-slate-400" />
+                  Unknown
+                </span>
+              </div>
+              {genderRows.length === 0 ? (
+                <p className="mt-3 text-sm text-slate-600">性別データがありません。</p>
+              ) : (
+                <div className="mt-4 grid gap-3">
+                  {genderRows.map((row) => {
+                    const total = getGenderTotal(row.genderCounts);
+                    const parts = genderBarParts(row.genderCounts);
+                    return (
+                      <div key={row.key}>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="font-semibold text-slate-700">{row.label}</span>
+                          <span className="text-slate-600">{total}人</span>
+                        </div>
+                        <div className="mt-1 flex h-2.5 overflow-hidden rounded-full bg-slate-100">
+                          {parts.map((part) => (
+                            <span
+                              key={part.key}
+                              className={part.className}
+                              style={{ width: `${(part.count / total) * 100}%` }}
+                              title={`${part.label}: ${part.count}人`}
+                            />
+                          ))}
+                        </div>
+                        <p className="mt-1 text-xs text-slate-500">
+                          M {row.genderCounts.male || 0} / F {row.genderCounts.female || 0} / O{" "}
+                          {row.genderCounts.other || 0} / U {row.genderCounts.unknown || 0}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </article>
           </div>
         </section>
 

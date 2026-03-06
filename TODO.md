@@ -25,7 +25,7 @@
 - [x] Score Input : 課題検索機能は不要なので、削除しよう
 - [x] DashBoard : Public Ranking > Result
 - [x] Public Rankingは Resultから表示できるようにする、まずはResultページを用意する
-- [ ] Result : 統計データにする、可視化できるグラフ表示にする。どんなのがいいかな？
+- [x] Result : 統計データにする、可視化できるグラフ表示にする。どんなのがいいかな？
 - [x] Result : 全体の課題数、Routeの達成率、シーズンごとの達成率、各カテゴリの参加者、男女比など？
 - [ ] Result : ランキング（カテゴリごとのシーズンごとのランキング、イベントを通して）
 - [ ] Climber Portal : みためをそろえる
