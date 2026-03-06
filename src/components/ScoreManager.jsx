@@ -187,6 +187,7 @@ const ScoreManager = ({ eventId }) => {
         solvedCountByParticipant.set(scoreDoc.id, solvedCount);
       }
 
+      const totalTaskCount = assignedTasks.length;
       const participantRows = participantsSnapshot.docs
         .map((doc) => ({
           id: doc.id,
@@ -195,6 +196,7 @@ const ScoreManager = ({ eventId }) => {
         .map((participant) => ({
           ...participant,
           solvedCount: solvedCountByParticipant.get(participant.id) || 0,
+          solvedCountTotal: totalTaskCount,
         }))
         .sort((a, b) => String(a.name || "").localeCompare(String(b.name || ""), "ja"));
 
@@ -264,7 +266,28 @@ const ScoreManager = ({ eventId }) => {
                 >
                   <td className="py-3 text-slate-900">{participant.name || "-"}</td>
                   <td className="py-3 text-slate-700">{participant.memberNo || "-"}</td>
-                  <td className="py-3 text-center text-slate-700">{participant.solvedCount || 0}</td>
+                  <td className="py-3 text-center">
+                    {(() => {
+                      const solvedTotal = participant.solvedCountTotal || 0;
+                      const solvedText =
+                        solvedTotal > 0
+                          ? `${participant.solvedCount}/${solvedTotal}`
+                          : String(participant.solvedCount || 0);
+                      const isComplete = solvedTotal > 0 && participant.solvedCount === solvedTotal;
+                      return (
+                        <span
+                          className={`inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-sm ${
+                            isComplete ? "bg-emerald-100 text-emerald-700" : "text-slate-700"
+                          }`}
+                        >
+                          <span className={isComplete ? "font-bold" : ""}>{solvedText}</span>
+                          {isComplete ? (
+                            <span className="rounded-full bg-emerald-200 px-2 py-0.5 text-xs font-bold">Complete</span>
+                          ) : null}
+                        </span>
+                      );
+                    })()}
+                  </td>
                   <td className="py-3 text-center">
                     <Link
                       to={`/events/${eventId}/scoreinput/${selectedSeason}/${selectedCategory}/${participant.id}`}
