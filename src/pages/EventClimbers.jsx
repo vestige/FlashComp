@@ -393,7 +393,7 @@ const EventClimbers = () => {
         <section className="mt-5">
           <h2 className={sectionHeadingClass}>👤 Registered Climbers</h2>
           <div className={sectionCardClass}>
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <div className="pb-4 pt-1">
               <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
                 <button
                   type="button"
