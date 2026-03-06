@@ -107,8 +107,8 @@ const actionMeta = {
     ),
   },
   ranking: {
-    label: "Public Ranking",
-    buildPath: (eventId) => `/score-summary/${eventId}`,
+    label: "Result",
+    buildPath: (eventId) => `/events/${eventId}/result`,
     icon: (
       <>
         <path d="M5 19h14" />

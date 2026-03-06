@@ -132,6 +132,17 @@ const RouteSelector = ({
   }, [fixedSeasonId]);
 
   useEffect(() => {
+    if (categories.length === 0) {
+      setSelectedCategory("");
+      return;
+    }
+    const exists = categories.some((category) => category.id === selectedCategory);
+    if (!exists) {
+      setSelectedCategory(categories[0].id);
+    }
+  }, [categories, selectedCategory]);
+
+  useEffect(() => {
     if (!eventId || !selectedSeason) {
       setTasks([]);
       setAssignedTaskIds([]);

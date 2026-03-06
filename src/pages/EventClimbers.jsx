@@ -360,7 +360,7 @@ const EventClimbers = () => {
             title="Climber Settings"
             description="参加者情報の登録・CSV入出力・カテゴリ管理を行います。"
             backTo="/dashboard"
-            backLabel="↩ ダッシュボードへ戻る"
+            backLabel="↑ Back to Dashboard"
             surface={false}
           />
         </div>

@@ -17,13 +17,11 @@ import {
 } from "../lib/taskAssignments";
 import ManagementHero from "../components/ManagementHero";
 import {
-  inputFieldClass,
   pageBackgroundClass,
   pageContainerClass,
   sectionCardClass,
   sectionHeadingClass,
   subtleButtonClass,
-  subtlePillButtonClass,
 } from "../components/uiStyles";
 
 const CheckAllIcon = ({ className = "h-4 w-4" }) => (
@@ -87,7 +85,6 @@ const ScoreInput = () => {
   const [savedScores, setSavedScores] = useState({});
   const [viewMode, setViewMode] = useState("simple");
   const [showOnlyUncleared, setShowOnlyUncleared] = useState(true);
-  const [taskKeyword, setTaskKeyword] = useState("");
   const [status, setStatus] = useState("");
   const [updatedAt, setUpdatedAt] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -223,14 +220,9 @@ const ScoreInput = () => {
     });
   };
 
-  const normalizedKeyword = taskKeyword.trim().toLowerCase();
   const clearCount = tasks.filter((task) => getScoreValueByTask(scores, task)).length;
   const remainingCount = tasks.length - clearCount;
   const visibleTasks = tasks.filter((task) => {
-    const matchesKeyword =
-      normalizedKeyword.length === 0 ||
-      String(task.name || "").toLowerCase().includes(normalizedKeyword);
-    if (!matchesKeyword) return false;
     if (!showOnlyUncleared) return true;
     return !getScoreValueByTask(scores, task);
   });
@@ -326,11 +318,10 @@ const ScoreInput = () => {
     <div className={pageBackgroundClass}>
       <div className={pageContainerClass}>
         <ManagementHero
-          eyebrow="Score Input"
           title="Score Input"
           description="採点を入力します。"
           backTo={backToScoresPath}
-          backLabel="↩ スコア一覧へ戻る"
+          backLabel="↑ Back to Score Management"
           surface={false}
         />
 
@@ -367,28 +358,30 @@ const ScoreInput = () => {
           <h2 className={sectionHeadingClass}>Registered Score</h2>
           <div className={sectionCardClass}>
             <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setViewMode("simple")}
-                className={`${subtlePillButtonClass} ${
-                  viewMode === "simple" ? "border-sky-300 bg-sky-50 text-sky-800" : ""
-                }`}
-                aria-pressed={viewMode === "simple"}
-                aria-label="簡易表示を選択"
-              >
-                簡易表示
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode("detail")}
-                className={`${subtlePillButtonClass} ${
-                  viewMode === "detail" ? "border-sky-300 bg-sky-50 text-sky-800" : ""
-                }`}
-                aria-pressed={viewMode === "detail"}
-                aria-label="詳細表示を選択"
-              >
-                詳細表示
-              </button>
+              <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white p-1">
+                <button
+                  type="button"
+                  onClick={() => setViewMode("simple")}
+                  className={`rounded-full px-3 py-1 text-sm font-bold transition ${
+                    viewMode === "simple" ? "bg-emerald-800 text-white" : "text-slate-500 hover:bg-slate-100"
+                  }`}
+                  aria-pressed={viewMode === "simple"}
+                  aria-label="簡易表示を選択"
+                >
+                  Simple
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode("detail")}
+                  className={`rounded-full px-3 py-1 text-sm font-bold transition ${
+                    viewMode === "detail" ? "bg-slate-900 text-white" : "text-slate-500 hover:bg-slate-100"
+                  }`}
+                  aria-pressed={viewMode === "detail"}
+                  aria-label="詳細表示を選択"
+                >
+                  Detail
+                </button>
+              </div>
               <label className="ml-1 inline-flex items-center gap-2 text-sm text-slate-700">
                 <input
                   type="checkbox"
@@ -397,16 +390,6 @@ const ScoreInput = () => {
                   className="size-4 rounded border-slate-300"
                 />
                 未完登のみ
-              </label>
-              <label className="ml-1 inline-flex items-center gap-2 text-sm text-slate-700">
-                課題検索:
-                <input
-                  type="text"
-                  value={taskKeyword}
-                  onChange={(e) => setTaskKeyword(e.target.value)}
-                  placeholder="No.01"
-                  className={`${inputFieldClass} w-32`}
-                />
               </label>
             </div>
             <div className="mt-3 flex flex-wrap gap-2">

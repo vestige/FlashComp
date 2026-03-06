@@ -161,7 +161,7 @@ const EventScores = () => {
           title="Score Management"
           description="採点対象の選択とスコア入力を行います。"
           backTo="/dashboard"
-          backLabel="↩ ダッシュボードへ戻る"
+          backLabel="↑ Back to Dashboard"
           surface={false}
         />
 

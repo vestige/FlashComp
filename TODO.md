@@ -14,10 +14,19 @@
 - [x] Score Input : ページタイトル/サマリー/セクション名を既存デザインに合わせる
 - [x] Score Input : 簡易表示で未保存の変更を色表示し、保存後反映する導線に合わせる
 - [x] Score Input : ボタン群を既存UIスタイルに統一（トグル/一括操作/保存）
-- [ ] DashBoard : Event Settings > Detail
-- [ ] DashBoard : Public Ranking > Result
+- [x] Season Settings : 初めからカテゴリ選択を１つ適用しておくのがいいかも。大体はカテゴリは１つの時のイベントもあるし。
+- [x] Season Settings : Event Settingsに戻る → Back to Event Settings 
+- [x] Event Settings : ダッシュボードに戻る → Back to Dashboard
+- [x] Climber Settings : ダッシュボードに戻る → Back to Dashboard
+- [x] Score Management : ダッシュボードに戻る → Back to Dashboard
+- [x] Score Input : スコア一覧に戻る → Back to Score Management
+- [x] Score Input : ページタイトルに小さい青字でScore Inputがある、削除して
+- [x] Score Input : 簡易表示と詳細表示は、Dashboardにあった、Active / All Eventsのようにスイッチの切り替えのようにしたい
+- [x] Score Input : 課題検索機能は不要なので、削除しよう
+- [x] DashBoard : Public Ranking > Result
+- [x] Public Rankingは Resultから表示できるようにする、まずはResultページを用意する
 - [ ] Result : 統計データにする、可視化できるグラフ表示にする。どんなのがいいかな？
-- [ ] Result : 全体の課題数、Routeの達成率、シーズンごとの達成率、各カテゴリの参加者、男女比など？
+- [x] Result : 全体の課題数、Routeの達成率、シーズンごとの達成率、各カテゴリの参加者、男女比など？
 - [ ] Result : ランキング（カテゴリごとのシーズンごとのランキング、イベントを通して）
 - [ ] Climber Portal : みためをそろえる
 - [ ] Climber Portal : Registerd Event(デフォルトはOpenされているEvent)

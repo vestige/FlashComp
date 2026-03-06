@@ -250,7 +250,7 @@ const SeasonEdit = () => {
           title="Season Settings"
           description={`Event: ${eventName} / Season: ${seasonDraft.name || "Untitled Season"}`}
           backTo={`/events/${eventId}/edit`}
-          backLabel="↩ Event Settingsへ戻る"
+          backLabel="↑ Back to Event Settings"
           surface={false}
         />
 

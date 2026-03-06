@@ -439,7 +439,7 @@ const EditEvent = () => {
           title="Event Settings"
           description="大会情報、シーズン、カテゴリ設定を1画面で管理します。"
           backTo="/dashboard"
-          backLabel="↩ ダッシュボードへ戻る"
+          backLabel="↑ Back to Dashboard"
           surface={false}
         />
 
