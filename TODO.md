@@ -26,7 +26,7 @@
 - [x] DashBoard : Public Ranking > Result
 - [x] Public Rankingは Resultから表示できるようにする、まずはResultページを用意する
 - [x] Result : 統計データにする、可視化できるグラフ表示にする。どんなのがいいかな？
-- [x] Result : 全体の課題数、Routeの達成率、シーズンごとの達成率、各カテゴリの参加者、男女比など？
+- [x] Result : 全体の課題数、Routeの達成率、シーズンごとの達成率、各カテゴリの参加者数、男女比など？
 - [ ] Result : ランキング（カテゴリごとのシーズンごとのランキング、イベントを通して）
 - [ ] Climber Portal : みためをそろえる
 - [ ] Climber Portal : Registerd Event(デフォルトはOpenされているEvent)
@@ -36,5 +36,6 @@
 - [ ] Climber Portal : 開催ジムごとにカードの色分けする？どうかな？
 
 #### ↑ができたら、また、詳細にする
-- [] Ranking
-- [] Score
+- [ ] Firebase Dynamic Linksが終わる、認証方法を変えないといけない？ Googleログインにして、システム管理者が特定のユーザーだけを許可するようにしたい
+- [ ] Ranking
+- [ ] Score
