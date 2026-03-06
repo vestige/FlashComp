@@ -89,10 +89,17 @@ const EventScores = () => {
         }
 
         const seasonSnap = await getDocs(collection(db, "events", eventId, "seasons"));
+        const seasonRows = seasonSnap.docs.map((seasonDoc) => ({
+          id: seasonDoc.id,
+          ...seasonDoc.data(),
+        }));
+        const seasonTaskSnaps = await Promise.all(
+          seasonRows.map((season) => getDocs(collection(db, "events", eventId, "seasons", season.id, "tasks")))
+        );
         const seasonsData = sortByRegistrationOrder(
-          seasonSnap.docs.map((seasonDoc) => ({
-            id: seasonDoc.id,
-            ...seasonDoc.data(),
+          seasonRows.map((season, index) => ({
+            ...season,
+            taskCount: seasonTaskSnaps[index]?.size || 0,
           }))
         );
         setSeasons(seasonsData);
@@ -180,6 +187,9 @@ const EventScores = () => {
                       <li key={season.id} className="rounded-md border border-slate-200 bg-white px-2 py-1">
                         <p className="font-semibold text-slate-900">{season.name || season.id}</p>
                         <p className="text-xs text-slate-500">{getSeasonPeriodText(season)}</p>
+                        <p className="mt-1 text-xs text-slate-600">
+                          Total Routes: {Number.isFinite(season.taskCount) ? season.taskCount : 0}
+                        </p>
                       </li>
                     ))}
                   </ul>

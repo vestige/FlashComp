@@ -269,10 +269,6 @@ const ScoreManager = ({ eventId }) => {
                   <td className="py-3 text-center">
                     {(() => {
                       const solvedTotal = participant.solvedCountTotal || 0;
-                      const solvedText =
-                        solvedTotal > 0
-                          ? `${participant.solvedCount}/${solvedTotal}`
-                          : String(participant.solvedCount || 0);
                       const isComplete = solvedTotal > 0 && participant.solvedCount === solvedTotal;
                       return (
                         <span
@@ -280,7 +276,7 @@ const ScoreManager = ({ eventId }) => {
                             isComplete ? "bg-emerald-100 text-emerald-700" : "text-slate-700"
                           }`}
                         >
-                          <span className={isComplete ? "font-bold" : ""}>{solvedText}</span>
+                          <span className={isComplete ? "font-bold" : ""}>{participant.solvedCount}</span>
                           {isComplete ? (
                             <span className="rounded-full bg-emerald-200 px-2 py-0.5 text-xs font-bold">Complete</span>
                           ) : null}
