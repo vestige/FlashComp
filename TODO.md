@@ -11,6 +11,9 @@
 - [x] Climber Settings : クライマーCSVセクションは消す
 - [x] Score Management :  みためをそろえる
 - [x] Score Management :  表示項目・デフォルト選択の調整（Summary、イベント期間、Activeシーズン初期選択、登録順ソート、会員番号/完登数表示）
+- [x] Score Input : ページタイトル/サマリー/セクション名を既存デザインに合わせる
+- [x] Score Input : 簡易表示で未保存の変更を色表示し、保存後反映する導線に合わせる
+- [x] Score Input : ボタン群を既存UIスタイルに統一（トグル/一括操作/保存）
 - [ ] DashBoard : Event Settings > Detail
 - [ ] DashBoard : Public Ranking > Result
 - [ ] Result : 統計データにする、可視化できるグラフ表示にする。どんなのがいいかな？
