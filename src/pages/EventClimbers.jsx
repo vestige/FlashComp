@@ -160,64 +160,6 @@ const EventClimbers = () => {
     }
   };
 
-  const exportGenderRatioCsv = async () => {
-    setCsvStatus("");
-    try {
-      const participants = await fetchParticipants();
-      const headers = [
-        "scope",
-        "categoryId",
-        "categoryName",
-        "male",
-        "female",
-        "other",
-        "unknown",
-        "total",
-        "maleRatioPct",
-        "femaleRatioPct",
-      ];
-      const calcCounts = (rows) => {
-        let male = 0;
-        let female = 0;
-        let other = 0;
-        let unknown = 0;
-        for (const row of rows) {
-          if (row.gender === "male") male += 1;
-          else if (row.gender === "female") female += 1;
-          else if (row.gender === "other") other += 1;
-          else unknown += 1;
-        }
-        const total = male + female + other + unknown;
-        const maleRatioPct = total > 0 ? ((male / total) * 100).toFixed(1) : "0.0";
-        const femaleRatioPct = total > 0 ? ((female / total) * 100).toFixed(1) : "0.0";
-        return { male, female, other, unknown, total, maleRatioPct, femaleRatioPct };
-      };
-
-      const rows = [];
-      rows.push({
-        scope: "overall",
-        categoryId: "all",
-        categoryName: "全カテゴリ",
-        ...calcCounts(participants),
-      });
-      for (const category of categories) {
-        const byCategory = participants.filter((participant) => participant.categoryId === category.id);
-        rows.push({
-          scope: "category",
-          categoryId: category.id,
-          categoryName: category.name || category.id,
-          ...calcCounts(byCategory),
-        });
-      }
-
-      downloadCsv(`${eventId}-gender-ratio.csv`, headers, rows);
-      setCsvStatus("✅ 男女比CSVを出力しました。");
-    } catch (err) {
-      console.error("男女比CSV出力に失敗:", err);
-      setCsvStatus("❌ 男女比CSV出力に失敗しました。");
-    }
-  };
-
   const handleImportParticipantsFile = async (eventInput) => {
     const file = eventInput.target.files?.[0];
     eventInput.target.value = "";
@@ -421,54 +363,36 @@ const EventClimbers = () => {
           </div>
         </section>
 
-        <section className="mt-4">
-          <h2 className={sectionHeadingClass}>
-            <Icon className="h-5 w-5 text-sky-600">
-              <path d="M4 19h16" />
-              <path d="M8 14h8" />
-              <path d="M8 10h8" />
-              <path d="M8 6h8" />
-            </Icon>
-            クライマーCSV
-          </h2>
-          <div className={sectionCardClass}>
-            <p className="text-sm text-slate-600">
-              クライマーCSVの出力/取り込みをこの画面で行います。必須列:
-              <span className="font-mono"> name,memberNo,age,gender,categoryId</span>
-            </p>
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={exportParticipantsCsv}
-                className={subtleButtonClass}
-              >
-                クライマーCSVを出力
-              </button>
-              <button
-                type="button"
-                onClick={exportGenderRatioCsv}
-                className={subtleButtonClass}
-              >
-                男女比CSVを出力
-              </button>
-              <label className={`text-sm text-slate-700 ${inputFieldClass}`}>
-                <input
-                  type="file"
-                  accept=".csv,text/csv"
-                  onChange={handleImportParticipantsFile}
-                  disabled={importingCsv}
-                  className="text-sm"
-                />
-              </label>
-              <span className="text-sm text-slate-600">{importingCsv ? "取り込み中..." : ""}</span>
-            </div>
-            {csvStatus && <p className="mt-3 text-sm text-slate-600">{csvStatus}</p>}
-          </div>
-        </section>
-
         <section className="mt-5">
           <h2 className={sectionHeadingClass}>👤 Registered Climbers</h2>
           <div className={sectionCardClass}>
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <p className="text-sm text-slate-600">
+                クライマーCSVの出力/取り込みを行います。必須列:
+                <span className="font-mono"> name,memberNo,age,gender,categoryId</span>
+              </p>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={exportParticipantsCsv}
+                  className={subtleButtonClass}
+                >
+                  クライマーCSVを出力
+                </button>
+                <label className={`text-sm text-slate-700 ${inputFieldClass}`}>
+                  <input
+                    type="file"
+                    accept=".csv,text/csv"
+                    onChange={handleImportParticipantsFile}
+                    disabled={importingCsv}
+                    className="text-sm"
+                  />
+                </label>
+                <span className="text-sm text-slate-600">{importingCsv ? "取り込み中..." : ""}</span>
+              </div>
+              {csvStatus && <p className="mt-3 text-sm text-slate-600">{csvStatus}</p>}
+            </div>
+
             <ParticipantManager
               eventId={eventId}
               categories={categories}
