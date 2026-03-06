@@ -15,14 +15,7 @@ import { usePageTitle } from "../hooks/usePageTitle";
 import { downloadCsv, parseCsv } from "../lib/csvUtils";
 import { cleanupParticipantScoresOutsideCategory } from "../lib/eventDataCleanup";
 import ManagementHero from "../components/ManagementHero";
-import {
-  inputFieldClass,
-  pageBackgroundClass,
-  pageContainerClass,
-  sectionCardClass,
-  sectionHeadingClass,
-  subtleButtonClass,
-} from "../components/uiStyles";
+import { pageBackgroundClass, pageContainerClass, sectionCardClass, sectionHeadingClass } from "../components/uiStyles";
 
 const REQUIRED_IMPORT_COLUMNS = ["name", "memberNo", "age", "gender", "categoryId"];
 
@@ -34,6 +27,40 @@ const normalizeGender = (value) => {
   if (raw === "other" || raw === "その他") return "other";
   return "";
 };
+
+const DownloadIcon = ({ className = "h-4 w-4" }) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    aria-hidden="true"
+  >
+    <path d="M12 3v10" />
+    <path d="M9 10l3 3 3-3" />
+    <path d="M4 17h16" />
+  </svg>
+);
+
+const UploadIcon = ({ className = "h-4 w-4" }) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    aria-hidden="true"
+  >
+    <path d="M12 21V11" />
+    <path d="M16 11 12 7 8 11" />
+    <path d="M4 17h16" />
+  </svg>
+);
 
 const EventClimbers = () => {
   const { eventId } = useParams();
@@ -371,21 +398,32 @@ const EventClimbers = () => {
                 クライマーCSVの出力/取り込みを行います。必須列:
                 <span className="font-mono"> name,memberNo,age,gender,categoryId</span>
               </p>
-              <div className="mt-3 flex flex-wrap items-center gap-2">
+              <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={exportParticipantsCsv}
-                  className={subtleButtonClass}
+                  className="inline-flex items-center gap-2 rounded-lg border border-emerald-300 bg-emerald-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-800"
+                  aria-label="クライマーCSVを出力"
                 >
-                  クライマーCSVを出力
+                  <DownloadIcon />
+                  出力
                 </button>
-                <label className={`text-sm text-slate-700 ${inputFieldClass}`}>
+                <label
+                  htmlFor="climber-csv-import"
+                  className={`inline-flex cursor-pointer items-center gap-2 rounded-lg border border-sky-300 bg-sky-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-700 ${
+                    importingCsv ? "pointer-events-none cursor-not-allowed opacity-70" : ""
+                  }`}
+                  aria-label="クライマーCSVを取り込み"
+                >
+                  <UploadIcon />
+                  取り込み
                   <input
                     type="file"
+                    id="climber-csv-import"
                     accept=".csv,text/csv"
                     onChange={handleImportParticipantsFile}
                     disabled={importingCsv}
-                    className="text-sm"
+                    className="sr-only"
                   />
                 </label>
                 <span className="text-sm text-slate-600">{importingCsv ? "取り込み中..." : ""}</span>
