@@ -277,7 +277,7 @@ const ScoreInput = () => {
         <ManagementHero
           eyebrow="Score Input"
           title="Score Input"
-          description={`クライマー「${participantName || "-"}」の採点を入力します。`}
+          description="採点を入力します。"
           backTo={backToScoresPath}
           backLabel="↩ スコア一覧へ戻る"
           surface={false}
@@ -312,131 +312,133 @@ const ScoreInput = () => {
           </div>
         </section>
 
-        <section className="mt-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setViewMode("simple")}
-              className={`rounded-full border px-3 py-1.5 text-sm font-medium transition ${
-                viewMode === "simple"
-                  ? "border-sky-300 bg-sky-50 text-sky-800"
-                  : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
-              }`}
-            >
-              簡易表示
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode("detail")}
-              className={`rounded-full border px-3 py-1.5 text-sm font-medium transition ${
-                viewMode === "detail"
-                  ? "border-sky-300 bg-sky-50 text-sky-800"
-                  : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
-              }`}
-            >
-              詳細表示
-            </button>
-            <label className="ml-1 inline-flex items-center gap-2 text-sm text-slate-700">
-              <input
-                type="checkbox"
-                checked={showOnlyUncleared}
-                onChange={(e) => setShowOnlyUncleared(e.target.checked)}
-                className="size-4 rounded border-slate-300"
-              />
-              未完登のみ
-            </label>
-            <label className="ml-1 inline-flex items-center gap-2 text-sm text-slate-700">
-              課題検索:
-              <input
-                type="text"
-                value={taskKeyword}
-                onChange={(e) => setTaskKeyword(e.target.value)}
-                placeholder="No.01"
-                className="w-32 rounded-lg border border-slate-300 px-2 py-1 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
-              />
-            </label>
-          </div>
-          <div className="mt-3 flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => applyBulkToVisible(true)}
-              className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700 transition hover:bg-emerald-100"
-            >
-              表示中をすべて完登
-            </button>
-            <button
-              type="button"
-              onClick={() => applyBulkToVisible(false)}
-              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-            >
-              表示中をすべて未完登
-            </button>
-          </div>
-        </section>
-
-        <section className="mt-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          {visibleTasks.length === 0 ? (
-            <p className="text-sm text-slate-600">表示条件に一致する課題がありません。</p>
-          ) : viewMode === "simple" ? (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {visibleTasks.map((task) => {
-                const isCleared = getScoreValueByTask(scores, task);
-                const isDirty = !taskScoreEquals(savedScores, scores, task);
-                return (
-                  <button
-                    key={task.id || task.name}
-                    type="button"
-                    onClick={() => handleToggleScore(task)}
-                    className={`min-h-[96px] rounded-xl border p-3 text-left transition ${
-                      isDirty
-                        ? "border-amber-300 bg-amber-50"
-                        : isCleared
-                          ? "border-emerald-300 bg-emerald-50"
-                          : "border-slate-300 bg-white hover:bg-slate-50"
-                    }`}
-                  >
-                    <div className="font-semibold text-slate-900">{task.name || task.id}</div>
-                    <div className="mt-1 text-sm text-slate-600">
-                      級: {task.grade || "-"} / 点: {task.points ?? "-"}
-                    </div>
-                    <div className={`mt-2 text-sm font-semibold ${isCleared ? "text-emerald-700" : "text-slate-700"}`}>
-                      {isCleared ? "完登" : "未完登"}
-                    </div>
-                  </button>
-                );
-              })}
+        <section className="mt-5">
+          <h2 className={sectionHeadingClass}>Registered Score</h2>
+          <div className={sectionCardClass}>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setViewMode("simple")}
+                className={`rounded-full border px-3 py-1.5 text-sm font-medium transition ${
+                  viewMode === "simple"
+                    ? "border-sky-300 bg-sky-50 text-sky-800"
+                    : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                }`}
+              >
+                簡易表示
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("detail")}
+                className={`rounded-full border px-3 py-1.5 text-sm font-medium transition ${
+                  viewMode === "detail"
+                    ? "border-sky-300 bg-sky-50 text-sky-800"
+                    : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                }`}
+              >
+                詳細表示
+              </button>
+              <label className="ml-1 inline-flex items-center gap-2 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={showOnlyUncleared}
+                  onChange={(e) => setShowOnlyUncleared(e.target.checked)}
+                  className="size-4 rounded border-slate-300"
+                />
+                未完登のみ
+              </label>
+              <label className="ml-1 inline-flex items-center gap-2 text-sm text-slate-700">
+                課題検索:
+                <input
+                  type="text"
+                  value={taskKeyword}
+                  onChange={(e) => setTaskKeyword(e.target.value)}
+                  placeholder="No.01"
+                  className="w-32 rounded-lg border border-slate-300 px-2 py-1 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                />
+              </label>
             </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-[520px] w-full border-collapse">
-                <thead>
-                  <tr>
-                    <th className="border-b border-slate-200 pb-2 text-left text-sm font-semibold text-slate-700">課題</th>
-                    <th className="border-b border-slate-200 pb-2 text-left text-sm font-semibold text-slate-700">級</th>
-                    <th className="border-b border-slate-200 pb-2 text-right text-sm font-semibold text-slate-700">点数</th>
-                    <th className="border-b border-slate-200 pb-2 text-center text-sm font-semibold text-slate-700">完登</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {visibleTasks.map((task) => (
-                    <tr key={task.id || task.name}>
-                      <td className="py-2 text-sm text-slate-800">{task.name || task.id}</td>
-                      <td className="py-2 text-sm text-slate-700">{task.grade || "-"}</td>
-                      <td className="py-2 text-right text-sm text-slate-700">{task.points ?? "-"}</td>
-                      <td className="py-2 text-center">
-                        <input
-                          type="checkbox"
-                          checked={getScoreValueByTask(scores, task)}
-                          onChange={() => handleToggleScore(task)}
-                          className="size-4 rounded border-slate-300"
-                        />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => applyBulkToVisible(true)}
+                className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700 transition hover:bg-emerald-100"
+              >
+                表示中をすべて完登
+              </button>
+              <button
+                type="button"
+                onClick={() => applyBulkToVisible(false)}
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+              >
+                表示中をすべて未完登
+              </button>
             </div>
-          )}
+            <div className="mt-4">
+              {visibleTasks.length === 0 ? (
+                <p className="text-sm text-slate-600">表示条件に一致する課題がありません。</p>
+              ) : viewMode === "simple" ? (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {visibleTasks.map((task) => {
+                    const isCleared = getScoreValueByTask(scores, task);
+                    const isDirty = !taskScoreEquals(savedScores, scores, task);
+                    return (
+                      <button
+                        key={task.id || task.name}
+                        type="button"
+                        onClick={() => handleToggleScore(task)}
+                        className={`min-h-[96px] rounded-xl border p-3 text-left transition ${
+                          isDirty
+                            ? "border-amber-300 bg-amber-50"
+                            : isCleared
+                              ? "border-emerald-300 bg-emerald-50"
+                              : "border-slate-300 bg-white hover:bg-slate-50"
+                        }`}
+                      >
+                        <div className="font-semibold text-slate-900">{task.name || task.id}</div>
+                        <div className="mt-1 text-sm text-slate-600">
+                          級: {task.grade || "-"} / 点: {task.points ?? "-"}
+                        </div>
+                        <div className={`mt-2 text-sm font-semibold ${isCleared ? "text-emerald-700" : "text-slate-700"}`}>
+                          {isCleared ? "完登" : "未完登"}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-[520px] w-full border-collapse">
+                    <thead>
+                      <tr>
+                        <th className="border-b border-slate-200 pb-2 text-left text-sm font-semibold text-slate-700">課題</th>
+                        <th className="border-b border-slate-200 pb-2 text-left text-sm font-semibold text-slate-700">級</th>
+                        <th className="border-b border-slate-200 pb-2 text-right text-sm font-semibold text-slate-700">点数</th>
+                        <th className="border-b border-slate-200 pb-2 text-center text-sm font-semibold text-slate-700">完登</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {visibleTasks.map((task) => (
+                        <tr key={task.id || task.name}>
+                          <td className="py-2 text-sm text-slate-800">{task.name || task.id}</td>
+                          <td className="py-2 text-sm text-slate-700">{task.grade || "-"}</td>
+                          <td className="py-2 text-right text-sm text-slate-700">{task.points ?? "-"}</td>
+                          <td className="py-2 text-center">
+                            <input
+                              type="checkbox"
+                              checked={getScoreValueByTask(scores, task)}
+                              onChange={() => handleToggleScore(task)}
+                              className="size-4 rounded border-slate-300"
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
         </section>
 
         <div className="mt-5 flex flex-wrap items-center gap-3">
