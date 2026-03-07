@@ -523,6 +523,14 @@ const Result = () => {
     };
   }, [summary]);
 
+  const overallCompletionDonutStyle = useMemo(() => {
+    const rate = Math.max(0, Math.min(1, summary?.overallCompletionRate || 0));
+    const percent = (rate * 100).toFixed(2);
+    return {
+      background: `conic-gradient(#2563eb 0 ${percent}%, #e2e8f0 ${percent}% 100%)`,
+    };
+  }, [summary]);
+
   if (loading || profileLoading) {
     return (
       <div className={pageBackgroundClass}>
@@ -646,6 +654,7 @@ const Result = () => {
           <div className="grid gap-4 xl:grid-cols-2 2xl:grid-cols-3">
             <article className={sectionCardClass}>
               <h3 className="text-lg font-bold text-slate-900">Season Completion Rate</h3>
+              <p className="mt-1 text-sm text-slate-600">シーズンごとの完登率を比較します。</p>
               {seasonCompletionRows.length === 0 ? (
                 <p className="mt-3 text-sm text-slate-600">シーズンデータがありません。</p>
               ) : (
@@ -671,6 +680,7 @@ const Result = () => {
 
             <article className={sectionCardClass}>
               <h3 className="text-lg font-bold text-slate-900">Participants by Category</h3>
+              <p className="mt-1 text-sm text-slate-600">カテゴリ別の参加者数を確認します。</p>
               {categoryParticipantRows.length === 0 ? (
                 <p className="mt-3 text-sm text-slate-600">カテゴリデータがありません。</p>
               ) : (
@@ -700,6 +710,7 @@ const Result = () => {
 
             <article className={sectionCardClass}>
               <h3 className="text-lg font-bold text-slate-900">Completion by Category</h3>
+              <p className="mt-1 text-sm text-slate-600">カテゴリ別の完登率を比較します。</p>
               {categoryCompletionRows.length === 0 ? (
                 <p className="mt-3 text-sm text-slate-600">カテゴリデータがありません。</p>
               ) : (
@@ -725,6 +736,7 @@ const Result = () => {
 
             <article className={sectionCardClass}>
               <h3 className="text-lg font-bold text-slate-900">Grade Completion Rate</h3>
+              <p className="mt-1 text-sm text-slate-600">グレード別の達成しやすさを確認します。</p>
               {gradeCompletionRows.length === 0 ? (
                 <p className="mt-3 text-sm text-slate-600">グレードデータがありません。</p>
               ) : (
@@ -757,6 +769,7 @@ const Result = () => {
 
             <article className={sectionCardClass}>
               <h3 className="text-lg font-bold text-slate-900">Average Points by Category</h3>
+              <p className="mt-1 text-sm text-slate-600">カテゴリごとの平均獲得ポイントを比較します。</p>
               {categoryAveragePointRows.length === 0 ? (
                 <p className="mt-3 text-sm text-slate-600">カテゴリデータがありません。</p>
               ) : (
@@ -786,7 +799,33 @@ const Result = () => {
             </article>
 
             <article className={sectionCardClass}>
+              <h3 className="text-lg font-bold text-slate-900">Overall Completion Split</h3>
+              <p className="mt-1 text-sm text-slate-600">全試行に対する完登・未完登の割合を表示します。</p>
+              {(summary?.overallPossibleCount || 0) === 0 ? (
+                <p className="mt-3 text-sm text-slate-600">完登データがありません。</p>
+              ) : (
+                <div className="mt-4 flex flex-wrap items-center gap-6">
+                  <div className="relative h-32 w-32 rounded-full" style={overallCompletionDonutStyle}>
+                    <div className="absolute inset-[17%] flex items-center justify-center rounded-full bg-white shadow-inner">
+                      <span className="text-sm font-black text-slate-900">
+                        {summary ? formatPercent(summary.overallCompletionRate) : "-"}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="space-y-2 text-sm text-slate-700">
+                    <p className="font-semibold text-slate-900">
+                      完登 {summary?.overallCompletedCount || 0} / 全試行 {summary?.overallPossibleCount || 0}
+                    </p>
+                    <p>未完登: {(summary?.overallPossibleCount || 0) - (summary?.overallCompletedCount || 0)}</p>
+                    <p>完登: Blue / 未完登: Gray</p>
+                  </div>
+                </div>
+              )}
+            </article>
+
+            <article className={sectionCardClass}>
               <h3 className="text-lg font-bold text-slate-900">Bonus Route Completion</h3>
+              <p className="mt-1 text-sm text-slate-600">ボーナス課題のみの達成率を確認します。</p>
               {(summary?.bonusPossibleCount || 0) === 0 ? (
                 <p className="mt-3 text-sm text-slate-600">ボーナス課題データがありません。</p>
               ) : (
@@ -811,6 +850,7 @@ const Result = () => {
 
             <article className={sectionCardClass}>
               <h3 className="text-lg font-bold text-slate-900">Gender Composition</h3>
+              <p className="mt-1 text-sm text-slate-600">全体とカテゴリ別の性別構成を確認します。</p>
               <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-600">
                 <span className="inline-flex items-center gap-1">
                   <span className="h-2.5 w-2.5 rounded-full bg-sky-500" />
