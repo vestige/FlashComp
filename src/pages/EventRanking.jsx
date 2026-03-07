@@ -313,6 +313,9 @@ const EventRanking = () => {
 
   const buildDetailLink = ({ participantId, seasonId = "all", categoryId = "all" }) => {
     const params = new URLSearchParams();
+    params.set("return", "ranking");
+    if (source) params.set("from", source);
+    if (mode !== "category") params.set("mode", mode);
     if (seasonId !== "all") params.set("season", seasonId);
     if (categoryId !== "all") params.set("category", categoryId);
     if (searchKeyword.trim()) params.set("q", searchKeyword.trim());

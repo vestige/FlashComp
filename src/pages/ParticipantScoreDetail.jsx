@@ -42,6 +42,9 @@ const addRankToRows = (rows) => {
 const ParticipantScoreDetail = () => {
   const { eventId, participantId } = useParams();
   const [searchParams] = useSearchParams();
+  const returnTarget = searchParams.get("return") || "";
+  const fromQuery = searchParams.get("from") || "";
+  const modeQuery = searchParams.get("mode") || "";
   const categoryQuery = searchParams.get("category") || "";
   const keywordQuery = searchParams.get("q") || "";
 
@@ -61,6 +64,9 @@ const ParticipantScoreDetail = () => {
 
   const buildParticipantDetailLink = (targetParticipantId) => {
     const params = new URLSearchParams();
+    if (returnTarget === "ranking") params.set("return", "ranking");
+    if (fromQuery) params.set("from", fromQuery);
+    if (modeQuery && modeQuery !== "category") params.set("mode", modeQuery);
     if (selectedSeasonId !== "all") params.set("season", selectedSeasonId);
     if (categoryQuery) params.set("category", categoryQuery);
     if (keywordQuery) params.set("q", keywordQuery);
@@ -76,6 +82,23 @@ const ParticipantScoreDetail = () => {
     const query = params.toString();
     return `/score-summary/${eventId}${query ? `?${query}` : ""}`;
   }, [eventId, selectedSeasonId, categoryQuery, keywordQuery]);
+
+  const rankingLink = useMemo(() => {
+    if (returnTarget !== "ranking") return "";
+    const params = new URLSearchParams();
+    if (fromQuery) params.set("from", fromQuery);
+    if (modeQuery && modeQuery !== "category") params.set("mode", modeQuery);
+    if (selectedSeasonId !== "all") params.set("season", selectedSeasonId);
+    if (categoryQuery) params.set("category", categoryQuery);
+    if (keywordQuery) params.set("q", keywordQuery);
+    const query = params.toString();
+    const basePath =
+      fromQuery === "owner" ? `/events/${eventId}/ranking` : `/score-summary/${eventId}/ranking`;
+    return `${basePath}${query ? `?${query}` : ""}`;
+  }, [returnTarget, fromQuery, modeQuery, selectedSeasonId, categoryQuery, keywordQuery, eventId]);
+
+  const backLink = rankingLink || summaryLink;
+  const backLabel = rankingLink ? "← ランキングに戻る" : "← 集計結果に戻る";
 
   useEffect(() => {
     let cancelled = false;
@@ -383,10 +406,10 @@ const ParticipantScoreDetail = () => {
         </p>
         <div className="mt-6">
           <Link
-            to={summaryLink}
+            to={backLink}
             className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
           >
-            ← 集計結果に戻る
+            {backLabel}
           </Link>
         </div>
       </div>
@@ -413,10 +436,10 @@ const ParticipantScoreDetail = () => {
               </p>
             </div>
             <Link
-              to={summaryLink}
+              to={backLink}
               className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
             >
-              ← 集計結果に戻る
+              {backLabel}
             </Link>
           </div>
         </section>
@@ -550,10 +573,10 @@ const ParticipantScoreDetail = () => {
 
         <div className="mt-6">
           <Link
-            to={summaryLink}
+            to={backLink}
             className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
           >
-            ← 集計結果に戻る
+            {backLabel}
           </Link>
         </div>
       </div>

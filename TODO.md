@@ -37,5 +37,5 @@
 
 #### ↑ができたら、また、詳細にする
 - [ ] Firebase Dynamic Linksが終わる、認証方法を変えないといけない？ Googleログインにして、システム管理者が特定のユーザーだけを許可するようにしたい
-- [ ] Ranking
+- [x] Ranking
 - [ ] Score

@@ -152,6 +152,32 @@ describe("ParticipantScoreDetail", () => {
     expect(within(row).getByText("100")).toBeInTheDocument();
   });
 
+  it("returns to ranking when opened from ranking context", async () => {
+    mockFirestoreForDetail({ participantId: "p2" });
+    renderDetail(
+      "/score-summary/event-1/participants/p2?return=ranking&from=portal&mode=season&season=season-1&category=cat-1&q=M-1002"
+    );
+
+    await screen.findByText(/FlashComp Spring 2026 - クライマー詳細/);
+
+    const backLink = screen.getAllByRole("link", { name: "← ランキングに戻る" })[0];
+    expect(backLink).toHaveAttribute(
+      "href",
+      "/score-summary/event-1/ranking?from=portal&mode=season&season=season-1&category=cat-1&q=M-1002"
+    );
+
+    const upperLink = screen.getByRole("link", { name: /↑ 1位 Aoi/ });
+    const lowerLink = screen.getByRole("link", { name: /↓ 3位 Mio/ });
+    expect(upperLink).toHaveAttribute(
+      "href",
+      "/score-summary/event-1/participants/p1?return=ranking&from=portal&mode=season&season=season-1&category=cat-1&q=M-1002"
+    );
+    expect(lowerLink).toHaveAttribute(
+      "href",
+      "/score-summary/event-1/participants/p3?return=ranking&from=portal&mode=season&season=season-1&category=cat-1&q=M-1002"
+    );
+  });
+
   it("shows boundary message when participant is top rank", async () => {
     mockFirestoreForDetail({ participantId: "p1" });
     renderDetail("/score-summary/event-1/participants/p1?season=season-1");
