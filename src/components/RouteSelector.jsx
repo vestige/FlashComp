@@ -408,167 +408,307 @@ const RouteSelector = ({
             </button>
           </div>
 
-          <table className="mt-4 w-full border-collapse text-sm">
-            <thead>
-              <tr>
-                <th className="border-b border-slate-200 py-3 text-left text-xs font-bold tracking-wider text-slate-500">
-                  Route Name (No.)
-                </th>
-                <th className="border-b border-slate-200 py-3 text-left text-xs font-bold tracking-wider text-slate-500">
-                  Grade (級)
-                </th>
-                <th className="border-b border-slate-200 py-3 pr-2 text-right text-xs font-bold tracking-wider text-slate-500">
-                  Points
-                </th>
-                <th className="border-b border-slate-200 py-3 text-center text-xs font-bold tracking-wider text-slate-500">
-                  Bonus
-                </th>
-                <th className="border-b border-slate-200 py-3 text-center text-xs font-bold tracking-wider text-slate-500">
-                  Adoption
-                </th>
-                <th className="border-b border-slate-200 py-3 text-center text-xs font-bold tracking-wider text-slate-500">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {tasks.map((task, index) => (
-                <tr key={task.id}>
-                  <td className="py-2">
-                    {task.isEditing ? (
-                      <input
-                        value={task.name || ""}
-                        onChange={(e) => handleTaskChange(index, "name", e.target.value)}
-                        placeholder="課題名"
-                        className="w-full rounded-lg border border-slate-300 px-2 py-1 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
-                      />
-                    ) : (
-                      <div className="flex items-center gap-3 rounded-lg bg-slate-100 px-3 py-2 font-semibold text-slate-800">
-                        <span className="inline-flex min-w-10 items-center justify-center rounded-lg bg-slate-200 px-2 py-1 text-base font-extrabold text-slate-700">
-                          {formatTaskNo(task)}
-                        </span>
-                        <span>{task.name}</span>
-                      </div>
-                    )}
-                  </td>
-                  <td className="py-2">
-                    {task.isEditing ? (
-                      <select
-                        value={task.grade || ""}
-                        onChange={(e) => handleTaskChange(index, "grade", e.target.value)}
-                        className="rounded-lg border border-slate-300 px-2 py-1 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
-                      >
-                        <option value="">-- 選択 --</option>
-                        {GRADE_OPTIONS.map((grade) => (
-                          <option key={grade} value={grade}>
-                            {grade}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <div className="rounded-lg bg-slate-100 px-3 py-2 text-slate-700">{task.grade || "-"}</div>
-                    )}
-                  </td>
-                  <td className="py-2 text-right">
-                    {task.isEditing ? (
-                      <div className="flex justify-end">
+          {tasks.length === 0 ? (
+            <p className="mt-4 text-sm text-slate-500">
+              課題がありません。まずは「+ Create Route」で登録してください。
+            </p>
+          ) : (
+            <>
+              <div className="mt-4 grid gap-3 md:hidden">
+                {tasks.map((task, index) => (
+                  <article key={task.id} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex min-w-10 items-center justify-center rounded-lg bg-slate-200 px-2 py-1 text-base font-extrabold text-slate-700">
+                        {formatTaskNo(task)}
+                      </span>
+                      {task.isEditing ? (
                         <input
-                          type="number"
-                          min="1"
-                          step="1"
-                          value={Number(task.points) || 1}
-                          onChange={(e) => handleTaskChange(index, "points", e.target.value)}
-                          className="w-24 rounded-lg border border-slate-300 px-2 py-1 text-right outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                          value={task.name || ""}
+                          onChange={(e) => handleTaskChange(index, "name", e.target.value)}
+                          placeholder="課題名"
+                          className="w-full rounded-lg border border-slate-300 px-2 py-1 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
                         />
+                      ) : (
+                        <p className="text-sm font-semibold text-slate-800">{task.name}</p>
+                      )}
+                    </div>
+
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                      <div>
+                        <p className="mb-1 text-xs font-semibold text-slate-500">Grade</p>
+                        {task.isEditing ? (
+                          <select
+                            value={task.grade || ""}
+                            onChange={(e) => handleTaskChange(index, "grade", e.target.value)}
+                            className="w-full rounded-lg border border-slate-300 px-2 py-1 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                          >
+                            <option value="">-- 選択 --</option>
+                            {GRADE_OPTIONS.map((grade) => (
+                              <option key={grade} value={grade}>
+                                {grade}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <div className="rounded-lg bg-white px-3 py-2 text-sm text-slate-700">{task.grade || "-"}</div>
+                        )}
                       </div>
-                    ) : (
-                      <div className="rounded-lg bg-slate-100 px-3 py-2 font-bold text-emerald-700">
-                        {Number(task.points) || 1}
+                      <div>
+                        <p className="mb-1 text-xs font-semibold text-slate-500">Points</p>
+                        {task.isEditing ? (
+                          <input
+                            type="number"
+                            min="1"
+                            step="1"
+                            value={Number(task.points) || 1}
+                            onChange={(e) => handleTaskChange(index, "points", e.target.value)}
+                            className="w-full rounded-lg border border-slate-300 px-2 py-1 text-right outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                          />
+                        ) : (
+                          <div className="rounded-lg bg-white px-3 py-2 text-right text-sm font-bold text-emerald-700">
+                            {Number(task.points) || 1}
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </td>
-                  <td className="py-2 text-center">
-                    {task.isEditing ? (
-                      <input
-                        type="checkbox"
-                        checked={Boolean(task.isBonus)}
-                        onChange={(e) => handleTaskChange(index, "isBonus", e)}
-                      />
-                    ) : task.isBonus ? (
-                      <span className="inline-flex justify-center text-emerald-900">
-                        <CheckCircleIcon checked />
-                      </span>
-                    ) : (
-                      <span className="inline-flex justify-center text-slate-300">
-                        <CheckCircleIcon checked={false} />
-                      </span>
-                    )}
-                  </td>
-                  <td className="py-2 text-center">
-                    <button
-                      type="button"
-                      disabled={!selectedCategory || !task.grade}
-                      onClick={() => handleToggleAssignment(task, !assignedSet.has(task.id))}
-                      className={`inline-flex items-center justify-center rounded-full transition ${
-                        !selectedCategory || !task.grade
-                          ? "cursor-not-allowed text-slate-300"
-                          : "text-emerald-900 hover:text-emerald-700"
-                      }`}
-                      aria-label={assignedSet.has(task.id) ? "採用を解除" : "採用する"}
-                    >
-                      <CheckCircleIcon checked={assignedSet.has(task.id)} />
-                    </button>
-                  </td>
-                  <td className="py-2 text-center">
-                    {task.isEditing ? (
-                      <div className="flex flex-wrap justify-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => handleSaveTask(index)}
-                          className="rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100"
-                        >
-                          保存
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => toggleEdit(index)}
-                          className="rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50"
-                        >
-                          キャンセル
-                        </button>
+                    </div>
+
+                    <div className="mt-3 flex items-center justify-between gap-2 text-sm">
+                      <div className="flex items-center gap-2">
+                        <span className="text-slate-600">Bonus</span>
+                        {task.isEditing ? (
+                          <input
+                            type="checkbox"
+                            checked={Boolean(task.isBonus)}
+                            onChange={(e) => handleTaskChange(index, "isBonus", e)}
+                          />
+                        ) : task.isBonus ? (
+                          <span className="inline-flex text-emerald-900">
+                            <CheckCircleIcon checked />
+                          </span>
+                        ) : (
+                          <span className="inline-flex text-slate-300">
+                            <CheckCircleIcon checked={false} />
+                          </span>
+                        )}
                       </div>
-                    ) : (
-                      <div className="flex items-center justify-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => toggleEdit(index)}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
-                          aria-label="編集"
-                        >
-                          <PencilIcon />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteTask(index)}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-rose-50 hover:text-rose-500"
-                          aria-label="削除"
-                        >
-                          <TrashIcon />
-                        </button>
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              ))}
-              {tasks.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="py-4 text-sm text-slate-500">
-                    課題がありません。まずは「+ Create Route」で登録してください。
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                      <button
+                        type="button"
+                        disabled={!selectedCategory || !task.grade}
+                        onClick={() => handleToggleAssignment(task, !assignedSet.has(task.id))}
+                        className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold transition ${
+                          !selectedCategory || !task.grade
+                            ? "cursor-not-allowed bg-slate-100 text-slate-300"
+                            : assignedSet.has(task.id)
+                              ? "bg-emerald-100 text-emerald-800"
+                              : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                        }`}
+                      >
+                        <CheckCircleIcon checked={assignedSet.has(task.id)} className="h-4 w-4" />
+                        {assignedSet.has(task.id) ? "採用中" : "未採用"}
+                      </button>
+                    </div>
+
+                    <div className="mt-3 flex flex-wrap justify-end gap-2">
+                      {task.isEditing ? (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => handleSaveTask(index)}
+                            className="rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100"
+                          >
+                            保存
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => toggleEdit(index)}
+                            className="rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50"
+                          >
+                            キャンセル
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => toggleEdit(index)}
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                            aria-label="編集"
+                          >
+                            <PencilIcon />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteTask(index)}
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-rose-50 hover:text-rose-500"
+                            aria-label="削除"
+                          >
+                            <TrashIcon />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </article>
+                ))}
+              </div>
+
+              <div className="mt-4 hidden md:block">
+                <table className="w-full border-collapse text-sm">
+                  <thead>
+                    <tr>
+                      <th className="border-b border-slate-200 py-3 text-left text-xs font-bold tracking-wider text-slate-500">
+                        Route Name (No.)
+                      </th>
+                      <th className="border-b border-slate-200 py-3 text-left text-xs font-bold tracking-wider text-slate-500">
+                        Grade (級)
+                      </th>
+                      <th className="border-b border-slate-200 py-3 pr-2 text-right text-xs font-bold tracking-wider text-slate-500">
+                        Points
+                      </th>
+                      <th className="border-b border-slate-200 py-3 text-center text-xs font-bold tracking-wider text-slate-500">
+                        Bonus
+                      </th>
+                      <th className="border-b border-slate-200 py-3 text-center text-xs font-bold tracking-wider text-slate-500">
+                        Adoption
+                      </th>
+                      <th className="border-b border-slate-200 py-3 text-center text-xs font-bold tracking-wider text-slate-500">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {tasks.map((task, index) => (
+                      <tr key={task.id}>
+                        <td className="py-2">
+                          {task.isEditing ? (
+                            <input
+                              value={task.name || ""}
+                              onChange={(e) => handleTaskChange(index, "name", e.target.value)}
+                              placeholder="課題名"
+                              className="w-full rounded-lg border border-slate-300 px-2 py-1 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                            />
+                          ) : (
+                            <div className="flex items-center gap-3 rounded-lg bg-slate-100 px-3 py-2 font-semibold text-slate-800">
+                              <span className="inline-flex min-w-10 items-center justify-center rounded-lg bg-slate-200 px-2 py-1 text-base font-extrabold text-slate-700">
+                                {formatTaskNo(task)}
+                              </span>
+                              <span>{task.name}</span>
+                            </div>
+                          )}
+                        </td>
+                        <td className="py-2">
+                          {task.isEditing ? (
+                            <select
+                              value={task.grade || ""}
+                              onChange={(e) => handleTaskChange(index, "grade", e.target.value)}
+                              className="rounded-lg border border-slate-300 px-2 py-1 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                            >
+                              <option value="">-- 選択 --</option>
+                              {GRADE_OPTIONS.map((grade) => (
+                                <option key={grade} value={grade}>
+                                  {grade}
+                                </option>
+                              ))}
+                            </select>
+                          ) : (
+                            <div className="rounded-lg bg-slate-100 px-3 py-2 text-slate-700">{task.grade || "-"}</div>
+                          )}
+                        </td>
+                        <td className="py-2 text-right">
+                          {task.isEditing ? (
+                            <div className="flex justify-end">
+                              <input
+                                type="number"
+                                min="1"
+                                step="1"
+                                value={Number(task.points) || 1}
+                                onChange={(e) => handleTaskChange(index, "points", e.target.value)}
+                                className="w-24 rounded-lg border border-slate-300 px-2 py-1 text-right outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                              />
+                            </div>
+                          ) : (
+                            <div className="rounded-lg bg-slate-100 px-3 py-2 font-bold text-emerald-700">
+                              {Number(task.points) || 1}
+                            </div>
+                          )}
+                        </td>
+                        <td className="py-2 text-center">
+                          {task.isEditing ? (
+                            <input
+                              type="checkbox"
+                              checked={Boolean(task.isBonus)}
+                              onChange={(e) => handleTaskChange(index, "isBonus", e)}
+                            />
+                          ) : task.isBonus ? (
+                            <span className="inline-flex justify-center text-emerald-900">
+                              <CheckCircleIcon checked />
+                            </span>
+                          ) : (
+                            <span className="inline-flex justify-center text-slate-300">
+                              <CheckCircleIcon checked={false} />
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-2 text-center">
+                          <button
+                            type="button"
+                            disabled={!selectedCategory || !task.grade}
+                            onClick={() => handleToggleAssignment(task, !assignedSet.has(task.id))}
+                            className={`inline-flex items-center justify-center rounded-full transition ${
+                              !selectedCategory || !task.grade
+                                ? "cursor-not-allowed text-slate-300"
+                                : "text-emerald-900 hover:text-emerald-700"
+                            }`}
+                            aria-label={assignedSet.has(task.id) ? "採用を解除" : "採用する"}
+                          >
+                            <CheckCircleIcon checked={assignedSet.has(task.id)} />
+                          </button>
+                        </td>
+                        <td className="py-2 text-center">
+                          {task.isEditing ? (
+                            <div className="flex flex-wrap justify-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => handleSaveTask(index)}
+                                className="rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100"
+                              >
+                                保存
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => toggleEdit(index)}
+                                className="rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50"
+                              >
+                                キャンセル
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => toggleEdit(index)}
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                                aria-label="編集"
+                              >
+                                <PencilIcon />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteTask(index)}
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-rose-50 hover:text-rose-500"
+                                aria-label="削除"
+                              >
+                                <TrashIcon />
+                              </button>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
         </div>
       )}
 
