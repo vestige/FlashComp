@@ -82,12 +82,18 @@ describe("ScoreSummary", () => {
     setupFirestore();
     renderSummary("/score-summary?q=Spring");
 
-    await screen.findByText("🏆 クライマー向け結果ページ");
-    expect(screen.getByRole("link", { name: "← TOPへ戻る" })).toHaveAttribute("href", "/");
+    await screen.findByRole("heading", { name: "Climber Portal" });
+    expect(screen.getByRole("link", { name: "↑ Back to TOP" })).toHaveAttribute("href", "/");
     expect(screen.getByDisplayValue("Spring")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Live" })).toBeInTheDocument();
     expect(screen.getByText("表示 1 / 1 件")).toBeInTheDocument();
     expect(screen.getByText("Spring Flash")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "ランキングを見る" })).toHaveAttribute(
+      "href",
+      "/score-summary/event-ongoing/ranking?from=portal"
+    );
+    expect(screen.queryByRole("link", { name: "このイベントのランキングを見る" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "新ランキング表示" })).not.toBeInTheDocument();
     expect(screen.queryByText("Winter Flash")).not.toBeInTheDocument();
     expect(screen.queryByText("Summer Practice")).not.toBeInTheDocument();
   });
@@ -97,7 +103,7 @@ describe("ScoreSummary", () => {
     const user = userEvent.setup();
     renderSummary("/score-summary?view=past&q=Winter");
 
-    await screen.findByText("🏆 クライマー向け結果ページ");
+    await screen.findByRole("heading", { name: "Climber Portal" });
     expect(screen.getByText("表示 1 / 1 件")).toBeInTheDocument();
     expect(screen.getByText("Winter Flash")).toBeInTheDocument();
 
@@ -118,7 +124,7 @@ describe("ScoreSummary", () => {
     const user = userEvent.setup();
     renderSummary("/score-summary");
 
-    await screen.findByText("🏆 クライマー向け結果ページ");
+    await screen.findByRole("heading", { name: "Climber Portal" });
     await user.click(screen.getByRole("button", { name: "Past" }));
 
     await waitFor(() => {
@@ -132,7 +138,7 @@ describe("ScoreSummary", () => {
     setupFirestore();
     renderSummary("/score-summary?gym=gym-b");
 
-    await screen.findByText("🏆 クライマー向け結果ページ");
+    await screen.findByRole("heading", { name: "Climber Portal" });
 
     expect(screen.getByLabelText(/ジム:/)).toHaveValue("gym-b");
     expect(screen.getByText("表示 0 / 0 件")).toBeInTheDocument();

@@ -225,6 +225,8 @@ graph TD
   - `戻る`（ダッシュボード）
 - クライマー向けイベント一覧（`/score-summary`）:
   - 画面上部に `TOPへ戻る` 導線を配置する
+  - イベントカードの主導線は `ランキングを見る` の1つに統一し、`/score-summary/{eventId}/ranking?from=portal` へ遷移する
+  - フィルターは `Dashboard` と同系UIで、`検索` + `Live/Past` + `ジム選択` + `リセット` を提供する
 
 ## ユーザーシナリオ（TODO反映）
 ### 目的

@@ -328,40 +328,74 @@ const EventRanking = () => {
     }
 
     return (
-      <div className="mt-3 overflow-x-auto">
-        <table className="min-w-[760px] w-full border-collapse text-sm">
-          <thead>
-            <tr>
-              <th className="border-b border-slate-200 py-2 text-left">Rank</th>
-              <th className="border-b border-slate-200 py-2 text-left">Name</th>
-              <th className="border-b border-slate-200 py-2 text-left">Member No</th>
-              {showCategory ? <th className="border-b border-slate-200 py-2 text-left">Category</th> : null}
-              <th className="border-b border-slate-200 py-2 text-right">Points</th>
-              <th className="border-b border-slate-200 py-2 text-right">Clears</th>
-              <th className="border-b border-slate-200 py-2 text-left">Detail</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => (
-              <tr key={row.participantId}>
-                <td className="py-2">{row.rank}</td>
-                <td className="py-2 text-slate-900">{row.name}</td>
-                <td className="py-2 text-slate-700">{row.memberNo || "-"}</td>
-                {showCategory ? <td className="py-2 text-slate-700">{row.categoryName || "-"}</td> : null}
-                <td className="py-2 text-right font-semibold text-slate-900">{row.totalPoints}</td>
-                <td className="py-2 text-right text-slate-700">{row.clearCount}</td>
-                <td className="py-2">
-                  <Link
-                    to={buildDetailLink({ participantId: row.participantId, seasonId, categoryId })}
-                    className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-100"
-                  >
-                    詳細を見る
-                  </Link>
-                </td>
+      <div className="mt-3">
+        <div className="grid gap-2 md:hidden">
+          {rows.map((row) => (
+            <article key={row.participantId} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-slate-500">Rank #{row.rank}</p>
+                  <p className="truncate text-sm font-semibold text-slate-900">{row.name}</p>
+                  <p className="mt-0.5 text-xs text-slate-600">Member: {row.memberNo || "-"}</p>
+                  {showCategory ? (
+                    <p className="mt-0.5 text-xs text-slate-600">Category: {row.categoryName || "-"}</p>
+                  ) : null}
+                </div>
+                <Link
+                  to={buildDetailLink({ participantId: row.participantId, seasonId, categoryId })}
+                  className="inline-flex shrink-0 items-center rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-100"
+                >
+                  詳細
+                </Link>
+              </div>
+              <dl className="mt-2 grid grid-cols-2 gap-2 text-xs">
+                <div className="rounded-md bg-white px-2 py-1">
+                  <dt className="text-slate-500">Points</dt>
+                  <dd className="font-semibold text-slate-900">{row.totalPoints}</dd>
+                </div>
+                <div className="rounded-md bg-white px-2 py-1">
+                  <dt className="text-slate-500">Clears</dt>
+                  <dd className="font-semibold text-slate-900">{row.clearCount}</dd>
+                </div>
+              </dl>
+            </article>
+          ))}
+        </div>
+        <div className="hidden overflow-x-auto md:block">
+          <table className="min-w-[760px] w-full border-collapse text-sm">
+            <thead>
+              <tr>
+                <th className="border-b border-slate-200 py-2 text-left">Rank</th>
+                <th className="border-b border-slate-200 py-2 text-left">Name</th>
+                <th className="border-b border-slate-200 py-2 text-left">Member No</th>
+                {showCategory ? <th className="border-b border-slate-200 py-2 text-left">Category</th> : null}
+                <th className="border-b border-slate-200 py-2 text-right">Points</th>
+                <th className="border-b border-slate-200 py-2 text-right">Clears</th>
+                <th className="border-b border-slate-200 py-2 text-left">Detail</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={row.participantId}>
+                  <td className="py-2">{row.rank}</td>
+                  <td className="py-2 text-slate-900">{row.name}</td>
+                  <td className="py-2 text-slate-700">{row.memberNo || "-"}</td>
+                  {showCategory ? <td className="py-2 text-slate-700">{row.categoryName || "-"}</td> : null}
+                  <td className="py-2 text-right font-semibold text-slate-900">{row.totalPoints}</td>
+                  <td className="py-2 text-right text-slate-700">{row.clearCount}</td>
+                  <td className="py-2">
+                    <Link
+                      to={buildDetailLink({ participantId: row.participantId, seasonId, categoryId })}
+                      className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-100"
+                    >
+                      詳細を見る
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     );
   };

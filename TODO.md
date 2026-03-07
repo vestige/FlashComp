@@ -34,6 +34,10 @@
 - [x] Climber Portal : まだはじまっていないイベントはどちらにも表示しない(これは実装済み？)
 - [x] Climber Portal : イベントカードに書く情報をもう少し増やす。どんな情報があるかな？
 - [x] Climber Portal : 開催ジムごとにカードの色分けする？どうかな？
+- [ ] Climber Portal : 見た目が揃っていない。ページタイトル、セクション表示など
+- [x] Climber Portal : このイベントのランキング表示と新ランキング表示がある、新しい方に切り替えて
+- [x] Climber Portal : Dashboardの様なフィルターにして
+- [ ] Season Settings : スマートフォン対応ができていない
 
 #### ↑ができたら、また、詳細にする
 - [ ] Firebase Dynamic Linksが終わる、認証方法を変えないといけない？ Googleログインにして、システム管理者が特定のユーザーだけを許可するようにしたい

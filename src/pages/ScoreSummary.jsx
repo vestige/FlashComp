@@ -3,6 +3,15 @@ import { Link, useSearchParams } from "react-router-dom";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
 import { usePageTitle } from "../hooks/usePageTitle";
+import ManagementHero from "../components/ManagementHero";
+import {
+  inputFieldClass,
+  pageBackgroundClass,
+  pageContainerClass,
+  sectionCardClass,
+  sectionHeadingClass,
+  subtleButtonClass,
+} from "../components/uiStyles";
 
 const toDateText = (value) => {
   if (!value) return "-";
@@ -59,6 +68,21 @@ const gymAccentPalette = [
     chipClass: "bg-violet-50 text-violet-700",
   },
 ];
+
+const Icon = ({ children, className = "h-4 w-4" }) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    aria-hidden="true"
+  >
+    {children}
+  </svg>
+);
 
 const compareEventsForDisplay = (a, b, nowMs) => {
   const aStatus = getEventStatus(a, nowMs);
@@ -214,77 +238,77 @@ const ScoreSummary = () => {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        <p className="text-sm text-slate-600">イベントを読み込んでいます...</p>
+      <div className={pageBackgroundClass}>
+        <div className={pageContainerClass}>
+          <p className="text-sm text-slate-600">イベントを読み込んでいます...</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-          {error}
-        </p>
-        <div className="mt-6">
-          <Link
-            to="/"
-            className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
-          >
-            ← Homeに戻る
-          </Link>
+      <div className={pageBackgroundClass}>
+        <div className={pageContainerClass}>
+          <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            {error}
+          </p>
+          <div className="mt-6">
+            <Link to="/" className={subtleButtonClass}>
+              ↑ Back to TOP
+            </Link>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#dbeafe_0%,_#f8fafc_45%,_#ecfeff_100%)]">
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="rounded-3xl border border-slate-200 bg-white/95 p-5 shadow-sm sm:p-6">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">Climber Portal</p>
-              <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
-                🏆 クライマー向け結果ページ
-              </h2>
-            </div>
-            <Link
-              to="/"
-              className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-            >
-              ← TOPへ戻る
-            </Link>
+    <div className={pageBackgroundClass}>
+      <div className={pageContainerClass}>
+        <ManagementHero
+          eyebrow="Climber Portal"
+          title="Climber Portal"
+          description="Live/Pastでイベントを切り替え、ランキングを確認します。"
+          backTo="/"
+          backLabel="↑ Back to TOP"
+          surface={false}
+        />
+
+        <section className="mt-4">
+          <h2 className={sectionHeadingClass}>Guide</h2>
+          <div className={sectionCardClass}>
+            <ol className="grid gap-1.5 pl-5 text-sm text-slate-700 sm:grid-cols-3 sm:gap-3">
+              <li>イベントを選ぶ</li>
+              <li>ランキングから自分を検索する</li>
+              <li>詳細ページでシーズン別内訳を確認する</li>
+            </ol>
           </div>
+        </section>
 
-          <p className="mt-3 text-sm text-slate-600">確認したいイベントを選んでください。</p>
-          <ol className="mt-3 grid gap-1.5 pl-5 text-sm text-slate-700 sm:grid-cols-3 sm:gap-3">
-            <li>イベントを選ぶ</li>
-            <li>ランキングから自分を検索する</li>
-            <li>「詳細を見る」でシーズン別の完登内訳を確認する</li>
-          </ol>
-        </div>
-
-        <div className="mt-4 flex flex-wrap items-end justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <label className="text-sm text-slate-700">
-              イベント名:
-              <input
-                type="text"
-                value={keyword}
-                onChange={(e) => setKeyword(e.target.value)}
-                placeholder="例: Spring"
-                className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
-              />
-            </label>
-            <div className="text-sm text-slate-700">
-              表示:
-              <div className="mt-1 inline-flex rounded-full border border-slate-200 bg-white p-1">
+        <section className="mt-5">
+          <h2 className={sectionHeadingClass}>Filters</h2>
+          <div className={sectionCardClass}>
+            <div className="flex flex-wrap items-center gap-3">
+              <label className="flex min-w-[260px] flex-1 items-center gap-2 text-sm text-slate-600">
+                <Icon className="h-4 w-4 text-slate-400">
+                  <circle cx="11" cy="11" r="7" />
+                  <path d="m20 20-3.5-3.5" />
+                </Icon>
+                <input
+                  type="text"
+                  value={keyword}
+                  onChange={(e) => setKeyword(e.target.value)}
+                  placeholder="例: Spring"
+                  className={`w-full ${inputFieldClass}`}
+                />
+              </label>
+              <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white p-1">
                 <button
                   type="button"
                   onClick={() => setViewFilter("live")}
-                  className={`rounded-full px-3 py-1 text-sm font-semibold transition ${
-                    viewFilter === "live" ? "bg-emerald-700 text-white" : "text-slate-600 hover:bg-slate-100"
+                  className={`rounded-full px-3 py-1 text-sm font-bold transition ${
+                    viewFilter === "live" ? "bg-emerald-800 text-white" : "text-slate-500 hover:bg-slate-100"
                   }`}
                 >
                   Live
@@ -292,111 +316,95 @@ const ScoreSummary = () => {
                 <button
                   type="button"
                   onClick={() => setViewFilter("past")}
-                  className={`rounded-full px-3 py-1 text-sm font-semibold transition ${
-                    viewFilter === "past" ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100"
+                  className={`rounded-full px-3 py-1 text-sm font-bold transition ${
+                    viewFilter === "past" ? "bg-slate-900 text-white" : "text-slate-500 hover:bg-slate-100"
                   }`}
                 >
                   Past
                 </button>
               </div>
-            </div>
-            <label className="text-sm text-slate-700">
-              ジム:
-              <select
-                value={gymFilter}
-                onChange={(e) => setGymFilter(e.target.value)}
-                className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
-              >
-                <option value="all">すべて</option>
-                {gyms.map((gym) => (
-                  <option key={gym.id} value={gym.id}>
-                    {gym.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <div className="flex items-end">
-              <button
-                type="button"
-                onClick={resetFilters}
-                className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
-              >
+              <label className="text-sm text-slate-700">
+                ジム:
+                <select
+                  value={gymFilter}
+                  onChange={(e) => setGymFilter(e.target.value)}
+                  className={`ml-2 min-w-[170px] ${inputFieldClass}`}
+                >
+                  <option value="all">すべて</option>
+                  {gyms.map((gym) => (
+                    <option key={gym.id} value={gym.id}>
+                      {gym.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button type="button" onClick={resetFilters} className={subtleButtonClass}>
                 フィルターをリセット
               </button>
             </div>
+            <p className="mt-3 text-sm font-medium text-slate-600">
+              表示 {filteredEvents.length} / {baseEvents.length} 件
+            </p>
           </div>
-          <span className="text-sm font-medium text-slate-600">
-            表示 {filteredEvents.length} / {baseEvents.length} 件
-          </span>
-        </div>
+        </section>
 
-        {events.length === 0 ? (
-          <p className="mt-4 text-sm text-slate-600">イベントがありません。</p>
-        ) : filteredEvents.length === 0 ? (
-          <p className="mt-4 text-sm text-slate-600">条件に一致するイベントがありません。</p>
-        ) : (
-          <div className="mt-4 grid gap-3">
-            {filteredEvents.map((event) => {
-              const nowMs = Date.now();
-              const status = getEventStatus(event, nowMs);
-              const statusClass = statusStyleMap[status] || statusStyleMap.ended;
-              const accent = gymAccentById.get(event.gymId) || {
-                leftBorderClass: "border-l-slate-300",
-                chipClass: "bg-slate-100 text-slate-700",
-              };
-              const timingLabel = buildEventTimingLabel(event, nowMs);
-              return (
-                <section
-                  key={event.id}
-                  className={`rounded-2xl border border-slate-200 border-l-4 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${accent.leftBorderClass}`}
-                >
-                  <div className="flex flex-wrap items-start justify-between gap-2">
-                    <h3 className="text-lg font-semibold text-slate-900">{event.name}</h3>
-                    <span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${statusClass}`}>
-                      {statusLabelMap[status]}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-sm text-slate-600">
-                    開催期間: {toDateText(event.startDate)} 〜 {toDateText(event.endDate)}
-                  </p>
-                  <div className="mt-2 flex flex-wrap items-center gap-2">
-                    <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${accent.chipClass}`}>
-                      {gymNameById.get(event.gymId) || "未設定ジム"}
-                    </span>
-                    {timingLabel ? (
-                      <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
-                        {timingLabel}
+        <section className="mt-5">
+          <h2 className={sectionHeadingClass}>Events</h2>
+          {events.length === 0 ? (
+            <p className="text-sm text-slate-600">イベントがありません。</p>
+          ) : filteredEvents.length === 0 ? (
+            <p className="text-sm text-slate-600">条件に一致するイベントがありません。</p>
+          ) : (
+            <div className="grid gap-3">
+              {filteredEvents.map((event) => {
+                const nowMs = Date.now();
+                const status = getEventStatus(event, nowMs);
+                const statusClass = statusStyleMap[status] || statusStyleMap.ended;
+                const accent = gymAccentById.get(event.gymId) || {
+                  leftBorderClass: "border-l-slate-300",
+                  chipClass: "bg-slate-100 text-slate-700",
+                };
+                const timingLabel = buildEventTimingLabel(event, nowMs);
+                return (
+                  <section
+                    key={event.id}
+                    className={`rounded-2xl border border-slate-200 border-l-4 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${accent.leftBorderClass}`}
+                  >
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <h3 className="text-lg font-semibold text-slate-900">{event.name}</h3>
+                      <span
+                        className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${statusClass}`}
+                      >
+                        {statusLabelMap[status]}
                       </span>
-                    ) : null}
-                  </div>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <Link
-                      to={`/score-summary/${event.id}`}
-                      className="inline-flex items-center rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-sm font-semibold text-sky-800 transition hover:bg-sky-100"
-                    >
-                      このイベントのランキングを見る
-                    </Link>
-                    <Link
-                      to={`/score-summary/${event.id}/ranking?from=portal`}
-                      className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-                    >
-                      新ランキング表示
-                    </Link>
-                  </div>
-                </section>
-              );
-            })}
-          </div>
-        )}
-
-        <div className="mt-8">
-          <Link
-            to="/"
-            className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-          >
-            ← Homeに戻る
-          </Link>
-        </div>
+                    </div>
+                    <p className="mt-2 text-sm text-slate-600">
+                      開催期間: {toDateText(event.startDate)} 〜 {toDateText(event.endDate)}
+                    </p>
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${accent.chipClass}`}>
+                        {gymNameById.get(event.gymId) || "未設定ジム"}
+                      </span>
+                      {timingLabel ? (
+                        <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
+                          {timingLabel}
+                        </span>
+                      ) : null}
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <Link
+                        to={`/score-summary/${event.id}/ranking?from=portal`}
+                        className="inline-flex items-center rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-sm font-semibold text-sky-800 transition hover:bg-sky-100"
+                      >
+                        ランキングを見る
+                      </Link>
+                    </div>
+                  </section>
+                );
+              })}
+            </div>
+          )}
+        </section>
       </div>
     </div>
   );
