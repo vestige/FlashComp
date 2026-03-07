@@ -5,6 +5,7 @@ import { db } from "../firebase";
 import ManagementHero from "../components/ManagementHero";
 import { usePageTitle } from "../hooks/usePageTitle";
 import { calculateCategoryRankings } from "../lib/rankingCsv";
+import { buildRankingBackLink } from "../lib/rankingNavigation";
 import {
   inputFieldClass,
   pageBackgroundClass,
@@ -34,25 +35,6 @@ const rankRows = (rows = []) => {
   });
 };
 
-const buildBackLink = ({ source, eventId }) => {
-  if (source === "portal") {
-    return {
-      backTo: `/score-summary/${eventId}`,
-      backLabel: "↑ Back to Portal",
-    };
-  }
-  if (source === "owner") {
-    return {
-      backTo: `/events/${eventId}/result`,
-      backLabel: "↑ Back to Result",
-    };
-  }
-  return {
-    backTo: "/",
-    backLabel: "↑ Back to TOP",
-  };
-};
-
 const EventRanking = () => {
   const { eventId } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -76,7 +58,10 @@ const EventRanking = () => {
   const [error, setError] = useState("");
   usePageTitle(event?.name ? `Ranking: ${event.name}` : "Ranking");
 
-  const { backTo, backLabel } = useMemo(() => buildBackLink({ source, eventId }), [source, eventId]);
+  const { backTo, backLabel } = useMemo(
+    () => buildRankingBackLink({ source, eventId }),
+    [source, eventId]
+  );
 
   useEffect(() => {
     let cancelled = false;

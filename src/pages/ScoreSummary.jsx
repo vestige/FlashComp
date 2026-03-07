@@ -267,24 +267,12 @@ const ScoreSummary = () => {
     <div className={pageBackgroundClass}>
       <div className={pageContainerClass}>
         <ManagementHero
-          eyebrow="Climber Portal"
           title="Climber Portal"
           description="Live/Pastでイベントを切り替え、ランキングを確認します。"
           backTo="/"
           backLabel="↑ Back to TOP"
           surface={false}
         />
-
-        <section className="mt-4">
-          <h2 className={sectionHeadingClass}>Guide</h2>
-          <div className={sectionCardClass}>
-            <ol className="grid gap-1.5 pl-5 text-sm text-slate-700 sm:grid-cols-3 sm:gap-3">
-              <li>イベントを選ぶ</li>
-              <li>ランキングから自分を検索する</li>
-              <li>詳細ページでシーズン別内訳を確認する</li>
-            </ol>
-          </div>
-        </section>
 
         <section className="mt-5">
           <h2 className={sectionHeadingClass}>Filters</h2>

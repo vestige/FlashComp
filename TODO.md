@@ -38,6 +38,9 @@
 - [x] Climber Portal : このイベントのランキング表示と新ランキング表示がある、新しい方に切り替えて
 - [x] Climber Portal : Dashboardの様なフィルターにして
 - [ ] Season Settings : スマートフォン対応ができていない
+- [x] Climber Portal : Guideセクションいらない削除して
+- [x] Climber Portal : CLIMBER PORTALのぺーじタイトルが２つある小さいのは消す
+
 
 #### ↑ができたら、また、詳細にする
 - [ ] Firebase Dynamic Linksが終わる、認証方法を変えないといけない？ Googleログインにして、システム管理者が特定のユーザーだけを許可するようにしたい
