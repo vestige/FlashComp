@@ -578,9 +578,6 @@ const Result = () => {
           <Link to={`/events/${eventId}/ranking?from=owner`} className={subtleButtonClass}>
             Open Ranking
           </Link>
-          <Link to={`/score-summary/${eventId}`} className={subtleButtonClass}>
-            Open Public Ranking
-          </Link>
         </ManagementHero>
 
         <section className="mt-4">

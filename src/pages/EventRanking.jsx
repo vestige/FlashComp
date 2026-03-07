@@ -11,7 +11,6 @@ import {
   pageContainerClass,
   sectionCardClass,
   sectionHeadingClass,
-  subtleButtonClass,
 } from "../components/uiStyles";
 
 const rankRows = (rows = []) => {
@@ -399,11 +398,7 @@ const EventRanking = () => {
           backTo={backTo}
           backLabel={backLabel}
           surface={false}
-        >
-          <Link to={`/score-summary/${eventId}`} className={subtleButtonClass}>
-            Open Public Ranking
-          </Link>
-        </ManagementHero>
+        />
 
         <section className="mt-4">
           <h2 className={sectionHeadingClass}>Filters</h2>

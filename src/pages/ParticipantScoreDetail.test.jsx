@@ -134,8 +134,8 @@ describe("ParticipantScoreDetail", () => {
       "/score-summary/event-1?season=season-1&category=cat-1&q=M-1002"
     );
 
-    const upperLink = screen.getByRole("link", { name: /↑ 1位 Aoi/ });
-    const lowerLink = screen.getByRole("link", { name: /↓ 3位 Mio/ });
+    const upperLink = await screen.findByRole("link", { name: /↑ 1位 Aoi/ });
+    const lowerLink = await screen.findByRole("link", { name: /↓ 3位 Mio/ });
     expect(upperLink).toHaveAttribute(
       "href",
       "/score-summary/event-1/participants/p1?season=season-1&category=cat-1&q=M-1002"
@@ -166,8 +166,8 @@ describe("ParticipantScoreDetail", () => {
       "/score-summary/event-1/ranking?from=portal&mode=season&season=season-1&category=cat-1&q=M-1002"
     );
 
-    const upperLink = screen.getByRole("link", { name: /↑ 1位 Aoi/ });
-    const lowerLink = screen.getByRole("link", { name: /↓ 3位 Mio/ });
+    const upperLink = await screen.findByRole("link", { name: /↑ 1位 Aoi/ });
+    const lowerLink = await screen.findByRole("link", { name: /↓ 3位 Mio/ });
     expect(upperLink).toHaveAttribute(
       "href",
       "/score-summary/event-1/participants/p1?return=ranking&from=portal&mode=season&season=season-1&category=cat-1&q=M-1002"
