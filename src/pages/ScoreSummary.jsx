@@ -76,12 +76,13 @@ const ScoreSummary = () => {
 
   const [searchParams, setSearchParams] = useSearchParams();
   const initialKeyword = searchParams.get("q") || "";
-  const initialStatus = searchParams.get("status") || "all";
+  const legacyStatus = searchParams.get("status") || "";
+  const initialView = searchParams.get("view") || (legacyStatus === "ended" ? "past" : "live");
   const initialGymId = searchParams.get("gym") || "all";
   const [events, setEvents] = useState([]);
   const [gyms, setGyms] = useState([]);
   const [keyword, setKeyword] = useState(initialKeyword);
-  const [statusFilter, setStatusFilter] = useState(initialStatus);
+  const [viewFilter, setViewFilter] = useState(initialView);
   const [gymFilter, setGymFilter] = useState(initialGymId);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -115,12 +116,12 @@ const ScoreSummary = () => {
     const params = new URLSearchParams();
     const normalizedKeyword = keyword.trim();
     if (normalizedKeyword) params.set("q", normalizedKeyword);
-    if (statusFilter !== "all") params.set("status", statusFilter);
+    if (viewFilter !== "live") params.set("view", viewFilter);
     if (gymFilter !== "all") params.set("gym", gymFilter);
     if (params.toString() !== searchParams.toString()) {
       setSearchParams(params, { replace: true });
     }
-  }, [keyword, statusFilter, gymFilter, searchParams, setSearchParams]);
+  }, [keyword, viewFilter, gymFilter, searchParams, setSearchParams]);
 
   useEffect(() => {
     if (gymFilter === "all") return;
@@ -129,23 +130,31 @@ const ScoreSummary = () => {
     if (!exists) setGymFilter("all");
   }, [gymFilter, gyms]);
 
-  const filteredEvents = useMemo(() => {
+  const { baseEvents, filteredEvents } = useMemo(() => {
     const nowMs = Date.now();
     const normalizedKeyword = keyword.trim().toLowerCase();
 
-    return [...events]
+    const targetStatus = viewFilter === "past" ? "ended" : "ongoing";
+    const visibleEvents = [...events]
       .sort((a, b) => compareEventsForDisplay(a, b, nowMs))
       .filter((event) => {
-        const eventName = (event.name || "").toLowerCase();
         const eventStatus = getEventStatus(event, nowMs);
-        const matchesKeyword = normalizedKeyword
-          ? eventName.includes(normalizedKeyword)
-          : true;
-        const matchesStatus = statusFilter === "all" ? true : eventStatus === statusFilter;
+        if (eventStatus === "upcoming") return false;
+        const matchesView = eventStatus === targetStatus;
         const matchesGym = gymFilter === "all" ? true : event.gymId === gymFilter;
-        return matchesKeyword && matchesStatus && matchesGym;
+        return matchesView && matchesGym;
       });
-  }, [events, keyword, statusFilter, gymFilter]);
+
+    const filtered = visibleEvents.filter((event) => {
+      const eventName = (event.name || "").toLowerCase();
+      return normalizedKeyword ? eventName.includes(normalizedKeyword) : true;
+    });
+
+    return {
+      baseEvents: visibleEvents,
+      filteredEvents: filtered,
+    };
+  }, [events, keyword, viewFilter, gymFilter]);
 
   const gymNameById = useMemo(
     () => new Map(gyms.map((gym) => [gym.id, gym.name || gym.id])),
@@ -154,7 +163,7 @@ const ScoreSummary = () => {
 
   const resetFilters = () => {
     setKeyword("");
-    setStatusFilter("all");
+    setViewFilter("live");
     setGymFilter("all");
   };
 
@@ -223,19 +232,29 @@ const ScoreSummary = () => {
                 className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
               />
             </label>
-            <label className="text-sm text-slate-700">
-              開催状況:
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
-              >
-                <option value="all">すべて</option>
-                <option value="ongoing">開催中</option>
-                <option value="upcoming">開催予定</option>
-                <option value="ended">終了</option>
-              </select>
-            </label>
+            <div className="text-sm text-slate-700">
+              表示:
+              <div className="mt-1 inline-flex rounded-full border border-slate-200 bg-white p-1">
+                <button
+                  type="button"
+                  onClick={() => setViewFilter("live")}
+                  className={`rounded-full px-3 py-1 text-sm font-semibold transition ${
+                    viewFilter === "live" ? "bg-emerald-700 text-white" : "text-slate-600 hover:bg-slate-100"
+                  }`}
+                >
+                  Live
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewFilter("past")}
+                  className={`rounded-full px-3 py-1 text-sm font-semibold transition ${
+                    viewFilter === "past" ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100"
+                  }`}
+                >
+                  Past
+                </button>
+              </div>
+            </div>
             <label className="text-sm text-slate-700">
               ジム:
               <select
@@ -262,7 +281,7 @@ const ScoreSummary = () => {
             </div>
           </div>
           <span className="text-sm font-medium text-slate-600">
-            表示 {filteredEvents.length} / {events.length} 件
+            表示 {filteredEvents.length} / {baseEvents.length} 件
           </span>
         </div>
 

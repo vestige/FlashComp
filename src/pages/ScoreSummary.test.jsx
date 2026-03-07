@@ -78,62 +78,65 @@ describe("ScoreSummary", () => {
     vi.clearAllMocks();
   });
 
-  it("filters events by keyword and status", async () => {
+  it("defaults to Live view and filters by keyword", async () => {
     setupFirestore();
-    renderSummary("/score-summary?status=ongoing&q=Spring");
+    renderSummary("/score-summary?q=Spring");
 
     await screen.findByText("🏆 クライマー向け結果ページ");
     expect(screen.getByRole("link", { name: "← TOPへ戻る" })).toHaveAttribute("href", "/");
     expect(screen.getByDisplayValue("Spring")).toBeInTheDocument();
-    expect(screen.getByLabelText(/開催状況:/)).toHaveValue("ongoing");
-    expect(screen.getByText("表示 1 / 3 件")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Live" })).toBeInTheDocument();
+    expect(screen.getByText("表示 1 / 1 件")).toBeInTheDocument();
     expect(screen.getByText("Spring Flash")).toBeInTheDocument();
     expect(screen.queryByText("Winter Flash")).not.toBeInTheDocument();
     expect(screen.queryByText("Summer Practice")).not.toBeInTheDocument();
   });
 
-  it("resets filters and shows all events", async () => {
+  it("switches to Past view and resets back to Live", async () => {
     setupFirestore();
     const user = userEvent.setup();
-    renderSummary("/score-summary?status=ended&q=Winter");
+    renderSummary("/score-summary?view=past&q=Winter");
 
     await screen.findByText("🏆 クライマー向け結果ページ");
-    expect(screen.getByText("表示 1 / 3 件")).toBeInTheDocument();
+    expect(screen.getByText("表示 1 / 1 件")).toBeInTheDocument();
+    expect(screen.getByText("Winter Flash")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "フィルターをリセット" }));
 
     await waitFor(() => {
       expect(screen.getByPlaceholderText("例: Spring")).toHaveValue("");
-      expect(screen.getByLabelText(/開催状況:/)).toHaveValue("all");
       expect(screen.getByLabelText(/ジム:/)).toHaveValue("all");
-      expect(screen.getByText("表示 3 / 3 件")).toBeInTheDocument();
+      expect(screen.getByText("表示 1 / 1 件")).toBeInTheDocument();
     });
     expect(screen.getByText("Spring Flash")).toBeInTheDocument();
-    expect(screen.getByText("Summer Practice")).toBeInTheDocument();
-    expect(screen.getByText("Winter Flash")).toBeInTheDocument();
+    expect(screen.queryByText("Winter Flash")).not.toBeInTheDocument();
+    expect(screen.queryByText("Summer Practice")).not.toBeInTheDocument();
   });
 
-  it("sorts events by status priority: ongoing, upcoming, ended", async () => {
+  it("switches to Past view and shows ended events only", async () => {
     setupFirestore();
+    const user = userEvent.setup();
     renderSummary("/score-summary");
 
     await screen.findByText("🏆 クライマー向け結果ページ");
+    await user.click(screen.getByRole("button", { name: "Past" }));
 
-    const nameNodes = screen
-      .getAllByRole("heading", { level: 3 })
-      .map((node) => node.firstChild?.textContent?.trim());
-    expect(nameNodes).toEqual(["Spring Flash", "Summer Practice", "Winter Flash"]);
+    await waitFor(() => {
+      expect(screen.getByText("Winter Flash")).toBeInTheDocument();
+    });
+    expect(screen.queryByText("Spring Flash")).not.toBeInTheDocument();
+    expect(screen.queryByText("Summer Practice")).not.toBeInTheDocument();
   });
 
-  it("filters events by gym", async () => {
+  it("hides upcoming-only gyms from Live/Past lists", async () => {
     setupFirestore();
     renderSummary("/score-summary?gym=gym-b");
 
     await screen.findByText("🏆 クライマー向け結果ページ");
 
     expect(screen.getByLabelText(/ジム:/)).toHaveValue("gym-b");
-    expect(screen.getByText("表示 1 / 3 件")).toBeInTheDocument();
-    expect(screen.getByText("Summer Practice")).toBeInTheDocument();
+    expect(screen.getByText("表示 0 / 0 件")).toBeInTheDocument();
+    expect(screen.queryByText("Summer Practice")).not.toBeInTheDocument();
     expect(screen.queryByText("Spring Flash")).not.toBeInTheDocument();
     expect(screen.queryByText("Winter Flash")).not.toBeInTheDocument();
   });
