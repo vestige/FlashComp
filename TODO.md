@@ -37,9 +37,12 @@
 - [ ] Climber Portal : 見た目が揃っていない。ページタイトル、セクション表示など
 - [x] Climber Portal : このイベントのランキング表示と新ランキング表示がある、新しい方に切り替えて
 - [x] Climber Portal : Dashboardの様なフィルターにして
-- [ ] Season Settings : スマートフォン対応ができていない
-- [x] Climber Portal : Guideセクションいらない削除して
-- [x] Climber Portal : CLIMBER PORTALのぺーじタイトルが２つある小さいのは消す
+- [ ] Ranking : Summaryセクションを用意して、Event情報を書く
+- [ ] システム管理者: 今のログインシステムは大丈夫か？
+- [ ] システム管理者: ジムオーナーのユーザーパスワードを変更できる様にしたい
+- [ ] Climber Detail : UIが他とあっていない
+
+
 
 
 #### ↑ができたら、また、詳細にする
