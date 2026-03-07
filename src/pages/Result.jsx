@@ -575,6 +575,9 @@ const Result = () => {
           backLabel="↑ Back to Dashboard"
           surface={false}
         >
+          <Link to={`/events/${eventId}/ranking?from=owner`} className={subtleButtonClass}>
+            Open Ranking
+          </Link>
           <Link to={`/score-summary/${eventId}`} className={subtleButtonClass}>
             Open Public Ranking
           </Link>

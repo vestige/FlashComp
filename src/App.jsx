@@ -13,6 +13,7 @@ const SeasonEdit = lazy(() => import("./pages/SeasonEdit"));
 const EventClimbers = lazy(() => import("./pages/EventClimbers"));
 const EventScores = lazy(() => import("./pages/EventScores"));
 const Result = lazy(() => import("./pages/Result"));
+const EventRanking = lazy(() => import("./pages/EventRanking"));
 const ScoreInput = lazy(() => import("./pages/ScoreInput"));
 const EventDataIO = lazy(() => import("./pages/EventDataIO"));
 const ScoreSummary = lazy(() => import("./pages/ScoreSummary"));
@@ -48,6 +49,7 @@ function App() {
               <Route path="/events/:eventId/climbers" element={<EventClimbers />} />
               <Route path="/events/:eventId/scores" element={<EventScores />} />
               <Route path="/events/:eventId/result" element={<Result />} />
+              <Route path="/events/:eventId/ranking" element={<EventRanking />} />
               <Route
                 path="/events/:eventId/scoreinput/:seasonId/:categoryId/:participantId"
                 element={<ScoreInput />}
@@ -64,6 +66,7 @@ function App() {
             />
             <Route path="/score-summary" element={<ScoreSummary />} />
             <Route path="/score-summary/:eventId" element={<EventSummary />} />
+            <Route path="/score-summary/:eventId/ranking" element={<EventRanking />} />
             <Route
               path="/score-summary/:eventId/participants/:participantId"
               element={<ParticipantScoreDetail />}

@@ -59,7 +59,7 @@ const buildRankings = (categoryMap) => {
   return rankings;
 };
 
-export const calculateRankingRows = async ({
+export const calculateCategoryRankings = async ({
   db,
   eventId,
   seasons,
@@ -72,7 +72,9 @@ export const calculateRankingRows = async ({
       ? seasons.map((season) => season.id)
       : [selectedSeasonId].filter(Boolean);
 
-  if (targetSeasonIds.length === 0) return [];
+  if (targetSeasonIds.length === 0) {
+    return buildRankings(buildInitialCategoryMap(categories, participants));
+  }
 
   const categoryMap = buildInitialCategoryMap(categories, participants);
   const participantById = new Map(participants.map((participant) => [participant.id, participant]));
@@ -138,7 +140,26 @@ export const calculateRankingRows = async ({
     }
   }
 
-  const rankings = buildRankings(categoryMap);
+  return buildRankings(categoryMap);
+};
+
+export const calculateRankingRows = async ({
+  db,
+  eventId,
+  seasons,
+  categories,
+  participants,
+  selectedSeasonId = "all",
+}) => {
+  if (!categories.length) return [];
+  const rankings = await calculateCategoryRankings({
+    db,
+    eventId,
+    seasons,
+    categories,
+    participants,
+    selectedSeasonId,
+  });
   const seasonScope =
     selectedSeasonId === "all"
       ? "all"

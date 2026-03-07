@@ -3,69 +3,7 @@ import { Link, useParams, useSearchParams } from "react-router-dom";
 import { db } from "../firebase";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { usePageTitle } from "../hooks/usePageTitle";
-import {
-  buildAssignedTasks,
-  buildTaskByScoreKey,
-  fetchCategoryAssignments,
-  fetchSeasonTasks,
-} from "../lib/taskAssignments";
-
-const getTimestampMs = (value) => {
-  if (!value) return 0;
-  if (typeof value.toMillis === "function") return value.toMillis();
-  if (typeof value.seconds === "number") return value.seconds * 1000;
-  return 0;
-};
-
-const buildInitialCategoryMap = (categories, participants) => {
-  const result = {};
-
-  for (const category of categories) {
-    const byParticipantId = new Map();
-    for (const participant of participants.filter((p) => p.categoryId === category.id)) {
-      byParticipantId.set(participant.id, {
-        participantId: participant.id,
-        name: participant.name || "名無し",
-        memberNo: participant.memberNo || "-",
-        totalPoints: 0,
-        clearCount: 0,
-        latestUpdatedAt: 0,
-      });
-    }
-    result[category.id] = byParticipantId;
-  }
-
-  return result;
-};
-
-const buildRankings = (categoryMap) => {
-  const rankings = {};
-
-  for (const [categoryId, participants] of Object.entries(categoryMap)) {
-    const sorted = Array.from(participants.values()).sort((a, b) => {
-      if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
-      if (b.clearCount !== a.clearCount) return b.clearCount - a.clearCount;
-      return a.name.localeCompare(b.name, "ja");
-    });
-
-    let prevPoints = null;
-    let prevClears = null;
-    let rank = 0;
-
-    rankings[categoryId] = sorted.map((row, index) => {
-      if (row.totalPoints !== prevPoints || row.clearCount !== prevClears) {
-        rank = index + 1;
-      }
-
-      prevPoints = row.totalPoints;
-      prevClears = row.clearCount;
-
-      return { ...row, rank };
-    });
-  }
-
-  return rankings;
-};
+import { calculateCategoryRankings } from "../lib/rankingCsv";
 
 const EventSummary = () => {
   const { eventId } = useParams();
@@ -154,98 +92,19 @@ const EventSummary = () => {
         return;
       }
 
-      const targetSeasonIds =
-        selectedSeasonId === "all"
-          ? seasons.map((season) => season.id)
-          : [selectedSeasonId].filter(Boolean);
-
-      if (targetSeasonIds.length === 0) {
-        setRankings(buildRankings(buildInitialCategoryMap(targetCategories, participants)));
-        return;
-      }
-
       setCalculating(true);
       try {
-        const categoryMap = buildInitialCategoryMap(targetCategories, participants);
-        const participantById = new Map(participants.map((p) => [p.id, p]));
-
-        const seasonTasksBySeasonId = new Map(
-          await Promise.all(
-            targetSeasonIds.map(async (seasonId) => [seasonId, await fetchSeasonTasks(eventId, seasonId)])
-          )
-        );
-
-        const fetchTasks = targetSeasonIds.flatMap((seasonId) =>
-          targetCategories.map(async (category) => {
-            const [assignments, scoreSnap] = await Promise.all([
-              fetchCategoryAssignments(eventId, seasonId, category.id),
-              getDocs(
-                collection(
-                  db,
-                  "events",
-                  eventId,
-                  "seasons",
-                  seasonId,
-                  "categories",
-                  category.id,
-                  "participants"
-                )
-              ),
-            ]);
-
-            return {
-              categoryId: category.id,
-              assignedTasks: buildAssignedTasks(
-                seasonTasksBySeasonId.get(seasonId) || [],
-                assignments
-              ),
-              scoreSnap,
-            };
-          })
-        );
-
-        const results = await Promise.all(fetchTasks);
-
-        for (const { categoryId, assignedTasks, scoreSnap } of results) {
-          const taskByScoreKey = buildTaskByScoreKey(assignedTasks);
-          for (const scoreDoc of scoreSnap.docs) {
-            const data = scoreDoc.data();
-            const scoreMap = data.scores || {};
-            const participantId = scoreDoc.id;
-
-            if (!categoryMap[categoryId].has(participantId)) {
-              const fallback = participantById.get(participantId);
-              categoryMap[categoryId].set(participantId, {
-                participantId,
-                name: fallback?.name || data.participantName || `ID:${participantId}`,
-                memberNo: fallback?.memberNo || "-",
-                totalPoints: 0,
-                clearCount: 0,
-                latestUpdatedAt: 0,
-              });
-            }
-
-            const row = categoryMap[categoryId].get(participantId);
-            const countedTaskIds = new Set();
-
-            for (const [scoreKey, isCleared] of Object.entries(scoreMap)) {
-              if (!isCleared) continue;
-
-              const task = taskByScoreKey.get(scoreKey);
-              const canonicalTaskId = task?.id || scoreKey;
-              if (countedTaskIds.has(canonicalTaskId)) continue;
-              countedTaskIds.add(canonicalTaskId);
-
-              row.totalPoints += Number(task?.points) || 1;
-              row.clearCount += 1;
-            }
-
-            row.latestUpdatedAt = Math.max(row.latestUpdatedAt, getTimestampMs(data.updatedAt));
-          }
-        }
+        const nextRankings = await calculateCategoryRankings({
+          db,
+          eventId,
+          seasons,
+          categories: targetCategories,
+          participants,
+          selectedSeasonId,
+        });
 
         if (!cancelled) {
-          setRankings(buildRankings(categoryMap));
+          setRankings(nextRankings);
         }
       } catch (err) {
         console.error("ランキング計算に失敗:", err);
@@ -418,12 +277,20 @@ const EventSummary = () => {
                 {event?.name} - 集計結果
               </h2>
             </div>
-            <Link
-              to="/score-summary"
-              className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-            >
-              ← イベント選択に戻る
-            </Link>
+            <div className="flex flex-wrap items-center gap-2">
+              <Link
+                to={`/score-summary/${eventId}/ranking?from=portal`}
+                className="inline-flex items-center rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-sm font-semibold text-sky-800 transition hover:bg-sky-100"
+              >
+                新ランキング表示
+              </Link>
+              <Link
+                to="/score-summary"
+                className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+              >
+                ← イベント選択に戻る
+              </Link>
+            </div>
           </div>
         </section>
 

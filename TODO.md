@@ -27,7 +27,7 @@
 - [x] Public Rankingは Resultから表示できるようにする、まずはResultページを用意する
 - [x] Result : 統計データにする、可視化できるグラフ表示にする。どんなのがいいかな？
 - [x] Result : 全体の課題数、Routeの達成率、シーズンごとの達成率、各カテゴリの参加者数、男女比など？
-- [ ] Result : ランキング（カテゴリごとのシーズンごとのランキング、イベントを通して）
+- [x] Result : ランキング（カテゴリごとのシーズンごとのランキング、イベントを通して）
 - [ ] Climber Portal : みためをそろえる
 - [ ] Climber Portal : Registerd Event(デフォルトはOpenされているEvent)
 - [ ] Climber Portal : スイッチ（Live / Past）で終了したEventも一覧がみれるようにする
