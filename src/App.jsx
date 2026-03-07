@@ -1,5 +1,5 @@
 import { Suspense, lazy } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Navigate, Routes, Route } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ManagementLayout from "./components/ManagementLayout";
 import AppShell from "./components/AppShell";
@@ -17,7 +17,6 @@ const EventRanking = lazy(() => import("./pages/EventRanking"));
 const ScoreInput = lazy(() => import("./pages/ScoreInput"));
 const EventDataIO = lazy(() => import("./pages/EventDataIO"));
 const ScoreSummary = lazy(() => import("./pages/ScoreSummary"));
-const EventSummary = lazy(() => import("./pages/EventSummary"));
 const ParticipantScoreDetail = lazy(() => import("./pages/ParticipantScoreDetail"));
 const SystemAdmin = lazy(() => import("./pages/SystemAdmin"));
 
@@ -65,7 +64,10 @@ function App() {
               }
             />
             <Route path="/score-summary" element={<ScoreSummary />} />
-            <Route path="/score-summary/:eventId" element={<EventSummary />} />
+            <Route
+              path="/score-summary/:eventId"
+              element={<Navigate to="/?legacy=score-summary-event" replace />}
+            />
             <Route path="/score-summary/:eventId/ranking" element={<EventRanking />} />
             <Route
               path="/score-summary/:eventId/participants/:participantId"

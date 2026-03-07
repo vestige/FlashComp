@@ -1,8 +1,10 @@
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { usePageTitle } from "../hooks/usePageTitle";
 
 const Home = () => {
   usePageTitle("Home");
+  const [searchParams] = useSearchParams();
+  const showLegacyPortalNotice = searchParams.get("legacy") === "score-summary-event";
   const cardClass =
     "group flex flex-col rounded-2xl border border-slate-200 bg-white p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl";
   const cardDescriptionClass = "mt-2 text-sm leading-relaxed text-slate-600";
@@ -16,6 +18,13 @@ const Home = () => {
 
   return (
     <main className="relative">
+      {showLegacyPortalNotice ? (
+        <section className="mx-auto mt-4 max-w-4xl px-4 sm:px-6 lg:px-8">
+          <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            旧URLです。クライマーポータルは「イベント結果を見る」からアクセスしてください。
+          </p>
+        </section>
+      ) : null}
       <section className="relative overflow-hidden px-6 py-16 lg:py-24">
           <div className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(45%_45%_at_50%_50%,rgba(82,183,136,0.15)_0%,rgba(255,255,255,0)_100%)]" />
           <div className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(45%_45%_at_50%_50%,rgba(54,179,242,0.05)_0%,rgba(255,255,255,0)_100%)]" />
