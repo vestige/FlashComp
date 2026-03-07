@@ -16,6 +16,7 @@ The following commands are available:
   - Tries to delete top-level `events`, `gyms`, `users` (gymOwners collection) as well. Use only with privileged account/rules.
 - `npm run db:seed`
   - Seeds realistic sample data for local testing (events, seasons, categories, routes, participants(climbers), scores) within gymOwner gym scope.
+  - Includes `ended`, `live`, `upcoming`, and `single-category` patterns for UI verification.
 - `npm run db:seed:system`
   - Also tries to write `gyms` and sample `users` docs for gymOwners.
   - Includes one ongoing event (`event-live-now`) and climbers who join from mid seasons (`entrySeasonId`).
@@ -23,6 +24,15 @@ The following commands are available:
     - `participated: true/false`
     - `seasonStatus: active/absent`
     - `scores` (absent seasons are recorded as all `false`, i.e. 0 points)
+- `npm run db:backup`
+  - Exports manageable `events` subtree docs to `backups/firestore-backup-<timestamp>.json`.
+  - Optional: `npm run db:backup -- --out backups/my-backup.json`
+- `npm run db:backup:system`
+  - Same as backup, plus `gyms` and `users` collections.
+- `npm run db:restore -- --yes --file <backup-json>`
+  - Restores docs from backup JSON into Firestore.
+  - Scope-safe: when not admin/all-gym, docs outside your gym scope are skipped.
+  - Optional `--include-system` to restore `gyms/users` docs too.
 
 Mid-season / skipped-season sample climbers:
 - `event-spring-2026`
@@ -34,6 +44,10 @@ Mid-season / skipped-season sample climbers:
   - `p003` Mio Yamamoto: `["season-02","season-03"]`
   - `p104` Daichi Mori: `["season-02","season-03"]`
   - `p203` Sei Kobayashi: `["season-01","season-03"]` (skips phase 2)
+
+Additional event patterns for validation:
+- `event-upcoming-2026`: upcoming event (future start/end dates)
+- `event-rookie-cup-2026`: single season + single category (small dataset)
 
 GymOwner profile samples (`users` collection):
 - `owner-shibuya` (`owner.shibuya@example.com`) -> `gymIds: ["gym-shibuya"]`
@@ -102,6 +116,12 @@ Reset/seed/purge auth:
 - Then run:
   - `npm run db:reset`
   - (`db:reset` runs purge + seed with current gymOwner's gym scope)
+
+Suggested pre-operation workflow:
+1. `npm run db:backup -- --out backups/pre-op.json`
+2. `npm run db:purge:yes`
+3. `npm run db:seed` (for staging checks) or continue with clean state
+4. If rollback needed: `npm run db:restore -- --yes --file backups/pre-op.json`
 
 If you need to target another Firebase project, set these env vars before running:
 

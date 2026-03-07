@@ -81,6 +81,7 @@ const categoryTemplates = [
   { id: "cat-middle", name: "Middle", grades: ["6Q", "5Q", "4Q"], basePoints: 100, clearRate: 0.55 },
   { id: "cat-open", name: "Open", grades: ["3Q", "2Q", "1Q"], basePoints: 130, clearRate: 0.42 },
 ];
+const categoryTemplateById = new Map(categoryTemplates.map((category) => [category.id, category]));
 
 const participantsByCategory = {
   "cat-beginner": [
@@ -144,6 +145,39 @@ function buildLiveEvent() {
   };
 }
 
+function buildUpcomingEvent() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const season1Start = addDays(today, 18);
+  const season1End = addDays(today, 47);
+  const season2Start = addDays(today, 48);
+  const season2End = addDays(today, 78);
+
+  return {
+    id: "event-upcoming-2026",
+    name: "FlashComp Upcoming 2026",
+    gymId: "gym-yokohama",
+    startDate: toDateText(season1Start),
+    endDate: toDateText(season2End),
+    seasons: [
+      {
+        id: "season-01",
+        name: "Advance Phase",
+        startDate: toDateText(season1Start),
+        endDate: toDateText(season1End),
+      },
+      {
+        id: "season-02",
+        name: "Final Phase",
+        startDate: toDateText(season2Start),
+        endDate: toDateText(season2End),
+      },
+    ],
+    routesPerCategory: 9,
+  };
+}
+
 const events = [
   {
     id: "event-spring-2026",
@@ -171,7 +205,23 @@ const events = [
     ],
     routesPerCategory: 10,
   },
+  {
+    id: "event-rookie-cup-2026",
+    name: "Rookie Cup 2026",
+    gymId: "gym-yokohama",
+    startDate: "2026-01-12",
+    endDate: "2026-02-10",
+    seasons: [
+      { id: "season-01", name: "Rookie Session", startDate: "2026-01-12", endDate: "2026-02-10" },
+    ],
+    routesPerCategory: 8,
+    categoryIds: ["cat-beginner"],
+    participantIdsByCategory: {
+      "cat-beginner": ["p001", "p002", "p003"],
+    },
+  },
   buildLiveEvent(),
+  buildUpcomingEvent(),
 ];
 
 const seasonParticipationByEvent = {
@@ -203,6 +253,29 @@ function resolveParticipatingSeasonIds(event, seasonIndexById, participantId) {
   }
 
   return valid;
+}
+
+function resolveCategoriesForEvent(event) {
+  const configuredCategoryIds = Array.isArray(event.categoryIds)
+    ? event.categoryIds.filter((categoryId) => categoryTemplateById.has(categoryId))
+    : [];
+  const categoryIds =
+    configuredCategoryIds.length > 0
+      ? configuredCategoryIds
+      : categoryTemplates.map((category) => category.id);
+  return categoryIds
+    .map((categoryId) => categoryTemplateById.get(categoryId))
+    .filter((category) => Boolean(category));
+}
+
+function resolveParticipantsForEventCategory(event, categoryId) {
+  const defaults = participantsByCategory[categoryId] || [];
+  const participantIds = event.participantIdsByCategory?.[categoryId];
+  if (!Array.isArray(participantIds) || participantIds.length === 0) {
+    return defaults;
+  }
+  const participantIdSet = new Set(participantIds);
+  return defaults.filter((participant) => participantIdSet.has(participant.id));
 }
 
 async function seed() {
@@ -302,6 +375,13 @@ async function seed() {
     seededEventCount += 1;
     const seasonIndexById = new Map(event.seasons.map((season, index) => [season.id, index]));
     const participantSeasonIdsById = new Map();
+    const eventCategories = resolveCategoriesForEvent(event);
+    const eventParticipantsByCategory = new Map(
+      eventCategories.map((category) => [
+        category.id,
+        resolveParticipantsForEventCategory(event, category.id),
+      ])
+    );
 
     for (const season of event.seasons) {
       await queueSet(["events", event.id, "seasons", season.id], {
@@ -311,14 +391,14 @@ async function seed() {
       });
     }
 
-    for (const category of categoryTemplates) {
+    for (const category of eventCategories) {
       await queueSet(["events", event.id, "categories", category.id], {
         name: category.name,
       });
     }
 
-    for (const category of categoryTemplates) {
-      const participants = participantsByCategory[category.id];
+    for (const category of eventCategories) {
+      const participants = eventParticipantsByCategory.get(category.id) || [];
 
       for (const participant of participants) {
         const participatingSeasonIds = resolveParticipatingSeasonIds(
@@ -344,7 +424,7 @@ async function seed() {
     }
 
     for (const season of event.seasons) {
-      for (const category of categoryTemplates) {
+      for (const category of eventCategories) {
         const routes = [];
 
         for (let i = 1; i <= event.routesPerCategory; i += 1) {
@@ -361,7 +441,7 @@ async function seed() {
           );
         }
 
-        const participants = participantsByCategory[category.id];
+        const participants = eventParticipantsByCategory.get(category.id) || [];
         for (const participant of participants) {
           const participatingSeasonIds = participantSeasonIdsById.get(participant.id) || [];
           const isParticipating = participatingSeasonIds.includes(season.id);
