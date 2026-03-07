@@ -28,12 +28,12 @@
 - [x] Result : 統計データにする、可視化できるグラフ表示にする。どんなのがいいかな？
 - [x] Result : 全体の課題数、Routeの達成率、シーズンごとの達成率、各カテゴリの参加者数、男女比など？
 - [x] Result : ランキング（カテゴリごとのシーズンごとのランキング、イベントを通して）
-- [ ] Climber Portal : みためをそろえる
+- [x] Climber Portal : みためをそろえる
 - [x] Climber Portal : Registerd Event(デフォルトはOpenされているEvent)
 - [x] Climber Portal : スイッチ（Live / Past）で終了したEventも一覧がみれるようにする
 - [x] Climber Portal : まだはじまっていないイベントはどちらにも表示しない(これは実装済み？)
-- [ ] Climber Portal : イベントカードに書く情報をもう少し増やす。どんな情報があるかな？
-- [ ] Climber Portal : 開催ジムごとにカードの色分けする？どうかな？
+- [x] Climber Portal : イベントカードに書く情報をもう少し増やす。どんな情報があるかな？
+- [x] Climber Portal : 開催ジムごとにカードの色分けする？どうかな？
 
 #### ↑ができたら、また、詳細にする
 - [ ] Firebase Dynamic Linksが終わる、認証方法を変えないといけない？ Googleログインにして、システム管理者が特定のユーザーだけを許可するようにしたい

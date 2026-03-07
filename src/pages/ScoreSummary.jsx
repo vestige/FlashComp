@@ -41,6 +41,24 @@ const statusOrderMap = {
   upcoming: 1,
   ended: 2,
 };
+const gymAccentPalette = [
+  {
+    leftBorderClass: "border-l-emerald-400",
+    chipClass: "bg-emerald-50 text-emerald-700",
+  },
+  {
+    leftBorderClass: "border-l-sky-400",
+    chipClass: "bg-sky-50 text-sky-700",
+  },
+  {
+    leftBorderClass: "border-l-amber-400",
+    chipClass: "bg-amber-50 text-amber-700",
+  },
+  {
+    leftBorderClass: "border-l-violet-400",
+    chipClass: "bg-violet-50 text-violet-700",
+  },
+];
 
 const compareEventsForDisplay = (a, b, nowMs) => {
   const aStatus = getEventStatus(a, nowMs);
@@ -69,6 +87,26 @@ const compareEventsForDisplay = (a, b, nowMs) => {
   if (aEndMs !== bEndMs) return bEndMs - aEndMs;
   if (aStartMs !== bStartMs) return bStartMs - aStartMs;
   return (a.name || "").localeCompare(b.name || "", "ja");
+};
+
+const buildEventTimingLabel = (event, nowMs) => {
+  const startMs = toTimestampMs(event.startDate);
+  const endMs = toTimestampMs(event.endDate);
+  const dayMs = 24 * 60 * 60 * 1000;
+  const status = getEventStatus(event, nowMs);
+  if (status === "ongoing" && endMs > 0) {
+    const days = Math.max(0, Math.ceil((endMs - nowMs) / dayMs));
+    return `終了まで ${days} 日`;
+  }
+  if (status === "ended" && endMs > 0) {
+    const days = Math.max(0, Math.floor((nowMs - endMs) / dayMs));
+    return `終了から ${days} 日`;
+  }
+  if (status === "upcoming" && startMs > 0) {
+    const days = Math.max(0, Math.ceil((startMs - nowMs) / dayMs));
+    return `開始まで ${days} 日`;
+  }
+  return "";
 };
 
 const ScoreSummary = () => {
@@ -160,6 +198,13 @@ const ScoreSummary = () => {
     () => new Map(gyms.map((gym) => [gym.id, gym.name || gym.id])),
     [gyms]
   );
+  const gymAccentById = useMemo(() => {
+    const map = new Map();
+    gyms.forEach((gym, index) => {
+      map.set(gym.id, gymAccentPalette[index % gymAccentPalette.length]);
+    });
+    return map;
+  }, [gyms]);
 
   const resetFilters = () => {
     setKeyword("");
@@ -292,12 +337,18 @@ const ScoreSummary = () => {
         ) : (
           <div className="mt-4 grid gap-3">
             {filteredEvents.map((event) => {
-              const status = getEventStatus(event, Date.now());
+              const nowMs = Date.now();
+              const status = getEventStatus(event, nowMs);
               const statusClass = statusStyleMap[status] || statusStyleMap.ended;
+              const accent = gymAccentById.get(event.gymId) || {
+                leftBorderClass: "border-l-slate-300",
+                chipClass: "bg-slate-100 text-slate-700",
+              };
+              const timingLabel = buildEventTimingLabel(event, nowMs);
               return (
                 <section
                   key={event.id}
-                  className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                  className={`rounded-2xl border border-slate-200 border-l-4 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${accent.leftBorderClass}`}
                 >
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <h3 className="text-lg font-semibold text-slate-900">{event.name}</h3>
@@ -308,15 +359,30 @@ const ScoreSummary = () => {
                   <p className="mt-2 text-sm text-slate-600">
                     開催期間: {toDateText(event.startDate)} 〜 {toDateText(event.endDate)}
                   </p>
-                  <p className="mt-1 text-sm text-slate-600">
-                    ジム: {gymNameById.get(event.gymId) || "未設定"}
-                  </p>
-                  <Link
-                    to={`/score-summary/${event.id}`}
-                    className="mt-3 inline-flex items-center rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-sm font-semibold text-sky-800 transition hover:bg-sky-100"
-                  >
-                    このイベントのランキングを見る
-                  </Link>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${accent.chipClass}`}>
+                      {gymNameById.get(event.gymId) || "未設定ジム"}
+                    </span>
+                    {timingLabel ? (
+                      <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
+                        {timingLabel}
+                      </span>
+                    ) : null}
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Link
+                      to={`/score-summary/${event.id}`}
+                      className="inline-flex items-center rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-sm font-semibold text-sky-800 transition hover:bg-sky-100"
+                    >
+                      このイベントのランキングを見る
+                    </Link>
+                    <Link
+                      to={`/score-summary/${event.id}/ranking?from=portal`}
+                      className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                    >
+                      新ランキング表示
+                    </Link>
+                  </div>
                 </section>
               );
             })}
