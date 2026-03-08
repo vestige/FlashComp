@@ -42,14 +42,6 @@ const defaultOwnerForm = {
   gymIds: [],
 };
 
-const profileDocIdFromEmail = (email) => {
-  return (email || "")
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-};
-
 const SystemAdmin = () => {
   usePageTitle("システム管理者");
 
@@ -257,9 +249,9 @@ const SystemAdmin = () => {
       return;
     }
 
-    const profileId = ownerForm.id.trim() || profileDocIdFromEmail(email);
+    const profileId = ownerForm.id.trim();
     if (!profileId) {
-      setStatus("❌ プロファイルIDを作成できませんでした。");
+      setStatus("❌ Firebase UIDは必須です（Googleログイン後に表示されるUIDを設定してください）。");
       return;
     }
 
@@ -492,12 +484,16 @@ const SystemAdmin = () => {
             </Icon>
             ジムオーナープロファイル管理
           </h2>
+          <p className="text-sm text-slate-600">
+            Googleログイン運用では、オーナー登録時に Firebase UID が必要です。
+          </p>
           <form onSubmit={handleSaveOwner} className="mt-3 grid gap-2">
             <input
               type="text"
-              placeholder="プロファイルID（空欄ならメールから自動生成）"
+              placeholder="Firebase UID（Googleログイン後に取得）"
               value={ownerForm.id}
               onChange={(e) => setOwnerForm((prev) => ({ ...prev, id: e.target.value }))}
+              required
               className={`w-full max-w-[700px] ${inputFieldClass}`}
             />
             <input

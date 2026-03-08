@@ -56,10 +56,18 @@ GymOwner profile samples (`users` collection):
 
 
 GymOwner access control fields used by app:
-- `users/{uid}` (gymOwners profile, or fallback by matching `email`)
+- `users/{uid}` (gymOwners profile)
 - `role` (`owner` or `admin`)
 - `gymIds` (array of gyms the gymOwner can manage/view, `["*"]` means all gyms)
-- If `users/{uid}` is missing but matching `email` doc exists, app migrates profile to `users/{uid}` on login.
+
+## Google login onboarding (gymOwner/admin)
+
+- Login method for management pages: Google Sign-In
+- First login can succeed in Firebase Auth even if profile is missing.
+- Management access is enabled only after admin creates `users/{uid}` with:
+  - `role` (`owner` or `admin`)
+  - `gymIds` (or `["*"]` for admin)
+- If profile is missing, management routes show UID/email so users can send UID to admin.
 
 ## System admin screen
 
@@ -91,10 +99,10 @@ GymOwner access control fields used by app:
   - `admin` or `gymIds` including `*` can manage all gyms/events
   - Event subcollections (`seasons/categories/routes/participants/...`) writes are restricted by parent event's `gymId`
   - `gyms` write is allowed for `admin` only
-  - `users` write is allowed for self or `admin`
+  - `users` write is allowed for `admin` only
 
 Important:
-- For production auth users, create `users/{uid}` docs keyed by Firebase Auth `uid`.
+- For production auth users, create `users/{uid}` docs keyed by Firebase Auth `uid` (admin operation).
 - Required fields: `role`, `gymIds`.
 - If `users/{uid}` is missing, gymOwner writes will be denied by rules.
 - For full access test accounts, use `role: "admin"` and `gymIds: ["*"]`.

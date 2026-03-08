@@ -1,33 +1,32 @@
 // src/pages/Login.jsx
 import { useState } from "react";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { auth } from "../firebase"; 
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { usePageTitle } from "../hooks/usePageTitle";
 
 const Login = () => {
-  usePageTitle("管理者ログイン");
+  usePageTitle("Googleログイン");
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [status, setStatus] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleLogin = async () => {
+  const handleGoogleLogin = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     const redirectPath = location.state?.from?.pathname || "/dashboard";
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      setStatus("✅ ログイン成功！管理ページに移動します...");
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+      setStatus("✅ Googleログイン成功。管理ページへ移動します...");
       setTimeout(() => navigate(redirectPath, { replace: true }), 600);
     } catch (error) {
-      setStatus("❌ ログイン失敗: " + error.message);
+      setStatus("❌ Googleログイン失敗: " + error.message);
+    } finally {
+      setIsSubmitting(false);
     }
-  };
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    await handleLogin();
   };
 
   return (
@@ -39,31 +38,38 @@ const Login = () => {
         >
           ← Homeに戻る
         </Link>
-        <h2 className="text-2xl font-bold text-slate-900">管理者ログイン</h2>
-        <form className="mt-4 grid gap-3" onSubmit={handleSubmit}>
-          <input
-            type="email"
-            placeholder="メールアドレス"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
-          />
-          <input
-            type="password"
-            placeholder="パスワード"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
-          />
-          <button
-            type="submit"
-            className="inline-flex items-center justify-center rounded-lg border border-sky-200 bg-sky-50 px-4 py-2 text-sm font-semibold text-sky-800 transition hover:bg-sky-100"
-          >
-            ログイン
-          </button>
-        </form>
+        <h2 className="text-2xl font-bold text-slate-900">運営ログイン</h2>
+        <p className="mt-3 text-sm text-slate-600">
+          管理画面はGoogleアカウントでログインしてください。
+        </p>
+        <button
+          type="button"
+          onClick={handleGoogleLogin}
+          disabled={isSubmitting}
+          className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
+            <path
+              fill="#EA4335"
+              d="M12 10.2v3.9h5.5c-.2 1.2-.9 2.3-1.9 3l3.1 2.4c1.8-1.7 2.9-4.2 2.9-7.1 0-.7-.1-1.4-.2-2.1H12Z"
+            />
+            <path
+              fill="#34A853"
+              d="M6.6 14.3 5.9 14l-2.5 2c1.6 3.1 4.8 5.2 8.6 5.2 2.5 0 4.6-.8 6.1-2.3l-3.1-2.4c-.8.5-1.8.8-3 .8-2.3 0-4.2-1.5-4.9-3.6Z"
+            />
+            <path
+              fill="#FBBC05"
+              d="M3.4 8.1A9.5 9.5 0 0 0 3 10c0 1.4.3 2.7.9 3.9l3.2-2.5A5.6 5.6 0 0 1 7 10c0-.5.1-1.1.3-1.5L3.4 8.1Z"
+            />
+            <path
+              fill="#4285F4"
+              d="M12 4.5c1.4 0 2.7.5 3.7 1.4l2.7-2.7A9.6 9.6 0 0 0 12 1C8.2 1 4.9 3.2 3.4 6.3l3.9 3A5.5 5.5 0 0 1 12 4.5Z"
+            />
+          </svg>
+          {isSubmitting ? "ログイン中..." : "Googleでログイン"}
+        </button>
         {status && (
-          <div className="mt-4 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+          <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
             {status}
           </div>
         )}
