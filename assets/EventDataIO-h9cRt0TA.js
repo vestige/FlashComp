@@ -1,1 +1,0 @@
-import{e as t,j as s,N as a}from"./vendor-react-run9ZIVx.js";import"./vendor-misc-B8N2N7WS.js";const n=()=>{const{eventId:e}=t();return s.jsx(a,{to:`/events/${e}/climbers`,replace:!0})};export{n as default};
