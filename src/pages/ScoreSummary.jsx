@@ -134,7 +134,7 @@ const buildEventTimingLabel = (event, nowMs) => {
 };
 
 const ScoreSummary = () => {
-  usePageTitle("クライマー向けイベント一覧");
+  usePageTitle("クライマーポータル");
 
   const [searchParams, setSearchParams] = useSearchParams();
   const initialKeyword = searchParams.get("q") || "";
@@ -255,7 +255,7 @@ const ScoreSummary = () => {
           </p>
           <div className="mt-6">
             <Link to="/" className={subtleButtonClass}>
-              ↑ Back to TOP
+              ← TOPへ戻る
             </Link>
           </div>
         </div>
@@ -267,15 +267,16 @@ const ScoreSummary = () => {
     <div className={pageBackgroundClass}>
       <div className={pageContainerClass}>
         <ManagementHero
-          title="Climber Portal"
-          description="Live/Pastでイベントを切り替え、ランキングを確認します。"
+          eyebrow="Climber Portal"
+          title="クライマーポータル"
+          description="開催中/終了イベントを切り替えて、ランキングを確認できます。"
           backTo="/"
-          backLabel="↑ Back to TOP"
+          backLabel="← TOPへ戻る"
           surface={false}
         />
 
         <section className="mt-5">
-          <h2 className={sectionHeadingClass}>Filters</h2>
+          <h2 className={sectionHeadingClass}>絞り込み</h2>
           <div className={sectionCardClass}>
             <div className="flex flex-wrap items-center gap-3">
               <label className="flex min-w-[260px] flex-1 items-center gap-2 text-sm text-slate-600">
@@ -299,7 +300,7 @@ const ScoreSummary = () => {
                     viewFilter === "live" ? "bg-emerald-800 text-white" : "text-slate-500 hover:bg-slate-100"
                   }`}
                 >
-                  Live
+                  開催中
                 </button>
                 <button
                   type="button"
@@ -308,7 +309,7 @@ const ScoreSummary = () => {
                     viewFilter === "past" ? "bg-slate-900 text-white" : "text-slate-500 hover:bg-slate-100"
                   }`}
                 >
-                  Past
+                  終了
                 </button>
               </div>
               <label className="text-sm text-slate-700">
@@ -337,7 +338,7 @@ const ScoreSummary = () => {
         </section>
 
         <section className="mt-5">
-          <h2 className={sectionHeadingClass}>Events</h2>
+          <h2 className={sectionHeadingClass}>イベント一覧</h2>
           {events.length === 0 ? (
             <p className="text-sm text-slate-600">イベントがありません。</p>
           ) : filteredEvents.length === 0 ? (

@@ -26,15 +26,19 @@ const AppShell = () => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const controlsRef = useRef(null);
+  const previousUidRef = useRef(null);
   const userLabel = currentUser?.displayName || currentUser?.email || "User";
   const userInitial = userLabel.trim().charAt(0).toUpperCase() || "U";
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setCurrentUser(user);
-      if (!user) {
+      const nextUid = user?.uid || null;
+      if (previousUidRef.current !== nextUid) {
+        setIsMenuOpen(false);
         setIsUserMenuOpen(false);
       }
+      previousUidRef.current = nextUid;
+      setCurrentUser(user);
     });
     return () => unsubscribe();
   }, []);
