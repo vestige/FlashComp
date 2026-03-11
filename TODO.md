@@ -1,44 +1,48 @@
-# TODO
-- [x] 各ページにヘッダーとフッターを用意して共通にする（topページに合わせる）
-- [x] 課題登録画面で保存やチェックボックスにチェックを入れるたびにメッセージが上に表示されるため、画面が動いた感じがしていやだ（下部表示に変更）
-- [x] テストデータをバリエーションよく用意したい
-- [x] 実際に運用する前にデータの全消去、運用開始時のバックアップ手順などを用意しておきたい
+# TODO（作業カンバン）
 
-## Check
-#### 追加（2026-03-06）
-- [x] Climber Settings : CVS出力、入力は作成の前におく
-- [x] Climber Settings : 男女比の出力はいったん削除
-- [x] Climber Settings : クライマーCSVセクションは消す
-- [x] Score Management :  みためをそろえる
-- [x] Score Management :  表示項目・デフォルト選択の調整（Summary、イベント期間、Activeシーズン初期選択、登録順ソート、会員番号/完登数表示）
-- [x] Score Input : ページタイトル/サマリー/セクション名を既存デザインに合わせる
-- [x] Score Input : 簡易表示で未保存の変更を色表示し、保存後反映する導線に合わせる
-- [x] Score Input : ボタン群を既存UIスタイルに統一（トグル/一括操作/保存）
-- [x] Season Settings : 初めからカテゴリ選択を１つ適用しておくのがいいかも。大体はカテゴリは１つの時のイベントもあるし。
-- [x] Season Settings : Event Settingsに戻る → Back to Event Settings 
-- [x] Event Settings : ダッシュボードに戻る → Back to Dashboard
-- [x] Climber Settings : ダッシュボードに戻る → Back to Dashboard
-- [x] Score Management : ダッシュボードに戻る → Back to Dashboard
-- [x] Score Input : スコア一覧に戻る → Back to Score Management
-- [x] Score Input : ページタイトルに小さい青字でScore Inputがある、削除して
-- [x] Score Input : 簡易表示と詳細表示は、Dashboardにあった、Active / All Eventsのようにスイッチの切り替えのようにしたい
-- [x] Score Input : 課題検索機能は不要なので、削除しよう
-- [x] DashBoard : Public Ranking > Result
-- [x] Public Rankingは Resultから表示できるようにする、まずはResultページを用意する
-- [x] Result : 統計データにする、可視化できるグラフ表示にする。どんなのがいいかな？
-- [x] Result : 全体の課題数、Routeの達成率、シーズンごとの達成率、各カテゴリの参加者数、男女比など？
-- [x] Result : ランキング（カテゴリごとのシーズンごとのランキング、イベントを通して）
-- [x] Climber Portal : みためをそろえる
-- [x] Climber Portal : Registerd Event(デフォルトはOpenされているEvent)
-- [x] Climber Portal : スイッチ（Live / Past）で終了したEventも一覧がみれるようにする
-- [x] Climber Portal : まだはじまっていないイベントはどちらにも表示しない(これは実装済み？)
-- [x] Climber Portal : イベントカードに書く情報をもう少し増やす。どんな情報があるかな？
-- [x] Climber Portal : 開催ジムごとにカードの色分けする？どうかな？
-- [ ] Climber Portal : 見た目が揃っていない。ページタイトル、セクション表示など
-- [x] Climber Portal : このイベントのランキング表示と新ランキング表示がある、新しい方に切り替えて
-- [x] Climber Portal : Dashboardの様なフィルターにして
-- [x] システム管理者: Googleログイン時の最小アカウント試験手順を整理（`SPEC.md` の「認証試験手順」）
-- [ ] Climber Detail : UIが他とあっていない
-- [ ] Ranking : Summaryセクションを用意して、Event情報を書く
-- [ ] Ranking : セクションごとにアイコン
-- [ ] Ranking : 一覧の見せ方をもう少しかっこよくしたい
+## カラム
+- Backlog: 未着手
+- Ready: 着手可能
+- In Progress: 着手中
+- Blocked: 依存待ち・外部要因待ち
+- Done: 完了
+
+## P0（最優先：認証基盤）
+
+### Backlog
+- [ ] `KAN-001` [P0] 認証方式変更の目的（Googleアカウント固定運用 / テスト用途削減 / 切替工数削減）を合意し、`SPEC.md` に方針明文化
+- [ ] `KAN-002` [P0] `admin` / `owner` / `viewer` の許可範囲（画面・API・公開領域）をマッピングして承認
+- [ ] `KAN-003` [P0] 未登録Googleアカウントの扱い（即時拒否 / 申請導線）を仕様確定
+- [x] `KAN-004` [P0] ステージング・本番で Google Provider 設定（ドメイン/リダイレクト）を反映
+- [x] `KAN-005` [P0] メール/パスワード認証の継続可否を決定し、OAuth以外運用をルール化
+- [x] `KAN-006` [P0] `src/pages/Login.jsx` を Google sign-in へ置換
+- [x] `KAN-007` [P0] 既存メール/パスワードUIを削除または非表示化
+- [x] `KAN-008` [P0] Googleログイン失敗時（ポップアップ拒否/ドメイン不一致/ネットワーク）メッセージ分岐を実装
+- [x] `KAN-009` [P0] `users/{uid}` 参照・初期作成の共通ヘルパーを実装（`hooks/lib`）
+- [x] `KAN-010` [P0] 初回ログイン時の `users/{uid}` 自動作成方針（`role` / `gymIds`）を確定して実装
+- [x] `KAN-011` [P0] `firestore.rules` の `users/{uid}` 前提ルールを画面導線に合わせ再設計
+- [x] `KAN-012` [P0] 管理画面/公開画面の読み取り・書き込み権限を明示分離しルール化
+- [x] `KAN-013` [P0] `admin` 全ジム / `owner` 担当ジムのアクセス制限をルールと取得処理で担保
+
+## P1（高優先：実装完成）
+
+### Backlog
+- [x] `KAN-101` [P1] `useOwnerProfile` / 権限制御系フックが常に最新 `users/{uid}.role` / `gymIds` を参照することを担保
+- [x] `KAN-102` [P1] `owner` 切替後（`gymIds` 変更）UIと権限表示の即時再取得を実装
+- [x] `KAN-103` [P1] `routes` と管理画面 (`/system-admin`, `/dashboard`, `/events/...`) の権限チェックを統一
+- [x] `KAN-104` [P1] ログイン後リダイレクト先（`from` クエリ or デフォルト）を統一
+- [ ] `KAN-105` [P1] ログアウト / セッション切替時のヘッダー・戻る導線表示を確認
+- [ ] `KAN-106` [P1] `permission-denied` を捕捉し、管理用メッセージに変換する
+- [ ] `KAN-107` [P1] Climber Portal の見た目（タイトル/セクション）を既存UIへ揃える
+- [ ] `KAN-108` [P1] 仕様の「認証試験手順（Googleログイン）」を `admin` / `owner` / 非許可で再作成
+- [ ] `KAN-109` [P1] `SPEC.md` の運用メモを `users/{uid}` ロール編集前提に更新
+- [ ] `KAN-110` [P1] `README.md` に最小権限アカウント開始手順を追記
+- [ ] `KAN-111` [P1] リリース前チェックリストを `SPEC.md` に移植（ログイン・権限復旧・公開ページ）
+
+## P2（中優先：UI/体裁改善）
+
+### Backlog
+- [ ] `KAN-201` [P2] Climber Detail のUIを共通デザインに揃える
+- [ ] `KAN-202` [P2] Ranking の Summary セクションを追加（イベント情報を表示）
+- [ ] `KAN-203` [P2] Ranking のセクションごとのアイコン設計と反映
+- [ ] `KAN-204` [P2] Ranking 一覧表示をデザイン改善（情報優先度・視認性・余白）

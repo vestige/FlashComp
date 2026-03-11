@@ -22,6 +22,14 @@ service cloud.firestore {
         && (userProfile().role == "owner" || userProfile().role == "admin");
     }
 
+    function isViewer() {
+      return hasUserProfile() && (
+        userProfile().role == "viewer"
+        || userProfile().role == "owner"
+        || userProfile().role == "admin"
+      );
+    }
+
     function isAdmin() {
       return hasUserProfile() && userProfile().role == "admin";
     }
@@ -40,6 +48,24 @@ service cloud.firestore {
         && (hasAllGymAccess() || gymId in ownerGymIds());
     }
 
+    function canReadPublic() {
+      return true;
+    }
+
+    function canReadManagementData() {
+      return isViewer();
+    }
+
+    function canReadManagementEvent(eventId) {
+      return isOwner()
+        && exists(eventDocPath(eventId))
+        && (hasAllGymAccess() || get(eventDocPath(eventId)).data.gymId in ownerGymIds());
+    }
+
+    function canWriteManagementEvent(eventId) {
+      return canManageEvent(eventId);
+    }
+
     function eventDocPath(eventId) {
       return /databases/$(database)/documents/events/$(eventId);
     }
@@ -50,24 +76,24 @@ service cloud.firestore {
         && (hasAllGymAccess() || get(eventDocPath(eventId)).data.gymId in ownerGymIds());
     }
 
-    // Public event browsing for climbers.
+    // Public event browsing for climbers + management read/write split.
     match /events/{eventId} {
-      allow read: if true;
+      allow read: if canReadPublic() || canReadManagementData() || canReadManagementEvent(eventId);
       allow create: if hasGymAccess(request.resource.data.gymId);
-      allow update: if canManageEvent(eventId)
+      allow update: if canWriteManagementEvent(eventId)
         && request.resource.data.gymId == resource.data.gymId;
-      allow delete: if canManageEvent(eventId);
+      allow delete: if canWriteManagementEvent(eventId);
     }
 
     // Event subcollections (seasons/categories/routes/participants/scores).
     match /events/{eventId}/{document=**} {
-      allow read: if true;
-      allow write: if canManageEvent(eventId);
+      allow read: if canReadPublic() || canReadManagementData() || canReadManagementEvent(eventId);
+      allow write: if canWriteManagementEvent(eventId);
     }
 
     // Public gym metadata for event browsing filters.
     match /gyms/{gymId} {
-      allow read: if true;
+      allow read: if canReadPublic() || canReadManagementData();
       allow write: if isAdmin();
     }
 
@@ -76,7 +102,16 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isSignedIn()
         && (request.auth.uid == userId || isAdmin());
-      allow create, update, delete: if isAdmin();
+      allow create: if isSignedIn()
+        && (
+          isAdmin() || (
+            request.auth.uid == userId
+            && request.resource.data.role == "viewer"
+            && request.resource.data.gymIds is list
+            && request.resource.data.gymIds.size() == 0
+          )
+        );
+      allow update, delete: if isAdmin();
     }
 
     match /{document=**} {

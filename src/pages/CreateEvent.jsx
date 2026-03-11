@@ -24,9 +24,11 @@ function CreateEvent() {
     authUser,
     gymIds,
     hasAllGymAccess,
+    role,
     loading: profileLoading,
     error: profileError,
   } = useOwnerProfile();
+  const canManageEvents = role === "owner" || role === "admin";
 
   useEffect(() => {
     if (profileLoading) return;
@@ -75,6 +77,25 @@ function CreateEvent() {
           <Link to="/dashboard" className={`mt-4 ${subtleButtonClass}`}>
             ← ダッシュボードへ戻る
           </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (!canManageEvents) {
+    return (
+      <div className={pageBackgroundClass}>
+        <div className={pageContainerNarrowClass}>
+          <ManagementHero
+            eyebrow="Event Setup"
+            title="Create New Event"
+            description="このアカウントはイベント作成権限がありません。"
+            backTo="/dashboard"
+            backLabel="← ダッシュボードへ戻る"
+          />
+          <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+            イベント作成は <code>owner</code> / <code>admin</code> 権限のみ利用できます。
+          </p>
         </div>
       </div>
     );

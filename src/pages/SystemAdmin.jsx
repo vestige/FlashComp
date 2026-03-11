@@ -45,7 +45,7 @@ const defaultOwnerForm = {
 const SystemAdmin = () => {
   usePageTitle("システム管理者");
 
-  const { authUser, role, loading: profileLoading, error: profileError } = useOwnerProfile();
+  const { authUser, role, loading: profileLoading, error: profileError, refreshProfile } = useOwnerProfile();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
@@ -282,6 +282,9 @@ const SystemAdmin = () => {
       setStatus(`✅ オーナープロファイル(${profileId})を保存しました。`);
       setEditingOwnerId(profileId);
       setOwnerForm((prev) => ({ ...prev, id: profileId }));
+      if (profileId === authUser?.uid) {
+        await refreshProfile();
+      }
       await loadAdminData();
     } catch (err) {
       console.error("オーナープロファイル保存に失敗:", err);

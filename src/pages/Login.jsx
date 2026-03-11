@@ -1,9 +1,28 @@
 // src/pages/Login.jsx
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-import { auth } from "../firebase"; 
+import { auth } from "../firebase";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { usePageTitle } from "../hooks/usePageTitle";
+
+const getGoogleSignInErrorMessage = (errorCode) => {
+  switch (errorCode) {
+    case "auth/popup-closed-by-user":
+      return "ログインがキャンセルされました。もう一度お試しください。";
+    case "auth/popup-blocked":
+      return "ブラウザーのポップアップがブロックされています。解除して再試行してください。";
+    case "auth/unauthorized-domain":
+      return "このドメインは認証許可されていません。管理者に Firebase 側の承認ドメイン設定を確認してください。";
+    case "auth/network-request-failed":
+      return "ネットワークエラーが発生しました。時間をおいて再試行してください。";
+    case "auth/cancelled-popup-request":
+      return "別のログイン処理が進行中です。しばらくしてから再試行してください。";
+    case "auth/operation-not-allowed":
+      return "Googleログインが有効化されていない可能性があります。管理者に確認してください。";
+    default:
+      return "Googleログインに失敗しました。しばらくしてから再試行してください。";
+  }
+};
 
 const Login = () => {
   usePageTitle("Googleログイン");
@@ -12,18 +31,24 @@ const Login = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const fromQuery = useMemo(() => {
+    const raw = new URLSearchParams(location.search).get("from");
+    return raw && raw.startsWith("/") ? raw : "";
+  }, [location.search]);
 
   const handleGoogleLogin = async () => {
     if (isSubmitting) return;
     setIsSubmitting(true);
-    const redirectPath = location.state?.from?.pathname || "/dashboard";
+    const redirectPath =
+      location.state?.from?.pathname || location.state?.from?.path || fromQuery || "/dashboard";
+
     try {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
       setStatus("✅ Googleログイン成功。管理ページへ移動します...");
       setTimeout(() => navigate(redirectPath, { replace: true }), 600);
     } catch (error) {
-      setStatus("❌ Googleログイン失敗: " + error.message);
+      setStatus(`❌ ${getGoogleSignInErrorMessage(error.code)}（${error.code || "unknown"}）`);
     } finally {
       setIsSubmitting(false);
     }

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { db } from "../firebase";
 import { Link } from "react-router-dom";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, documentId, getDocs, query, where } from "firebase/firestore";
 import { usePageTitle } from "../hooks/usePageTitle";
 import { useOwnerProfile } from "../hooks/useOwnerProfile";
 import { getEventActionPlan } from "../lib/dashboardActions";
@@ -69,6 +69,25 @@ const statusLabel = {
   upcoming: "UPCOMING",
   completed: "Completed",
   unknown: "Unknown",
+};
+
+const chunk = (values, size) => {
+  if (!Array.isArray(values) || size <= 0) return [];
+  if (values.length === 0) return [];
+  const chunks = [];
+  for (let i = 0; i < values.length; i += size) {
+    chunks.push(values.slice(i, i + size));
+  }
+  return chunks;
+};
+
+const toUniqueById = (rows) => {
+  const map = new Map();
+  rows.forEach((row) => {
+    if (!row?.id) return;
+    map.set(row.id, row);
+  });
+  return [...map.values()];
 };
 
 const actionMeta = {
@@ -151,9 +170,11 @@ const Dashboard = () => {
     authUser,
     gymIds,
     hasAllGymAccess,
+    role,
     loading: profileLoading,
     error: profileError,
   } = useOwnerProfile();
+  const canManageEvents = role === "owner" || role === "admin";
 
   useEffect(() => {
     if (profileLoading) return;
@@ -167,19 +188,48 @@ const Dashboard = () => {
       setLoading(true);
       setError("");
       try {
-        const [eventSnap, gymSnap] = await Promise.all([
-          getDocs(collection(db, "events")),
-          getDocs(collection(db, "gyms")),
-        ]);
-        const eventRows = eventSnap.docs
-          .map((eventDoc) => ({ id: eventDoc.id, ...eventDoc.data() }))
-          .filter((event) => hasAllGymAccess || gymIds.includes(event.gymId));
-        const gymRows = gymSnap.docs
-          .map((gymDoc) => ({ id: gymDoc.id, ...gymDoc.data() }))
-          .filter((gym) => hasAllGymAccess || gymIds.includes(gym.id))
-          .sort((a, b) => (a.name || "").localeCompare(b.name || "", "ja"));
+        const eventPromise = hasAllGymAccess
+          ? getDocs(collection(db, "events")).then((snapshot) =>
+              snapshot.docs.map((eventDoc) => ({ id: eventDoc.id, ...eventDoc.data() }))
+            )
+          : gymIds.length > 0
+            ? Promise.all(
+                chunk(gymIds, 10).map((chunkedGymIds) =>
+                  getDocs(
+                    query(
+                      collection(db, "events"),
+                      where("gymId", "in", chunkedGymIds)
+                    )
+                  ).then((snapshot) =>
+                    snapshot.docs.map((eventDoc) => ({ id: eventDoc.id, ...eventDoc.data() }))
+                  )
+                )
+              ).then((rowsByChunk) => toUniqueById(rowsByChunk.flat()))
+            : Promise.resolve([]);
+
+        const gymPromise = hasAllGymAccess
+          ? getDocs(collection(db, "gyms")).then((snapshot) =>
+              snapshot.docs.map((gymDoc) => ({ id: gymDoc.id, ...gymDoc.data() }))
+            )
+          : gymIds.length > 0
+            ? Promise.all(
+                chunk(gymIds, 10).map((chunkedGymIds) =>
+                  getDocs(
+                    query(
+                      collection(db, "gyms"),
+                      where(documentId(), "in", chunkedGymIds)
+                    )
+                  ).then((snapshot) =>
+                    snapshot.docs.map((gymDoc) => ({ id: gymDoc.id, ...gymDoc.data() }))
+                  )
+                )
+              ).then((rowsByChunk) => toUniqueById(rowsByChunk.flat()))
+            : Promise.resolve([]);
+
+        const [eventRows, gymRows] = await Promise.all([eventPromise, gymPromise]);
+        const sortedGymRows = gymRows.sort((a, b) => (a.name || "").localeCompare(b.name || "", "ja"));
         setEvents(eventRows);
-        setGyms(gymRows);
+        setGyms(sortedGymRows);
       } catch (err) {
         console.error("イベント取得失敗:", err);
         setError("イベントの取得に失敗しました。");
@@ -280,7 +330,7 @@ const Dashboard = () => {
             backLabel="↑ Back to TOP"
             surface={false}
           >
-            {hasAllGymAccess || gymIds.length > 0 ? (
+            {canManageEvents && (hasAllGymAccess || gymIds.length > 0) ? (
               <button type="button" onClick={() => setIsCreateModalOpen(true)} className={eventCreateButtonClass}>
                 <Icon className="h-4 w-4">
                   <path d="M12 5v14M5 12h14" />
@@ -289,7 +339,11 @@ const Dashboard = () => {
               </button>
             ) : null}
           </ManagementHero>
-          {!hasAllGymAccess && gymIds.length === 0 ? (
+          {!canManageEvents ? (
+            <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+              現在のアカウントは閲覧のみです。イベント作成には <code>owner/admin</code> と担当ジム割当てが必要です。
+            </p>
+          ) : !hasAllGymAccess && gymIds.length === 0 ? (
             <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
               担当ジムが未設定のため、イベントを作成できません。システム管理者に設定を依頼してください。
             </p>

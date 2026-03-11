@@ -53,21 +53,25 @@ GymOwner profile samples (`users` collection):
 - `owner-shibuya` (`owner.shibuya@example.com`) -> `gymIds: ["gym-shibuya"]`
 - `owner-yokohama` (`owner.yokohama@example.com`) -> `gymIds: ["gym-yokohama"]`
 - `owner-multi` (`owner.multi@example.com`) -> `role: "admin", gymIds: ["*"]` (all gyms)
+- `viewer-sample` -> `role: "viewer", gymIds: []`
 
 
 GymOwner access control fields used by app:
 - `users/{uid}` (gymOwners profile)
-- `role` (`owner` or `admin`)
+- `role` (`viewer` / `owner` / `admin`)
 - `gymIds` (array of gyms the gymOwner can manage/view, `["*"]` means all gyms)
 
 ## Google login onboarding (gymOwner/admin)
 
 - Login method for management pages: Google Sign-In
+- Email/Password authentication should be disabled in Firebase Auth for management access.
 - First login can succeed in Firebase Auth even if profile is missing.
-- Management access is enabled only after admin creates `users/{uid}` with:
-  - `role` (`owner` or `admin`)
-  - `gymIds` (or `["*"]` for admin)
-- If profile is missing, management routes show UID/email so users can send UID to admin.
+- First-time login automatically creates `users/{uid}` as:
+  - `role: "viewer"`
+  - `gymIds: []`
+- Full management access is enabled when system admin updates `users/{uid}`:
+  - `owner`: `role` + `gymIds`（担当ジムを1つ以上）
+  - `admin`: `role: "admin", gymIds: ["*"]`
 
 ## System admin screen
 
@@ -139,6 +143,26 @@ If you need to target another Firebase project, set these env vars before runnin
 - `FIREBASE_STORAGE_BUCKET`
 - `FIREBASE_MESSAGING_SENDER_ID`
 - `FIREBASE_APP_ID`
+
+For frontend execution (Vite), create `.env.staging` and `.env.production` from `.env.example` and fill:
+
+- `VITE_FIREBASE_API_KEY`
+- `VITE_FIREBASE_AUTH_DOMAIN`
+- `VITE_FIREBASE_PROJECT_ID`
+- `VITE_FIREBASE_STORAGE_BUCKET`
+- `VITE_FIREBASE_MESSAGING_SENDER_ID`
+- `VITE_FIREBASE_APP_ID`
+
+Build mode tips:
+
+- `npm run dev -- --mode staging` -> loads `.env.staging`
+- `npm run build -- --mode production` -> loads `.env.production`
+
+After changing values, verify Google sign-in:
+
+- Firebase Authentication > Sign-in method: Google is enabled
+- Authentication > Settings > Authorized domains includes each deploy domain
+- Google OAuth redirect/callback settings match your frontend domain
 
 ## USE
 ### local
