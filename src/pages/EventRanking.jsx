@@ -6,6 +6,7 @@ import ManagementHero from "../components/ManagementHero";
 import { usePageTitle } from "../hooks/usePageTitle";
 import { calculateCategoryRankings } from "../lib/rankingCsv";
 import { buildRankingBackLink } from "../lib/rankingNavigation";
+import { formatSeasonDate } from "../lib/seasonStatus";
 import {
   inputFieldClass,
   pageBackgroundClass,
@@ -62,6 +63,16 @@ const EventRanking = () => {
     () => buildRankingBackLink({ source, eventId }),
     [source, eventId]
   );
+
+  const eventPeriodText = useMemo(() => {
+    if (!event) return "-";
+    return formatSeasonDate(event.startDate);
+  }, [event]);
+
+  const eventEndDateText = useMemo(() => {
+    if (!event) return "-";
+    return formatSeasonDate(event.endDate);
+  }, [event]);
 
   useEffect(() => {
     let cancelled = false;
@@ -418,6 +429,26 @@ const EventRanking = () => {
           backLabel={backLabel}
           surface={false}
         />
+
+        <section className="mt-4">
+          <h2 className={sectionHeadingClass}>📚Summary</h2>
+          <div className={sectionCardClass}>
+            <div className="grid gap-3 md:grid-cols-2">
+              <article className="rounded-xl border border-slate-200 bg-slate-50 p-4 md:col-span-2">
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">イベント名</p>
+                <p className="mt-1 text-lg font-bold text-slate-900">{event?.name || "-"}</p>
+              </article>
+              <article className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">開始日</p>
+                <p className="mt-1 text-lg font-bold text-slate-900">{eventPeriodText}</p>
+              </article>
+              <article className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">終了日</p>
+                <p className="mt-1 text-lg font-bold text-slate-900">{eventEndDateText}</p>
+              </article>
+            </div>
+          </div>
+        </section>
 
         <section className="mt-4">
           <h2 className={sectionHeadingClass}>Filters</h2>
