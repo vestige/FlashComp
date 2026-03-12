@@ -6,7 +6,7 @@
 - [ ] `git status -sb` で `main...origin/main` が `0 0` かを確認
 
 ### 2) 直近コミットの共有状況
-- [x] `89dc5ac`（`main`）は `origin/main` と一致
+- [x] `8cbe492`（`main`）は `origin/main` と一致
 - [ ] 必要なら未コミット変更を別コミット化する
 
 ### 3) 未コミット差分（現状）
@@ -33,6 +33,11 @@
 - [x] `KAN-105` 完了（AppShellテストでログアウト/セッション切替時のヘッダー導線確認）
 - [x] `KAN-106` 完了（permission-denied を管理向けメッセージへ変換）
 - [x] `KAN-107` 完了（Climber Portalのタイトル/セクションを既存UI表記に統一）
+- [x] `KAN-108` 完了（認証試験手順を admin/owner/非許可で再作成）
+- [x] `KAN-109` 完了（SPEC運用メモを users/{uid} 前提に更新）
+- [x] `KAN-110` 完了（READMEに最小権限アカウント開始手順を追記）
+- [x] `KAN-111` 完了（SPECにリリース前チェックリストを移植）
+- [ ] `KAN-201`（Climber Detail UI）着手（P2）
 
 ### 5) ローカル検証（必要最小）
 - [ ] `npm install`（初回）

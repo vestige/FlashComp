@@ -8,6 +8,12 @@
 
 ## 0) 事前準備（共通）
 
+- ## 0-0. ローカル最短フロー
+  1. `npm install`
+  2. `.env.staging.local` を作成し、`VITE_FIREBASE_*` を設定
+  3. `npm run dev -- --mode staging`
+  4. `http://localhost:5173/FlashComp/login` で Google サインイン
+
 - `src/firebase.js` が以下を環境変数から読む構成になっていることを確認
   - `VITE_FIREBASE_API_KEY`
   - `VITE_FIREBASE_AUTH_DOMAIN`
@@ -74,31 +80,39 @@ npm run dev -- --mode staging
 
 ### 1-4. 権限テスト
 
-### 公開閲覧 / 管理操作の分離
-- `/score-summary` 系のページはログイン不要で `events/{eventId}`, `gyms`, その配下参照が読み込める
-- `owner/admin` 以外はイベント作成/編集系の書込に失敗する（`permission-denied`）
+### 1-4. 役割別チェック
 
-#### admin 権限（`role: "admin"`, `gymIds: ["*"]`）
-- `/system-admin` が開ける
-- ジムCRUDが実行できる
-- 代表的イベントを編集できる
+#### 前提
+- `/score-summary` 系はログイン不要で閲覧できること
+- `owner/admin` 以外は管理操作で `permission-denied` になること
 
-#### owner 権限（`role: "owner"`）
-- 担当ジムのみ編集可能
-- 非担当のイベント編集が弾かれる
-- `/system-admin` の閲覧制御が仕様どおりであること
+#### admin（`role: "admin"`, `gymIds: ["*"]`）
+- `Login` 後、`/system-admin` が開けること
+- `gyms` の作成・更新・削除ができること
+- `/events/:eventId/scores` など管理ページの書込が通ること
+- `/dashboard` と `score-summary` が問題なく表示できること
 
-#### 非許可
-- `users/{uid}` が未作成でも初回ログイン時に `role: "viewer"` で自動作成される
-- `users/{uid}` が `role: "viewer"` の場合、`/dashboard` は閲覧できますが `Event` 作成は行えないこと
-- `owner` / `admin` 以外の権限での保存・更新が拒否されること
+#### owner（`role: "owner"`）
+- `Login` 後、`/system-admin` が拒否されること
+- `dashboard` は表示されること
+- 担当ジムのイベントは編集できること
+- 非担当ジムのイベント編集が `permission-denied` で拒否されること
 
-### 1-5. エラー表示
+#### viewer（`role: "viewer"`）
+- `Login` 後、`/dashboard` は表示されること
+- `/system-admin` が拒否されること
+- イベント作成/更新の保存が `permission-denied` になること
 
-1. ポップアップ拒否（意図的に拒否）
-2. ドメイン不一致（意図的に許可ドメインを外した状態で試行）
-3. ネットワーク不調（可能なら）
-4. 期待値: `Login.jsx` のエラーメッセージが分岐表示されること
+#### 非許可（`users/{uid}` 未作成 / role未設定）
+- 初回ログインで `users/{uid}` が `role: "viewer"` として作成されること
+- `/system-admin` が開けないこと
+- 管理画面での保存や更新が `permission-denied` になること
+
+### 1-5. エラー表示 / メッセージ
+
+1. Googleログインエラー（ポップアップ拒否、ドメイン不一致、ネットワーク）
+2. 期待値: 管理向けに分かるメッセージ（rawエラーをそのまま表示しない）
+3. 併せて管理画面の `permission-denied` が運用メッセージに置換されていることを確認
 
 ### 1-6. ログアウト
 
@@ -129,6 +143,36 @@ npm run dev -- --mode staging
 - Firebase Console 上で確認した「Authorized domains」が、GitHub Pages ドメイン（と必要ならカスタムドメイン）を含む
 - OAuth のリダイレクト許可がフロントURLに一致する
 - `users/{uid}` の設定が環境別に混在していない（本番とステージングUIDを取り違えない）
+
+---
+
+## 4) Firestore test data scripts
+
+- 一覧
+  - `npm run db:purge`（安全モード）
+  - `npm run db:purge:yes`（イベント関連データを破壊的に削除）
+  - `npm run db:purge:yes:system`（`events`/`gyms`/`users` の上位削除も対象）
+  - `npm run db:seed`
+  - `npm run db:seed:system`
+  - `npm run db:backup -- --out backups/pre-op.json`
+  - `npm run db:backup:system`
+  - `npm run db:restore -- --yes --file <backup-json>`
+- `db:seed` / `db:seed:system` はローカル検証前のイベント再現に使う
+- `db:reset` を使う場合は `SCRIPT_AUTH_*` を設定してから実行する
+
+実行例（ローカル）
+
+```bash
+$env:SCRIPT_AUTH_EMAIL='YOUR_ADMIN_ACCOUNT_EMAIL'
+$env:SCRIPT_AUTH_PASSWORD='YOUR_PASSWORD'
+npm run db:reset
+```
+
+### validation用サンプルイベント（参考）
+- `event-spring-2026`
+- `event-live-now`
+- `event-upcoming-2026`
+- `event-rookie-cup-2026`
 
 ---
 

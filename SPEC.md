@@ -257,34 +257,43 @@ graph TD
 - カテゴリごとの集計結果確認
 
 ## 認証試験手順（Googleログイン・最小アカウント運用）
-テスト用Googleアカウントの新規作成を減らすため、同一アカウントの `users/{uid}` ロールを切り替えて確認する。
-管理者側は **Google認証のみ** を運用とし、メール/パスワード認証は無効運用とする（管理画面への認証導線は `Login` での Google Sign-In のみ）。
+Google運用では、同一Googleアカウントで `users/{uid}` を編集して権限を切り替える方式を採用する。
+管理画面の認証は `Login` の Google Sign-In のみで、メール/パスワード認証は運用外とする。
 
 ### 前提
-- 対象はステージング環境（本番データは使わない）
-- Firebase Console で `users/{uid}` を編集できる状態にする
-- Firebase Authentication の Sign-in method で Google のみ有効化し、Email/Password は無効化する
-- 切り替え前の `users/{uid}` の内容を控えておく
+- 対象はステージング（本番データ不使用）で実施する
+- Firebase Authentication は **Google のみ有効化**（Email/Password は運用外）
+- 対象環境の `Authorized domains` と OAuth リダイレクト URI が一致している
+- 検証用アカウントで Firebase Console から `users/{uid}` を編集可能
+- 切り替え前の `users/{uid}`（`role` / `gymIds`）を記録しておく
 
-### ロール切り替えパターン
-1. システム管理者モード
-   - `role: "admin"`
-   - `gymIds: ["*"]`
-2. ジムオーナーモード
-   - `role: "owner"`
-   - `gymIds: ["gym-shibuya"]`（担当ジム1つ以上）
-3. 閲覧モード（viewer）
-   - `role: "viewer"`
-   - `gymIds: []`
+### ロール別ケース
+#### ケース1: `admin`（`role: "admin"`, `gymIds: ["*"]`）
+1. 該当アカウントで `Login` し、Google認証で入室できること
+2. `/system-admin` に入れること
+3. `gyms` の作成・更新・削除が行えること
+4. `/events/.../scores` など管理画面ルートが閲覧可能で、管理操作が成功すること
+5. `/dashboard` と公開側 `/score-summary` も問題なく閲覧できること
 
-### 確認チェックリスト
-1. `admin` モードで `/system-admin` にアクセスできる
-2. `admin` モードでジム作成・更新・削除ができる
-3. `owner` モードで担当ジムのイベントのみ編集できる
-4. `owner` モードで担当外ジムのイベント編集が拒否される
-5. `viewer` では `/dashboard` は閲覧できるが、イベント作成は拒否される
-6. クライマー向けページ（`/score-summary` 系）がログイン不要で閲覧できる
+#### ケース2: `owner`（`role: "owner"`, `gymIds: ["gym-shibuya"]`）
+1. 該当アカウントで `Login` できること
+2. `/system-admin` は開けない（管理画面権限に応じた拒否）
+3. 担当ジムのイベントのみ編集可能
+4. 非担当ジムのイベント編集・削除は `permission-denied` で拒否されること
+5. `/dashboard` は閲覧可能
 
-### 運用メモ
-- `owner` モードで `/system-admin` に入れなくなることがあるため、復旧は Firebase Console で `admin` に戻す
-- 本番リリース前に、可能なら実アカウントを追加して最終受け入れ試験を1回だけ行う
+#### ケース3: `viewer`（`role: "viewer"`, `gymIds: []`）
+1. 該当アカウントで `Login` できること
+2. `/dashboard` は閲覧できること
+3. イベント作成/更新（管理側の書き込み）で拒否されること
+
+#### ケース4: 非許可
+1. `users/{uid}` が未作成、または `role` 未設定の状態で `Login` すること
+2. 初回ログイン後に `users/{uid}` が `role: "viewer"` として自動作成されること
+3. 管理画面系 API は `permission-denied` で拒否されること
+4. `/system-admin` は開けないが、公開クライマー系 `/score-summary` は引き続きログイン不要で閲覧できること
+
+### 補足確認
+- 失敗系は必ず「ログイン自体」ではなく、`permission-denied` の内容を見て運用者向けメッセージへ統一されること
+- owner / admin の誤判定が出た場合は `users/{uid}` のロール復旧（必要なら `admin`）から再確認
+- リリース前には本番を想定したアカウントを最低1回通し実行する
