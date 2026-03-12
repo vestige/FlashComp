@@ -3,12 +3,21 @@ import { Link, useParams, useSearchParams } from "react-router-dom";
 import { collection, doc, getDoc, getDocs, query, where } from "firebase/firestore";
 import { db } from "../firebase";
 import { usePageTitle } from "../hooks/usePageTitle";
+import ManagementHero from "../components/ManagementHero";
 import {
   buildAssignedTasks,
   buildTaskByScoreKey,
   fetchCategoryAssignments,
   fetchSeasonTasks,
 } from "../lib/taskAssignments";
+import {
+  inputFieldClass,
+  pageBackgroundClass,
+  pageContainerClass,
+  sectionCardClass,
+  sectionHeadingClass,
+  subtleButtonClass,
+} from "../components/uiStyles";
 
 const getTimestampText = (value) => {
   if (!value) return "-";
@@ -99,6 +108,11 @@ const ParticipantScoreDetail = () => {
 
   const backLink = rankingLink || summaryLink;
   const backLabel = rankingLink ? "← ランキングに戻る" : "← 集計結果に戻る";
+  const participantCategoryId = participant?.categoryId || "";
+  const participantCategoryName = useMemo(
+    () => categories.find((category) => category.id === participantCategoryId)?.name || "未設定",
+    [categories, participantCategoryId]
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -168,6 +182,14 @@ const ParticipantScoreDetail = () => {
       cancelled = true;
     };
   }, [eventId, participantId, searchParams]);
+
+  useEffect(() => {
+    if (seasons.length === 0) return;
+    if (selectedSeasonId === "all") return;
+    if (seasons.every((season) => season.id !== selectedSeasonId)) {
+      setSelectedSeasonId("all");
+    }
+  }, [seasons, selectedSeasonId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -392,127 +414,154 @@ const ParticipantScoreDetail = () => {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        <p className="text-sm text-slate-600">クライマー詳細を読み込んでいます...</p>
+      <div className={pageBackgroundClass}>
+        <div className={pageContainerClass}>
+          <div className={sectionCardClass}>
+            <p className="text-sm text-slate-600">クライマー詳細を読み込んでいます...</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-          {error}
-        </p>
-        <div className="mt-6">
-          <Link
-            to={backLink}
-            className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
-          >
-            {backLabel}
-          </Link>
+      <div className={pageBackgroundClass}>
+        <div className={pageContainerClass}>
+          <div className={sectionCardClass}>
+            <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+              {error}
+            </p>
+            <div className="mt-6">
+              <Link
+                to={backLink}
+                className={subtleButtonClass}
+              >
+                {backLabel}
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#dbeafe_0%,_#f8fafc_45%,_#ecfeff_100%)]">
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        <section className="rounded-3xl border border-slate-200 bg-white/95 p-5 shadow-sm sm:p-6">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">Climber Detail</p>
-              <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
-                {event?.name} - クライマー詳細
-              </h2>
-              <p className="mt-3 text-sm text-slate-700">
-                名前: <strong>{participant?.name || "-"}</strong>
-              </p>
-              <p className="mt-1 text-sm text-slate-700">
-                会員番号: {participant?.memberNo || "-"} / カテゴリ:
-                {" "}
-                {categories.find((c) => c.id === participant?.categoryId)?.name || "未設定"}
-              </p>
-            </div>
-            <Link
-              to={backLink}
-              className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-            >
-              {backLabel}
-            </Link>
-          </div>
-        </section>
-
-        <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <label className="text-sm text-slate-700">
-            表示シーズン:
-            <select
-              value={selectedSeasonId}
-              onChange={(e) => setSelectedSeasonId(e.target.value)}
-              className="ml-2 rounded-lg border border-slate-300 px-2 py-1 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
-            >
-              <option value="all">総合（全シーズン）</option>
-              {seasons.map((season) => (
-                <option key={season.id} value={season.id}>
-                  {season.name}
-                </option>
-              ))}
-            </select>
-          </label>
+    <div className={pageBackgroundClass}>
+      <div className={pageContainerClass}>
+        <div className="mb-6">
+          <ManagementHero
+            title="Climber Detail"
+            description="クライマーのスコア内訳と順位を確認します。"
+            meta={`イベント: ${event?.name || "-"} / 名前: ${participant?.name || "-"} / 会員番号: ${
+              participant?.memberNo || "-"
+            } / カテゴリ: ${participantCategoryName}`}
+            backTo={backLink}
+            backLabel={backLabel}
+            surface={false}
+          />
         </div>
 
-        <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <h3 className="text-lg font-semibold text-slate-900">合計</h3>
-          <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-slate-700">
-            <p>
-              得点: <strong>{totalSummary.totalPoints}</strong>
-            </p>
-            <p>
-              完登数: <strong>{totalSummary.totalClears}</strong>
-            </p>
+        <section className="mt-4">
+          <h2 className={sectionHeadingClass}>表示シーズン</h2>
+          <div className={sectionCardClass}>
+            <label className="text-sm text-slate-700">
+              表示シーズン:
+              <select
+                value={selectedSeasonId}
+                onChange={(e) => setSelectedSeasonId(e.target.value)}
+                className={`${inputFieldClass} ml-2`}
+              >
+                <option value="all">総合（全シーズン）</option>
+                {seasons.map((season) => (
+                  <option key={season.id} value={season.id}>
+                    {season.name}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
-          {overallRankInfo && (
-            <p className="mt-2 text-sm text-slate-700">
-              順位（{overallRankInfo.categoryName}）:
-              {" "}
-              <strong>{overallRankInfo.rank}</strong>
-              {" / "}
-              {overallRankInfo.totalParticipants}
-              {" "}
-              （得点 {overallRankInfo.totalPoints} / 完登 {overallRankInfo.totalClears}）
-            </p>
-          )}
         </section>
+
+        <section className="mt-4">
+          <h2 className={sectionHeadingClass}>サマリ</h2>
+          <div className={sectionCardClass}>
+            <div className="grid gap-3 md:grid-cols-3">
+              <article className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+                  Total Points
+                </p>
+                <p className="mt-1 text-lg font-bold text-slate-900">{totalSummary.totalPoints}</p>
+              </article>
+              <article className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+                  Total Clear
+                </p>
+                <p className="mt-1 text-lg font-bold text-slate-900">{totalSummary.totalClears}</p>
+              </article>
+              <article className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+                  Overall Rank
+                </p>
+                {overallRankInfo ? (
+                  <p className="mt-1 text-lg font-bold text-slate-900">
+                    {overallRankInfo.rank} / {overallRankInfo.totalParticipants}
+                    <span className="ml-2 text-sm font-semibold text-slate-700">
+                      （{overallRankInfo.totalPoints}点）
+                    </span>
+                  </p>
+                ) : (
+                  <p className="mt-1 text-lg font-bold text-slate-900">-</p>
+                )}
+              </article>
+            </div>
+            {overallRankInfo && (
+              <p className="mt-3 text-sm text-slate-600">
+                順位（{overallRankInfo.categoryName}）: {overallRankInfo.rank} / {overallRankInfo.totalParticipants}
+                {" "}
+                （得点 {overallRankInfo.totalPoints} / 完登 {overallRankInfo.totalClears}）
+              </p>
+            )}
+          </div>
+        </section>
+
         {(adjacentParticipants.prev || adjacentParticipants.next) && (
-          <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <h3 className="text-lg font-semibold text-slate-900">近い順位のクライマー</h3>
-            <div className="mt-2 flex flex-wrap gap-2 text-sm">
-              {adjacentParticipants.prev ? (
-                <Link
-                  to={buildParticipantDetailLink(adjacentParticipants.prev.participantId)}
-                  className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-2.5 py-1 text-slate-700 transition hover:bg-slate-100"
-                >
-                  ↑ {adjacentParticipants.prev.rank}位 {adjacentParticipants.prev.name}
-                </Link>
-              ) : (
-                <span className="text-slate-600">これより上位のクライマーはいません</span>
-              )}
-              {adjacentParticipants.next ? (
-                <Link
-                  to={buildParticipantDetailLink(adjacentParticipants.next.participantId)}
-                  className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-2.5 py-1 text-slate-700 transition hover:bg-slate-100"
-                >
-                  ↓ {adjacentParticipants.next.rank}位 {adjacentParticipants.next.name}
-                </Link>
-              ) : (
-                <span className="text-slate-600">これより下位のクライマーはいません</span>
-              )}
+          <section className="mt-4">
+            <h2 className={sectionHeadingClass}>近い順位のクライマー</h2>
+            <div className={sectionCardClass}>
+              <div className="flex flex-wrap gap-2 text-sm">
+                {adjacentParticipants.prev ? (
+                  <Link
+                    to={buildParticipantDetailLink(adjacentParticipants.prev.participantId)}
+                    className={subtleButtonClass}
+                  >
+                    ↑ {adjacentParticipants.prev.rank}位 {adjacentParticipants.prev.name}
+                  </Link>
+                ) : (
+                  <span className="text-slate-600">これより上位のクライマーはいません</span>
+                )}
+                {adjacentParticipants.next ? (
+                  <Link
+                    to={buildParticipantDetailLink(adjacentParticipants.next.participantId)}
+                    className={subtleButtonClass}
+                  >
+                    ↓ {adjacentParticipants.next.rank}位 {adjacentParticipants.next.name}
+                  </Link>
+                ) : (
+                  <span className="text-slate-600">これより下位のクライマーはいません</span>
+                )}
+              </div>
             </div>
           </section>
         )}
 
-        {calculating && <p className="mt-4 text-sm text-slate-600">内訳を計算中...</p>}
+        {calculating && (
+          <div className="mt-4">
+            <p className="rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-sky-700">
+              内訳を計算中...
+            </p>
+          </div>
+        )}
 
         <div className="mt-5">
           {seasonSummaries.length === 0 ? (
@@ -521,60 +570,65 @@ const ParticipantScoreDetail = () => {
             seasonSummaries.map((season) => (
               <section
                 key={season.seasonId}
-                className="mb-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+                className="mb-4"
               >
-                <h3 className="text-lg font-semibold text-slate-900">
-                  {season.seasonName} / 得点 {season.totalPoints} / 完登 {season.totalClears}
-                </h3>
+                <h2 className={sectionHeadingClass}>{season.seasonName}</h2>
+                <div className={sectionCardClass}>
+                  <p className="text-sm text-slate-600">
+                    得点 {season.totalPoints} / 完登 {season.totalClears}
+                  </p>
 
-                {season.categorySummaries.length === 0 ? (
-                  <p className="mt-2 text-sm text-slate-600">このシーズンの採点データはありません。</p>
-                ) : (
-                  season.categorySummaries.map((category) => (
-                    <div key={`${season.seasonId}-${category.categoryId}`} className="mt-4">
-                      <h4 className="text-sm font-semibold text-slate-800">
-                        カテゴリ: {category.categoryName} / 順位 {category.rank}/{category.totalParticipants}
-                        {" / "}得点 {category.totalPoints} / 完登 {category.clearCount}
-                      </h4>
-                      <p className="mt-1 text-xs text-slate-500">
-                        最終更新: {category.updatedAtText}
-                      </p>
-                      {category.clearedRoutes.length === 0 ? (
-                        <p className="mt-2 text-sm text-slate-600">完登課題はありません。</p>
-                      ) : (
-                        <div className="mt-2 overflow-x-auto">
-                          <table className="min-w-[360px] w-full border-collapse text-sm">
-                            <thead>
-                              <tr>
-                                <th className="border-b border-slate-200 py-2 text-left">課題</th>
-                                <th className="border-b border-slate-200 py-2 text-left">グレード</th>
-                                <th className="border-b border-slate-200 py-2 text-right">点数</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {category.clearedRoutes.map((route) => (
-                                <tr key={route.routeName}>
-                                  <td className="py-2">{route.routeName}</td>
-                                  <td className="py-2">{route.grade}</td>
-                                  <td className="py-2 text-right">{route.points}</td>
+                  {season.categorySummaries.length === 0 ? (
+                    <p className="mt-2 text-sm text-slate-600">このシーズンの採点データはありません。</p>
+                  ) : (
+                    season.categorySummaries.map((category) => (
+                      <div
+                        key={`${season.seasonId}-${category.categoryId}`}
+                        className="mt-4 rounded-xl border border-slate-200 bg-white p-4"
+                      >
+                        <h3 className="text-sm font-semibold text-slate-800">
+                          カテゴリ: {category.categoryName} / 順位 {category.rank}/{category.totalParticipants}
+                          {" / "}得点 {category.totalPoints} / 完登 {category.clearCount}
+                        </h3>
+                        <p className="mt-1 text-xs text-slate-500">
+                          最終更新: {category.updatedAtText}
+                        </p>
+                        {category.clearedRoutes.length === 0 ? (
+                          <p className="mt-2 text-sm text-slate-600">完登課題はありません。</p>
+                        ) : (
+                          <div className="mt-2 overflow-x-auto">
+                            <table className="min-w-[360px] w-full border-collapse text-sm">
+                              <thead>
+                                <tr>
+                                  <th className="border-b border-slate-200 py-2 text-left">課題</th>
+                                  <th className="border-b border-slate-200 py-2 text-left">グレード</th>
+                                  <th className="border-b border-slate-200 py-2 text-right">点数</th>
                                 </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      )}
-                    </div>
-                  ))
-                )}
+                              </thead>
+                              <tbody>
+                                {category.clearedRoutes.map((route) => (
+                                  <tr key={route.routeName}>
+                                    <td className="py-2">{route.routeName}</td>
+                                    <td className="py-2">{route.grade}</td>
+                                    <td className="py-2 text-right">{route.points}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
               </section>
             ))
           )}
         </div>
-
         <div className="mt-6">
           <Link
             to={backLink}
-            className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+            className={subtleButtonClass}
           >
             {backLabel}
           </Link>

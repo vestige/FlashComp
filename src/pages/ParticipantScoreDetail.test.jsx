@@ -120,7 +120,7 @@ describe("ParticipantScoreDetail", () => {
     mockFirestoreForDetail({ participantId: "p2" });
     renderDetail("/score-summary/event-1/participants/p2?season=season-1&category=cat-1&q=M-1002");
 
-    await screen.findByText(/FlashComp Spring 2026 - クライマー詳細/);
+    await screen.findByText("Climber Detail");
     await screen.findByText(/順位（Beginner）:/);
     expect(firestoreMocks.where).toHaveBeenCalledWith("categoryId", "==", "cat-1");
 
@@ -158,7 +158,7 @@ describe("ParticipantScoreDetail", () => {
       "/score-summary/event-1/participants/p2?return=ranking&from=portal&mode=season&season=season-1&category=cat-1&q=M-1002"
     );
 
-    await screen.findByText(/FlashComp Spring 2026 - クライマー詳細/);
+    await screen.findByText("Climber Detail");
 
     const backLink = screen.getAllByRole("link", { name: "← ランキングに戻る" })[0];
     expect(backLink).toHaveAttribute(
@@ -182,11 +182,36 @@ describe("ParticipantScoreDetail", () => {
     mockFirestoreForDetail({ participantId: "p1" });
     renderDetail("/score-summary/event-1/participants/p1?season=season-1");
 
-    await screen.findByText(/FlashComp Spring 2026 - クライマー詳細/);
+    await screen.findByText("Climber Detail");
 
     await waitFor(() =>
       expect(screen.getByText("これより上位のクライマーはいません")).toBeInTheDocument()
     );
     expect(screen.getByRole("link", { name: /↓ 2位 Riku/ })).toBeInTheDocument();
+  });
+
+  it("shows shared UI summary and participant metadata", async () => {
+    mockFirestoreForDetail({ participantId: "p2" });
+    renderDetail("/score-summary/event-1/participants/p2?season=season-1&category=cat-1&q=M-1002");
+
+    expect(await screen.findByText("Climber Detail")).toBeInTheDocument();
+    expect(screen.getByText("イベント: FlashComp Spring 2026 / 名前: Riku / 会員番号: M-1002 / カテゴリ: Beginner")).toBeInTheDocument();
+    expect(screen.getByText("サマリ")).toBeInTheDocument();
+    expect(screen.getByText("Total Points")).toBeInTheDocument();
+    expect(screen.getByText("100")).toBeInTheDocument();
+    expect(screen.getByText("Total Clear")).toBeInTheDocument();
+    expect(screen.getByText("1")).toBeInTheDocument();
+  });
+
+  it("falls back to all seasons when invalid season query is given", async () => {
+    mockFirestoreForDetail({ participantId: "p2" });
+    renderDetail("/score-summary/event-1/participants/p2?season=missing-season&q=M-1002");
+
+    expect(await screen.findByText("Climber Detail")).toBeInTheDocument();
+
+    const backLink = screen.getAllByRole("link", { name: "← 集計結果に戻る" })[0];
+    expect(backLink).toHaveAttribute("href", "/score-summary/event-1?q=M-1002");
+    const seasonSelect = screen.getByRole("combobox");
+    expect(seasonSelect).toHaveValue("all");
   });
 });

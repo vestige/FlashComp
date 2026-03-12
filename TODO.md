@@ -42,7 +42,29 @@
 ## P2（中優先：UI/体裁改善）
 
 ### Backlog
-- [ ] `KAN-201` [P2] Climber Detail のUIを共通デザインに揃える
+- [x] `KAN-201` [P2] Climber Detail のUIを既存管理画面デザインに統一
+  - [x] `KAN-201-01` [P2] `src/pages/ParticipantScoreDetail.jsx` の読み込み/エラー/メインの共通ラッパーを導入する
+    - `pageBackgroundClass` / `pageContainerClass` を採用し、他管理ページと同一トーンの背景と余白を適用
+    - ロード中・エラー時も同一ラッパー構造で表示を統一
+  - [x] `KAN-201-02` [P2] ヘッダ領域を `ManagementHero` ベースに差し替える
+    - タイトル・説明・戻り先を既存仕様準拠で再構成
+    - `backLabel`（集計結果/ランキングに戻る）を維持し、`return` 遷移情報を壊さない
+  - [x] `KAN-201-03` [P2] セクション構成を共通コンポーネント化
+    - `sectionHeadingClass` + `sectionCardClass` へ置換
+    - 表示シーズン、合計、近い順位のクライマーを統一見出し/カード構成に再レイアウト
+    - `inputFieldClass` / `subtleButtonClass` を使って選択UIとリンクUIを整える
+  - [x] `KAN-201-04` [P2] 総合/セクション集計の可読性を改善
+    - 総合ポイント、完登数、順位をメトリクスカードで見やすく整理
+    - `calculating` 表示をトースト/インフォカード化して視認性を上げる
+  - [x] `KAN-201-05` [P2] シーズン別内訳のカード化とテーブルUI統一
+    - `season -> category` をカード構造で階層化
+    - テーブルヘッダの背景と行余白を整備、完登課題0件時の文言を明示
+  - [x] `KAN-201-06` [P2] 既存挙動回帰テストを追加
+    - `src/pages/ParticipantScoreDetail.test.jsx` で `backLink`、`return=ranking`、順位リンクのクエリ維持、トップ/下位境界メッセージを再確認
+    - UI変更で文言を置換した場合はアサーション更新（ページタイトル/見出し/ローディング）
+  - [x] `KAN-201-07` [P2] 回収タスク
+    - 未使用CSSの整理（共通クラス利用後に不要な手書きクラス除去）
+    - 再読込時の画面初期化と state リセット（selectedSeasonId）影響がないことを最終確認
 - [ ] `KAN-202` [P2] Ranking の Summary セクションを追加（イベント情報を表示）
 - [ ] `KAN-203` [P2] Ranking のセクションごとのアイコン設計と反映
 - [ ] `KAN-204` [P2] Ranking 一覧表示をデザイン改善（情報優先度・視認性・余白）
