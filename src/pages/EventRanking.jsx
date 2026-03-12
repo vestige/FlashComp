@@ -451,7 +451,6 @@ const EventRanking = () => {
         </section>
 
         <section className="mt-4">
-          <h2 className={sectionHeadingClass}>🎛 Filters</h2>
           <div className={sectionCardClass}>
             <div className="flex flex-wrap items-center gap-2">
               <div className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white p-1">

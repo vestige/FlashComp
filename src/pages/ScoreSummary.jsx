@@ -276,7 +276,6 @@ const ScoreSummary = () => {
         />
 
         <section className="mt-5">
-          <h2 className={sectionHeadingClass}>絞り込み</h2>
           <div className={sectionCardClass}>
             <div className="flex flex-wrap items-center gap-3">
               <label className="flex min-w-[260px] flex-1 items-center gap-2 text-sm text-slate-600">
