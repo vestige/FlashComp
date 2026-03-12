@@ -12,6 +12,7 @@ import { db } from "../firebase";
 import { usePageTitle } from "../hooks/usePageTitle";
 import { useOwnerProfile } from "../hooks/useOwnerProfile";
 import ManagementHero from "../components/ManagementHero";
+import { getAdminActionErrorMessage } from "../lib/firebaseErrorMessage";
 import {
   inputFieldClass,
   pageBackgroundClass,
@@ -122,7 +123,13 @@ const SystemAdmin = () => {
       setGymDrafts(nextGymDrafts);
     } catch (err) {
       console.error("管理データの取得に失敗:", err);
-      setError("管理データの取得に失敗しました。");
+      setError(
+        getAdminActionErrorMessage({
+          error: err,
+          actionLabel: "管理データの取得",
+          defaultMessage: "管理データの取得に失敗しました。",
+        })
+      );
     } finally {
       setLoading(false);
     }
@@ -172,7 +179,13 @@ const SystemAdmin = () => {
       await loadAdminData();
     } catch (err) {
       console.error("ジム登録に失敗:", err);
-      setStatus("❌ ジム登録に失敗しました。");
+      setStatus(
+        getAdminActionErrorMessage({
+          error: err,
+          actionLabel: "ジム登録",
+          defaultMessage: "❌ ジム登録に失敗しました。",
+        })
+      );
     }
   };
 
@@ -198,7 +211,13 @@ const SystemAdmin = () => {
       await loadAdminData();
     } catch (err) {
       console.error("ジム更新に失敗:", err);
-      setStatus("❌ ジム更新に失敗しました。");
+      setStatus(
+        getAdminActionErrorMessage({
+          error: err,
+          actionLabel: "ジム更新",
+          defaultMessage: "❌ ジム更新に失敗しました。",
+        })
+      );
     }
   };
 
@@ -216,7 +235,13 @@ const SystemAdmin = () => {
       await loadAdminData();
     } catch (err) {
       console.error("ジム削除に失敗:", err);
-      setStatus("❌ ジム削除に失敗しました。");
+      setStatus(
+        getAdminActionErrorMessage({
+          error: err,
+          actionLabel: "ジム削除",
+          defaultMessage: "❌ ジム削除に失敗しました。",
+        })
+      );
     }
   };
 
@@ -288,7 +313,13 @@ const SystemAdmin = () => {
       await loadAdminData();
     } catch (err) {
       console.error("オーナープロファイル保存に失敗:", err);
-      setStatus("❌ オーナープロファイル保存に失敗しました。");
+      setStatus(
+        getAdminActionErrorMessage({
+          error: err,
+          actionLabel: "オーナープロファイル保存",
+          defaultMessage: "❌ オーナープロファイル保存に失敗しました。",
+        })
+      );
     }
   };
 
@@ -310,7 +341,13 @@ const SystemAdmin = () => {
       await loadAdminData();
     } catch (err) {
       console.error("オーナープロファイル削除に失敗:", err);
-      setStatus("❌ オーナープロファイル削除に失敗しました。");
+      setStatus(
+        getAdminActionErrorMessage({
+          error: err,
+          actionLabel: "オーナープロファイル削除",
+          defaultMessage: "❌ オーナープロファイル削除に失敗しました。",
+        })
+      );
     }
   };
 

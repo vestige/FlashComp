@@ -31,9 +31,9 @@
 - [x] `KAN-102` [P1] `owner` 切替後（`gymIds` 変更）UIと権限表示の即時再取得を実装
 - [x] `KAN-103` [P1] `routes` と管理画面 (`/system-admin`, `/dashboard`, `/events/...`) の権限チェックを統一
 - [x] `KAN-104` [P1] ログイン後リダイレクト先（`from` クエリ or デフォルト）を統一
-- [ ] `KAN-105` [P1] ログアウト / セッション切替時のヘッダー・戻る導線表示を確認
-- [ ] `KAN-106` [P1] `permission-denied` を捕捉し、管理用メッセージに変換する
-- [ ] `KAN-107` [P1] Climber Portal の見た目（タイトル/セクション）を既存UIへ揃える
+- [x] `KAN-105` [P1] ログアウト / セッション切替時のヘッダー・戻る導線表示を確認
+- [x] `KAN-106` [P1] `permission-denied` を捕捉し、管理用メッセージに変換する
+- [x] `KAN-107` [P1] Climber Portal の見た目（タイトル/セクション）を既存UIへ揃える
 - [ ] `KAN-108` [P1] 仕様の「認証試験手順（Googleログイン）」を `admin` / `owner` / 非許可で再作成
 - [ ] `KAN-109` [P1] `SPEC.md` の運用メモを `users/{uid}` ロール編集前提に更新
 - [ ] `KAN-110` [P1] `README.md` に最小権限アカウント開始手順を追記
