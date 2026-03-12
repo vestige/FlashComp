@@ -451,7 +451,7 @@ const EventRanking = () => {
         </section>
 
         <section className="mt-4">
-          <h2 className={sectionHeadingClass}>Filters</h2>
+          <h2 className={sectionHeadingClass}>🎛 Filters</h2>
           <div className={sectionCardClass}>
             <div className="flex flex-wrap items-center gap-2">
               <div className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white p-1">
@@ -533,7 +533,7 @@ const EventRanking = () => {
 
         {mode === "category" ? (
           <section className="mt-5">
-            <h2 className={sectionHeadingClass}>Category Ranking</h2>
+            <h2 className={sectionHeadingClass}>🧩 Category Ranking</h2>
             <div className="grid gap-4">
               {filteredCategorySections.map(({ category, rows }) => (
                 <article key={category.id} className={sectionCardClass}>
@@ -551,7 +551,7 @@ const EventRanking = () => {
 
         {mode === "season" ? (
           <section className="mt-5">
-            <h2 className={sectionHeadingClass}>Season Ranking</h2>
+            <h2 className={sectionHeadingClass}>🗂️ Season Ranking</h2>
             <div className="grid gap-4">
               {seasonSections.map(({ season, rows }) => (
                 <article key={season.id} className={sectionCardClass}>
@@ -570,7 +570,7 @@ const EventRanking = () => {
 
         {mode === "overall" ? (
           <section className="mt-5">
-            <h2 className={sectionHeadingClass}>Overall Ranking</h2>
+            <h2 className={sectionHeadingClass}>🏆 Overall Ranking</h2>
             <article className={sectionCardClass}>
               {renderRowsTable({
                 rows: overallRows,
