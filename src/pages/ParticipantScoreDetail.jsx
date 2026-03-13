@@ -460,9 +460,6 @@ const ParticipantScoreDetail = () => {
           <ManagementHero
             title="Climber Detail"
             description="クライマーの内訳・完登数・順位をモダンなレイアウトで確認します。"
-            meta={`イベント: ${event?.name || "-"} / 名前: ${participant?.name || "-"} / 会員番号: ${
-              participant?.memberNo || "-"
-            } / カテゴリ: ${participantCategoryName}`}
             backTo={backLink}
             backLabel={backLabel}
             surface={false}
@@ -493,7 +490,21 @@ const ParticipantScoreDetail = () => {
         <section className="mt-4">
           <h2 className={sectionHeadingClass}>サマリ</h2>
           <div className={sectionCardClass}>
-            <div className="grid gap-3 md:grid-cols-4">
+            <div className="grid gap-3 md:grid-cols-3">
+              <article className="rounded-xl border border-slate-200 bg-white p-4">
+                <p className="text-xs font-semibold text-slate-500">クライマー名</p>
+                <p className="mt-1 text-base font-bold text-slate-900">{participant?.name || "-"}</p>
+              </article>
+              <article className="rounded-xl border border-slate-200 bg-white p-4">
+                <p className="text-xs font-semibold text-slate-500">会員番号</p>
+                <p className="mt-1 text-base font-bold text-slate-900">{participant?.memberNo || "-"}</p>
+              </article>
+              <article className="rounded-xl border border-slate-200 bg-white p-4">
+                <p className="text-xs font-semibold text-slate-500">カテゴリ</p>
+                <p className="mt-1 text-base font-bold text-slate-900">{participantCategoryName}</p>
+              </article>
+            </div>
+            <div className="mt-3 grid gap-3 md:grid-cols-4">
               <article className="rounded-xl border border-slate-200 bg-white p-4">
                 <p className="text-xs font-semibold text-slate-500">総合ポイント</p>
                 <p className="mt-1 text-lg font-bold text-slate-900">{totalSummary.totalPoints}</p>
