@@ -239,6 +239,7 @@ const ParticipantScoreDetail = () => {
 
             const rowsByParticipantId = new Map();
             const categoryParticipants = allParticipants.filter((p) => p.categoryId === categoryId);
+            const categoryParticipantCount = categoryParticipants.length;
             for (const p of categoryParticipants) {
               rowsByParticipantId.set(p.id, {
                 participantId: p.id,
@@ -248,6 +249,7 @@ const ParticipantScoreDetail = () => {
                 clearCount: 0,
               });
             }
+            const routeCompletionCounts = new Map();
 
             let participantScoreData = null;
             for (const scoreDoc of scoresSnap.docs) {
@@ -273,6 +275,10 @@ const ParticipantScoreDetail = () => {
                 const canonicalTaskId = task?.id || routeName;
                 if (countedTaskIds.has(canonicalTaskId)) continue;
                 countedTaskIds.add(canonicalTaskId);
+                routeCompletionCounts.set(
+                  canonicalTaskId,
+                  (routeCompletionCounts.get(canonicalTaskId) || 0) + 1
+                );
 
                 currentRow.totalPoints += Number(task?.points) || 1;
                 currentRow.clearCount += 1;
@@ -316,17 +322,21 @@ const ParticipantScoreDetail = () => {
             const clearedRoutes = [];
             for (const [scoreKey, isCleared] of Object.entries(scores)) {
               if (!isCleared) continue;
-              const task = taskByScoreKey.get(scoreKey);
-              const canonicalTaskId = task?.id || scoreKey;
-              if (clearedTaskIds.has(canonicalTaskId)) continue;
-              clearedTaskIds.add(canonicalTaskId);
+                const task = taskByScoreKey.get(scoreKey);
+                const canonicalTaskId = task?.id || scoreKey;
+                if (clearedTaskIds.has(canonicalTaskId)) continue;
+                clearedTaskIds.add(canonicalTaskId);
+                const completionCount = routeCompletionCounts.get(canonicalTaskId) || 0;
 
-              clearedRoutes.push({
-                routeName: task?.name || scoreKey,
-                points: Number(task?.points) || 1,
-                grade: task?.grade || "-",
-              });
-            }
+                clearedRoutes.push({
+                  routeName: task?.name || scoreKey,
+                  points: Number(task?.points) || 1,
+                  grade: task?.grade || "-",
+                  completionCount,
+                  completionRate:
+                    categoryParticipantCount === 0 ? 0 : Math.round((completionCount / categoryParticipantCount) * 1000) / 10,
+                });
+              }
             clearedRoutes.sort((a, b) => a.routeName.localeCompare(b.routeName, "ja"));
 
             const totalPoints = clearedRoutes.reduce((sum, route) => sum + route.points, 0);
@@ -630,12 +640,15 @@ const ParticipantScoreDetail = () => {
                           <p className="bg-white px-4 py-3 text-sm text-slate-600">完登課題はありません。</p>
                         ) : (
                           <div className="overflow-x-auto">
-                            <table className="min-w-[420px] w-full border-collapse text-sm">
+                <table className="min-w-[420px] w-full border-collapse text-sm">
                               <thead>
                                 <tr className="bg-slate-100/70">
                                   <th className="px-4 py-2 text-left text-xs font-semibold text-slate-600">課題</th>
                                   <th className="px-4 py-2 text-left text-xs font-semibold text-slate-600">グレード</th>
                                   <th className="px-4 py-2 text-right text-xs font-semibold text-slate-600">点数</th>
+                                  <th className="px-4 py-2 text-right text-xs font-semibold text-slate-600">
+                                    完登率 ({category.totalParticipants}人)
+                                  </th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -647,6 +660,9 @@ const ParticipantScoreDetail = () => {
                                     <td className="px-4 py-2 text-slate-800">{route.routeName}</td>
                                     <td className="px-4 py-2 text-slate-700">{route.grade}</td>
                                     <td className="px-4 py-2 text-right font-semibold text-slate-900">{route.points}</td>
+                                    <td className="px-4 py-2 text-right text-xs text-slate-700">
+                                      {route.completionCount}人 / {category.totalParticipants}人（{route.completionRate}%）
+                                    </td>
                                   </tr>
                                 ))}
                               </tbody>
