@@ -331,11 +331,14 @@ const ParticipantScoreDetail = () => {
 
             const totalPoints = clearedRoutes.reduce((sum, route) => sum + route.points, 0);
 
-            return {
+        return {
               categoryId,
               categoryName: categoryNameMap.get(categoryId) || categoryId,
               clearCount: clearedRoutes.length,
               totalPoints,
+              totalTaskCount: new Set(
+                assignedTasks.map((task) => task?.id || task?.scoreKey || task?.routeName || task?.name).filter(Boolean)
+              ).size,
               rank: myRankRow?.rank || rankedRows.length,
               totalParticipants: rankedRows.length,
               updatedAtText: getTimestampText(participantScoreData?.updatedAt),
@@ -586,7 +589,7 @@ const ParticipantScoreDetail = () => {
               >
                 <h2 className={sectionHeadingClass}>{season.seasonName}</h2>
                 <div className={sectionCardClass}>
-                  <div className="grid gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3 sm:grid-cols-3">
+                    <div className="grid gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3 sm:grid-cols-3">
                     <article>
                       <p className="text-xs font-semibold text-slate-500">シーズン合計ポイント</p>
                       <p className="mt-1 text-base font-bold text-slate-900">{season.totalPoints}</p>
@@ -595,11 +598,11 @@ const ParticipantScoreDetail = () => {
                       <p className="text-xs font-semibold text-slate-500">シーズン完登</p>
                       <p className="mt-1 text-base font-bold text-slate-900">{season.totalClears}</p>
                     </article>
-                    <article>
-                      <p className="text-xs font-semibold text-slate-500">カテゴリ数</p>
-                      <p className="mt-1 text-base font-bold text-slate-900">{season.categorySummaries.length}</p>
-                    </article>
-                  </div>
+                      <article>
+                        <p className="text-xs font-semibold text-slate-500">カテゴリ数</p>
+                        <p className="mt-1 text-base font-bold text-slate-900">{season.categorySummaries.length}</p>
+                      </article>
+                    </div>
 
                   {season.categorySummaries.length === 0 ? (
                     <p className="mt-2 text-sm text-slate-600">このシーズンの採点データはありません。</p>
@@ -613,6 +616,13 @@ const ParticipantScoreDetail = () => {
                           <h3 className="text-sm font-semibold text-slate-800">{category.categoryName}</h3>
                           <p className="mt-1 text-xs text-slate-500">
                             順位 {category.rank}/{category.totalParticipants} / 得点 {category.totalPoints} / 完登 {category.clearCount}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            完登率: {category.clearCount} / {category.totalTaskCount} ({
+                              category.totalTaskCount === 0
+                                ? "0"
+                                : Math.round((category.clearCount / category.totalTaskCount) * 100)
+                            }%)
                           </p>
                           <p className="text-xs text-slate-500">最終更新: {category.updatedAtText}</p>
                         </div>
@@ -650,14 +660,6 @@ const ParticipantScoreDetail = () => {
               </section>
             ))
           )}
-        </div>
-        <div className="mt-6">
-          <Link
-            to={backLink}
-            className={subtleButtonClass}
-          >
-            {backLabel}
-          </Link>
         </div>
       </div>
     </div>
