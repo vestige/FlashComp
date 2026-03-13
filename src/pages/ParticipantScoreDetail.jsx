@@ -412,6 +412,13 @@ const ParticipantScoreDetail = () => {
     [seasonSummaries]
   );
 
+  const overallRankValue = overallRankInfo
+    ? `${overallRankInfo.rank} / ${overallRankInfo.totalParticipants}`
+    : "-";
+  const averagePoints = overallRankInfo?.totalParticipants
+    ? Math.round((overallRankInfo.totalPoints / overallRankInfo.totalParticipants) * 10) / 10
+    : 0;
+
   if (loading) {
     return (
       <div className={pageBackgroundClass}>
@@ -452,7 +459,7 @@ const ParticipantScoreDetail = () => {
         <div className="mb-6">
           <ManagementHero
             title="Climber Detail"
-            description="クライマーのスコア内訳と順位を確認します。"
+            description="クライマーの内訳・完登数・順位をモダンなレイアウトで確認します。"
             meta={`イベント: ${event?.name || "-"} / 名前: ${participant?.name || "-"} / 会員番号: ${
               participant?.memberNo || "-"
             } / カテゴリ: ${participantCategoryName}`}
@@ -465,12 +472,12 @@ const ParticipantScoreDetail = () => {
         <section className="mt-4">
           <h2 className={sectionHeadingClass}>表示シーズン</h2>
           <div className={sectionCardClass}>
-            <label className="text-sm text-slate-700">
-              表示シーズン:
+            <label className="block text-sm text-slate-700">
+              <span className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Season Filter</span>
               <select
                 value={selectedSeasonId}
                 onChange={(e) => setSelectedSeasonId(e.target.value)}
-                className={`${inputFieldClass} ml-2`}
+                className={`${inputFieldClass} mt-1 w-full`}
               >
                 <option value="all">総合（全シーズン）</option>
                 {seasons.map((season) => (
@@ -486,39 +493,29 @@ const ParticipantScoreDetail = () => {
         <section className="mt-4">
           <h2 className={sectionHeadingClass}>サマリ</h2>
           <div className={sectionCardClass}>
-            <div className="grid gap-3 md:grid-cols-3">
-              <article className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
-                  Total Points
-                </p>
+            <div className="grid gap-3 md:grid-cols-4">
+              <article className="rounded-xl border border-slate-200 bg-white p-4">
+                <p className="text-xs font-semibold text-slate-500">総合ポイント</p>
                 <p className="mt-1 text-lg font-bold text-slate-900">{totalSummary.totalPoints}</p>
               </article>
-              <article className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
-                  Total Clear
-                </p>
+              <article className="rounded-xl border border-slate-200 bg-white p-4">
+                <p className="text-xs font-semibold text-slate-500">合計完登</p>
                 <p className="mt-1 text-lg font-bold text-slate-900">{totalSummary.totalClears}</p>
               </article>
-              <article className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
-                  Overall Rank
+              <article className="rounded-xl border border-slate-200 bg-white p-4">
+                <p className="text-xs font-semibold text-slate-500">順位</p>
+                <p className="mt-1 text-lg font-bold text-slate-900">{overallRankValue}</p>
+              </article>
+              <article className="rounded-xl border border-slate-200 bg-white p-4">
+                <p className="text-xs font-semibold text-slate-500">平均ポイント</p>
+                <p className="mt-1 text-lg font-bold text-slate-900">
+                  {overallRankInfo ? averagePoints.toFixed(1) : "-"}
                 </p>
-                {overallRankInfo ? (
-                  <p className="mt-1 text-lg font-bold text-slate-900">
-                    {overallRankInfo.rank} / {overallRankInfo.totalParticipants}
-                    <span className="ml-2 text-sm font-semibold text-slate-700">
-                      （{overallRankInfo.totalPoints}点）
-                    </span>
-                  </p>
-                ) : (
-                  <p className="mt-1 text-lg font-bold text-slate-900">-</p>
-                )}
               </article>
             </div>
             {overallRankInfo && (
-              <p className="mt-3 text-sm text-slate-600">
-                順位（{overallRankInfo.categoryName}）: {overallRankInfo.rank} / {overallRankInfo.totalParticipants}
-                {" "}
+              <p className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
+                {overallRankInfo.categoryName} の順位情報: {overallRankInfo.rank}位 / {overallRankInfo.totalParticipants}人
                 （得点 {overallRankInfo.totalPoints} / 完登 {overallRankInfo.totalClears}）
               </p>
             )}
@@ -527,28 +524,32 @@ const ParticipantScoreDetail = () => {
 
         {(adjacentParticipants.prev || adjacentParticipants.next) && (
           <section className="mt-4">
-            <h2 className={sectionHeadingClass}>近い順位のクライマー</h2>
+            <h2 className={sectionHeadingClass}>近い順位</h2>
             <div className={sectionCardClass}>
-              <div className="flex flex-wrap gap-2 text-sm">
+              <div className="flex flex-col gap-2 text-sm sm:flex-row sm:gap-3">
                 {adjacentParticipants.prev ? (
                   <Link
                     to={buildParticipantDetailLink(adjacentParticipants.prev.participantId)}
-                    className={subtleButtonClass}
+                    className={`${subtleButtonClass} w-full sm:w-auto`}
                   >
-                    ↑ {adjacentParticipants.prev.rank}位 {adjacentParticipants.prev.name}
+                    <span>↑</span>
+                    <span className="font-semibold">{adjacentParticipants.prev.rank}位</span>
+                    <span>{adjacentParticipants.prev.name}</span>
                   </Link>
                 ) : (
-                  <span className="text-slate-600">これより上位のクライマーはいません</span>
+                  <span className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-slate-600">上位なし</span>
                 )}
                 {adjacentParticipants.next ? (
                   <Link
                     to={buildParticipantDetailLink(adjacentParticipants.next.participantId)}
-                    className={subtleButtonClass}
+                    className={`${subtleButtonClass} w-full sm:w-auto`}
                   >
-                    ↓ {adjacentParticipants.next.rank}位 {adjacentParticipants.next.name}
+                    <span>↓</span>
+                    <span className="font-semibold">{adjacentParticipants.next.rank}位</span>
+                    <span>{adjacentParticipants.next.name}</span>
                   </Link>
                 ) : (
-                  <span className="text-slate-600">これより下位のクライマーはいません</span>
+                  <span className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-slate-600">下位なし</span>
                 )}
               </div>
             </div>
@@ -574,9 +575,20 @@ const ParticipantScoreDetail = () => {
               >
                 <h2 className={sectionHeadingClass}>{season.seasonName}</h2>
                 <div className={sectionCardClass}>
-                  <p className="text-sm text-slate-600">
-                    得点 {season.totalPoints} / 完登 {season.totalClears}
-                  </p>
+                  <div className="grid gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3 sm:grid-cols-3">
+                    <article>
+                      <p className="text-xs font-semibold text-slate-500">シーズン合計ポイント</p>
+                      <p className="mt-1 text-base font-bold text-slate-900">{season.totalPoints}</p>
+                    </article>
+                    <article>
+                      <p className="text-xs font-semibold text-slate-500">シーズン完登</p>
+                      <p className="mt-1 text-base font-bold text-slate-900">{season.totalClears}</p>
+                    </article>
+                    <article>
+                      <p className="text-xs font-semibold text-slate-500">カテゴリ数</p>
+                      <p className="mt-1 text-base font-bold text-slate-900">{season.categorySummaries.length}</p>
+                    </article>
+                  </div>
 
                   {season.categorySummaries.length === 0 ? (
                     <p className="mt-2 text-sm text-slate-600">このシーズンの採点データはありません。</p>
@@ -584,33 +596,36 @@ const ParticipantScoreDetail = () => {
                     season.categorySummaries.map((category) => (
                       <div
                         key={`${season.seasonId}-${category.categoryId}`}
-                        className="mt-4 rounded-xl border border-slate-200 bg-white p-4"
+                        className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
                       >
-                        <h3 className="text-sm font-semibold text-slate-800">
-                          カテゴリ: {category.categoryName} / 順位 {category.rank}/{category.totalParticipants}
-                          {" / "}得点 {category.totalPoints} / 完登 {category.clearCount}
-                        </h3>
-                        <p className="mt-1 text-xs text-slate-500">
-                          最終更新: {category.updatedAtText}
-                        </p>
+                        <div className="border-b border-slate-200 bg-slate-50 px-4 py-3">
+                          <h3 className="text-sm font-semibold text-slate-800">{category.categoryName}</h3>
+                          <p className="mt-1 text-xs text-slate-500">
+                            順位 {category.rank}/{category.totalParticipants} / 得点 {category.totalPoints} / 完登 {category.clearCount}
+                          </p>
+                          <p className="text-xs text-slate-500">最終更新: {category.updatedAtText}</p>
+                        </div>
                         {category.clearedRoutes.length === 0 ? (
-                          <p className="mt-2 text-sm text-slate-600">完登課題はありません。</p>
+                          <p className="bg-white px-4 py-3 text-sm text-slate-600">完登課題はありません。</p>
                         ) : (
-                          <div className="mt-2 overflow-x-auto">
-                            <table className="min-w-[360px] w-full border-collapse text-sm">
+                          <div className="overflow-x-auto">
+                            <table className="min-w-[420px] w-full border-collapse text-sm">
                               <thead>
-                                <tr>
-                                  <th className="border-b border-slate-200 py-2 text-left">課題</th>
-                                  <th className="border-b border-slate-200 py-2 text-left">グレード</th>
-                                  <th className="border-b border-slate-200 py-2 text-right">点数</th>
+                                <tr className="bg-slate-100/70">
+                                  <th className="px-4 py-2 text-left text-xs font-semibold text-slate-600">課題</th>
+                                  <th className="px-4 py-2 text-left text-xs font-semibold text-slate-600">グレード</th>
+                                  <th className="px-4 py-2 text-right text-xs font-semibold text-slate-600">点数</th>
                                 </tr>
                               </thead>
                               <tbody>
                                 {category.clearedRoutes.map((route) => (
-                                  <tr key={route.routeName}>
-                                    <td className="py-2">{route.routeName}</td>
-                                    <td className="py-2">{route.grade}</td>
-                                    <td className="py-2 text-right">{route.points}</td>
+                                  <tr
+                                    key={route.routeName}
+                                    className="border-b border-slate-200 transition hover:bg-slate-50"
+                                  >
+                                    <td className="px-4 py-2 text-slate-800">{route.routeName}</td>
+                                    <td className="px-4 py-2 text-slate-700">{route.grade}</td>
+                                    <td className="px-4 py-2 text-right font-semibold text-slate-900">{route.points}</td>
                                   </tr>
                                 ))}
                               </tbody>
