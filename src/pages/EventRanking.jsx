@@ -306,6 +306,43 @@ const EventRanking = () => {
     [rankingsByScope, aggregateRowsFromCategoryRankings]
   );
 
+  const displayedRows = useMemo(() => {
+    if (mode === "category") {
+      return filteredCategorySections.flatMap(({ rows }) => rows);
+    }
+    if (mode === "season") {
+      return seasonSections.flatMap(({ rows }) => rows);
+    }
+    return overallRows;
+  }, [mode, filteredCategorySections, seasonSections, overallRows]);
+
+  const rankingSummary = useMemo(() => {
+    const climberCount = displayedRows.length;
+    if (climberCount === 0) {
+      return {
+        climberCount: 0,
+        topPoints: null,
+        averagePoints: null,
+        averageRatio: 0,
+      };
+    }
+
+    const totalPoints = displayedRows.reduce((sum, row) => sum + (Number(row.totalPoints) || 0), 0);
+    const topPoints = displayedRows.reduce(
+      (max, row) => Math.max(max, Number(row.totalPoints) || 0),
+      0
+    );
+    const averagePoints = Math.round((totalPoints / climberCount) * 10) / 10;
+    const averageRatio = topPoints > 0 ? Math.min(100, Math.round((averagePoints / topPoints) * 100)) : 0;
+
+    return {
+      climberCount,
+      topPoints,
+      averagePoints,
+      averageRatio,
+    };
+  }, [displayedRows]);
+
   const buildDetailLink = ({ participantId, seasonId = "all", categoryId = "all" }) => {
     const params = new URLSearchParams();
     params.set("return", "ranking");
@@ -327,35 +364,15 @@ const EventRanking = () => {
       );
     }
 
-    const totalPoints = rows.reduce((sum, row) => sum + (Number(row.totalPoints) || 0), 0);
-    const totalClears = rows.reduce((sum, row) => sum + (Number(row.clearCount) || 0), 0);
-    const averagePoints = Math.round((totalPoints / rows.length) * 10) / 10;
-    const top = rows[0];
-
     return (
       <div className="mt-3">
-        <div className="mb-3 grid gap-3 sm:grid-cols-3">
-          <article className="rounded-xl border border-slate-200 bg-white px-3 py-2">
-            <p className="text-xs font-semibold tracking-wide text-slate-500">クライマー数</p>
-            <p className="mt-1 text-base font-bold text-slate-900">{rows.length}名</p>
-          </article>
-          <article className="rounded-xl border border-slate-200 bg-white px-3 py-2">
-            <p className="text-xs font-semibold tracking-wide text-slate-500">TOPポイント</p>
-            <p className="mt-1 text-base font-bold text-slate-900">{top ? top.totalPoints : "-"}</p>
-          </article>
-          <article className="rounded-xl border border-slate-200 bg-white px-3 py-2">
-            <p className="text-xs font-semibold tracking-wide text-slate-500">平均ポイント / 合計完登</p>
-            <p className="mt-1 text-base font-bold text-slate-900">
-              {averagePoints.toFixed(1)} / {totalClears}
-            </p>
-          </article>
-        </div>
-
         <div className="grid gap-2 md:hidden">
           {rows.map((row) => (
             <article
               key={row.participantId}
-              className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm transition hover:shadow-md"
+              className={`rounded-2xl border bg-white p-3 shadow-sm transition hover:shadow-md ${
+                row.rank <= 3 ? "border-emerald-200" : "border-slate-200"
+              }`}
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
@@ -370,84 +387,104 @@ const EventRanking = () => {
                 </div>
                 <Link
                   to={buildDetailLink({ participantId: row.participantId, seasonId, categoryId })}
-                  className="inline-flex shrink-0 items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-100"
+                  className="inline-flex shrink-0 items-center rounded-lg border border-emerald-700 bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-800"
                 >
-                  詳細
+                  Detail
                 </Link>
               </div>
               <dl className="mt-2 grid grid-cols-2 gap-2 text-xs">
-                <div className="rounded-md bg-slate-50 px-2 py-2">
-                  <dt className="text-slate-500">Points</dt>
-                  <dd className="font-semibold text-slate-900">{row.totalPoints}</dd>
+                <div className="rounded-md bg-emerald-50 px-2 py-2">
+                  <dt className="text-emerald-700">Points</dt>
+                  <dd className="font-semibold text-emerald-900">{row.totalPoints}</dd>
                 </div>
-                <div className="rounded-md bg-slate-50 px-2 py-2">
-                  <dt className="text-slate-500">Clears</dt>
-                  <dd className="font-semibold text-slate-900">{row.clearCount}</dd>
+                <div className="rounded-md bg-sky-50 px-2 py-2">
+                  <dt className="text-sky-700">Clears</dt>
+                  <dd className="font-semibold text-sky-900">{row.clearCount}</dd>
                 </div>
               </dl>
             </article>
           ))}
         </div>
-          <div className="hidden overflow-x-auto md:block">
-            <div className="overflow-hidden rounded-2xl border border-slate-200">
-              <table className="min-w-[760px] w-full border-collapse text-sm">
-                <thead>
-                  <tr className="bg-slate-100/80">
-                  <th className="px-3 py-2.5 text-left text-xs font-semibold text-slate-600">Rank</th>
-                  <th className="px-3 py-2.5 text-left text-xs font-semibold text-slate-600">Name</th>
-                  <th className="px-3 py-2.5 text-left text-xs font-semibold text-slate-600">Member No</th>
+        <div className="hidden overflow-x-auto md:block">
+          <div className="overflow-hidden rounded-2xl border border-slate-200">
+            <table className="min-w-[760px] w-full border-collapse text-sm">
+              <thead>
+                <tr className="bg-slate-100/80">
+                  <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-600">
+                    Rank
+                  </th>
+                  <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-600">
+                    Climber
+                  </th>
+                  <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-600">
+                    Member No
+                  </th>
                   {showCategory ? (
-                    <th className="px-3 py-2.5 text-left text-xs font-semibold text-slate-600">Category</th>
+                    <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-600">
+                      Category
+                    </th>
                   ) : null}
-                  <th className="px-3 py-2.5 text-right text-xs font-semibold text-slate-600">Points</th>
-                  <th className="px-3 py-2.5 text-right text-xs font-semibold text-slate-600">Clears</th>
-                  <th className="px-3 py-2.5 text-left text-xs font-semibold text-slate-600">Detail</th>
+                  <th className="px-3 py-2.5 text-right text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-600">
+                    Points
+                  </th>
+                  <th className="px-3 py-2.5 text-right text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-600">
+                    Clears
+                  </th>
+                  <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-600">
+                    Detail
+                  </th>
                 </tr>
-                </thead>
-                <tbody>
-                  {rows.map((row, index) => (
-                    <tr
-                      key={row.participantId}
-                      className={`${
-                        index % 2 === 0 ? "bg-white" : "bg-slate-50/40"
-                      } transition hover:bg-slate-100/60`}
-                    >
-                      <td className="px-3 py-2.5">
-                        <span
-                          className={`inline-flex h-6 min-w-6 items-center justify-center rounded-full text-[11px] font-bold ${
-                            row.rank === 1
-                              ? "bg-amber-500 text-white"
-                              : row.rank === 2
-                                ? "bg-slate-300 text-slate-700"
-                                : row.rank === 3
-                                  ? "bg-amber-700/90 text-white"
-                                  : "bg-slate-200 text-slate-700"
-                          }`}
-                        >
-                          {row.rank}
-                        </span>
-                      </td>
-                      <td className="px-3 py-2.5 text-slate-900 font-medium">{row.name}</td>
-                      <td className="px-3 py-2.5 text-slate-700">{row.memberNo || "-"}</td>
-                      {showCategory ? (
-                        <td className="px-3 py-2.5 text-slate-700">{row.categoryName || "-"}</td>
-                      ) : null}
-                      <td className="px-3 py-2.5 text-right font-semibold text-slate-900">{row.totalPoints}</td>
-                      <td className="px-3 py-2.5 text-right text-slate-700">{row.clearCount}</td>
-                      <td className="px-3 py-2.5">
-                        <Link
-                          to={buildDetailLink({ participantId: row.participantId, seasonId, categoryId })}
-                          className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-white"
-                        >
-                          詳細
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+              </thead>
+              <tbody>
+                {rows.map((row, index) => (
+                  <tr
+                    key={row.participantId}
+                    className={`${
+                      index % 2 === 0 ? "bg-white" : "bg-slate-50/40"
+                    } transition hover:bg-slate-100/60`}
+                  >
+                    <td className="px-3 py-2.5">
+                      <span
+                        className={`inline-flex h-6 min-w-6 items-center justify-center rounded-full text-[11px] font-bold ${
+                          row.rank === 1
+                            ? "bg-amber-500 text-white"
+                            : row.rank === 2
+                              ? "bg-slate-300 text-slate-700"
+                              : row.rank === 3
+                                ? "bg-amber-700/90 text-white"
+                                : "bg-slate-200 text-slate-700"
+                        }`}
+                      >
+                        {row.rank}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <p className="font-semibold text-slate-900">{row.name}</p>
+                    </td>
+                    <td className="px-3 py-2.5 font-mono text-xs text-slate-500">{row.memberNo || "-"}</td>
+                    {showCategory ? (
+                      <td className="px-3 py-2.5 text-slate-700">{row.categoryName || "-"}</td>
+                    ) : null}
+                    <td className="px-3 py-2.5 text-right text-base font-bold text-emerald-700">{row.totalPoints}</td>
+                    <td className="px-3 py-2.5 text-right">
+                      <span className="inline-flex min-w-10 justify-center rounded-full bg-sky-50 px-2 py-0.5 text-xs font-semibold text-sky-700">
+                        {row.clearCount}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <Link
+                        to={buildDetailLink({ participantId: row.participantId, seasonId, categoryId })}
+                        className="inline-flex items-center rounded-full border border-emerald-700 bg-emerald-700 px-3 py-1 text-xs font-semibold text-white transition hover:bg-emerald-800"
+                      >
+                        Detail
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
+        </div>
       </div>
     );
   };
@@ -583,6 +620,50 @@ const EventRanking = () => {
               </label>
             </div>
             {calculating ? <p className="mt-3 text-sm text-slate-600">ランキングを計算中...</p> : null}
+          </div>
+        </section>
+
+        <section className="mt-4">
+          <div className="grid gap-3 md:grid-cols-3">
+            <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-xs font-semibold uppercase tracking-[0.1em] text-slate-500">Climbers</p>
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-sky-50 text-xs font-bold text-sky-700">
+                  C
+                </span>
+              </div>
+              <p className="mt-2 text-3xl font-black text-slate-900">{rankingSummary.climberCount.toLocaleString("ja-JP")}</p>
+              <p className="mt-1 text-xs text-slate-600">現在表示中の件数</p>
+            </article>
+            <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-xs font-semibold uppercase tracking-[0.1em] text-slate-500">Top Points</p>
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-50 text-xs font-bold text-emerald-700">
+                  P
+                </span>
+              </div>
+              <p className="mt-2 text-3xl font-black text-emerald-700">
+                {rankingSummary.topPoints == null ? "-" : rankingSummary.topPoints.toLocaleString("ja-JP")}
+              </p>
+              <p className="mt-1 text-xs text-slate-600">表示範囲の最高ポイント</p>
+            </article>
+            <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-xs font-semibold uppercase tracking-[0.1em] text-slate-500">Avg. Points</p>
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-50 text-xs font-bold text-indigo-700">
+                  A
+                </span>
+              </div>
+              <p className="mt-2 text-3xl font-black text-slate-900">
+                {rankingSummary.averagePoints == null ? "-" : rankingSummary.averagePoints.toFixed(1)}
+              </p>
+              <div className="mt-2 h-1.5 rounded-full bg-slate-200">
+                <div
+                  className="h-full rounded-full bg-indigo-500 transition-all"
+                  style={{ width: `${rankingSummary.averageRatio}%` }}
+                />
+              </div>
+            </article>
           </div>
         </section>
 
