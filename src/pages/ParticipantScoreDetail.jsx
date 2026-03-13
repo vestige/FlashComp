@@ -660,11 +660,19 @@ const ParticipantScoreDetail = () => {
                                     <td className="px-4 py-2 text-slate-800">{route.routeName}</td>
                                     <td className="px-4 py-2 text-slate-700">{route.grade}</td>
                                     <td className="px-4 py-2 text-right font-semibold text-slate-900">{route.points}</td>
-                                    <td className="px-4 py-2 text-right text-xs text-slate-700">
-                                      {route.completionCount}人 / {category.totalParticipants}人（{route.completionRate}%）
-                                    </td>
-                                  </tr>
-                                ))}
+                                   <td className="px-4 py-2 text-right text-xs text-slate-700">
+                                     <p>
+                                       {route.completionCount}人 / {category.totalParticipants}人（{route.completionRate}%）
+                                     </p>
+                                     <div className="mt-1 h-1.5 w-full rounded-full bg-slate-200">
+                                       <div
+                                         className="h-full rounded-full bg-emerald-500 transition-all"
+                                         style={{ width: `${route.completionRate}%` }}
+                                       />
+                                     </div>
+                                   </td>
+                                   </tr>
+                                 ))}
                               </tbody>
                             </table>
                           </div>
