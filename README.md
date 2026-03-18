@@ -47,5 +47,5 @@ https://vestige.github.io/FlashComp/demo/
   - `demo`: `https://vestige.github.io/FlashComp/demo/`
 - `build:stg` と `build:demo` は `vite.config.js` の `base` と連動して、GitHub Pages の配下ルーティングを自動的に合わせる
 
-※CI で Firebase の `VITE_FIREBASE_*` が未設定だと、起動時にデフォルト設定へフォールバックして警告を出します。  
-デモ・ステージングでも本番と同一 Firebase を使う場合でも、同じ値を GitHub Secrets に登録してください。
+※CI/ローカルとも `VITE_FIREBASE_*` は必須です。未設定なら起動時に明示エラーで停止します。  
+ローカルは `.env.local` / `.env.staging.local` に、GitHub Actions は Secrets に必ず同等値を登録してください。
