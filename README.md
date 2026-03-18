@@ -4,6 +4,20 @@ https://vestige.github.io/FlashComp/
 https://vestige.github.io/FlashComp/demo/
 ※ステージングが必要な場合は `https://vestige.github.io/FlashComp/stg/` を利用
 
+## 環境と配信先
+
+- 本番: `https://vestige.github.io/FlashComp/`
+- デモ: `https://vestige.github.io/FlashComp/demo/`
+- ステージング: `https://vestige.github.io/FlashComp/stg/`
+- データは原則同一 Firebase を参照。データ分離が必要な場合は環境別Firebaseを用意して、`VITE_FIREBASE_*` を切り替える
+
+## ローカル起動
+
+- 本番想定パスで確認: `npm run dev -- --mode prod`
+- ステージング想定: `npm run dev -- --mode stg`
+- デモ想定: `npm run dev -- --mode demo`
+- `npm run build:prod / build:stg / build:demo` でそれぞれの配信時振る舞いを事前確認
+
 ## Google認証（最小権限アカウント運用）
 
 1. Firebase Console の管理画面で `Authentication > Sign-in method` の Google を有効化し、Email/Password を無効化する
@@ -31,6 +45,7 @@ https://vestige.github.io/FlashComp/demo/
   - `prod`: 本番（`/FlashComp/`）
   - `stg`: `https://vestige.github.io/FlashComp/stg/`
   - `demo`: `https://vestige.github.io/FlashComp/demo/`
+- `build:stg` と `build:demo` は `vite.config.js` の `base` と連動して、GitHub Pages の配下ルーティングを自動的に合わせる
 
-※CI で Firebase の `VITE_FIREBASE_*` が未設定だと、起動時にデフォルト設定へフォールバックするため、ログに警告が出ます。  
-デモ・ステージングでも本番と同じ Firebase を使う場合は、同一値を GitHub Secrets に登録してください。
+※CI で Firebase の `VITE_FIREBASE_*` が未設定だと、起動時にデフォルト設定へフォールバックして警告を出します。  
+デモ・ステージングでも本番と同一 Firebase を使う場合でも、同じ値を GitHub Secrets に登録してください。

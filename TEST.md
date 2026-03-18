@@ -59,6 +59,7 @@ Copy-Item .env.example .env.staging.local   # Windows PowerShell
 ```bash
 npm run dev -- --mode staging
 ```
+  - `staging` は `vite.config.js` 上で `stg` と解釈されるため、`npm run dev -- --mode stg` でも同等
 
 ### 1-2. Googleログイン導線
 
@@ -144,7 +145,23 @@ npm run dev -- --mode staging
 - OAuth のリダイレクト許可がフロントURLに一致する
 - `users/{uid}` の設定が環境別に混在していない（本番とステージングUIDを取り違えない）
 
----
+### 2-4. デモ/ステージング配信確認（推奨フロー）
+
+1. GitHub Actions → `Deploy to GitHub Pages` → `Run workflow`
+2. `target_env` を以下で順番に実行
+   - `demo`: `https://vestige.github.io/FlashComp/demo/`
+   - `stg`: `https://vestige.github.io/FlashComp/stg/`
+3. 各URLで以下を確認
+   - 表示が空白でなく、CSS/JS が読み込まれている
+   - `/login` が Google Sign-In のみで開ける
+   - `admin / owner / viewer / 未許可` それぞれの権限制御がローカル結果と一致
+   - `No routes matched` がコンソールに出ない
+
+補足:
+- 短時間で検証する場合、ローカルは UI 変更多発確認、stg/demo は毎回の運用リリース確認に使う。
+- デモURLで動けば運用フローとしては「実環境通過」とみなせる。
+
+--- 
 
 ## 4) Firestore test data scripts
 
