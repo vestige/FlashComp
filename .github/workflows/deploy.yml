@@ -4,7 +4,18 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches:
-      - main  
+      - main
+  workflow_dispatch:
+    inputs:
+      target_env:
+        description: "deploy target"
+        required: true
+        default: "prod"
+        type: choice
+        options:
+          - prod
+          - stg
+          - demo
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -17,10 +28,35 @@ jobs:
           node-version: "20"
       - name: Install dependencies
         run: npm ci
+      - name: Resolve target environment
+        id: target
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "env_name=${{ github.event.inputs.target_env }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "env_name=prod" >> "$GITHUB_OUTPUT"
+          fi
       - name: Build project
-        run: npm run build
-      - name: Deploy to GitHub Pages
+        run: npm run build:${{ steps.target.outputs.env_name }}
+      - name: Deploy to GitHub Pages (production)
+        if: steps.target.outputs.env_name == 'prod'
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
+      - name: Deploy to GitHub Pages (staging)
+        if: steps.target.outputs.env_name == 'stg'
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          destination_dir: stg
+          keep_files: true
+      - name: Deploy to GitHub Pages (demo)
+        if: steps.target.outputs.env_name == 'demo'
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          destination_dir: demo
+          keep_files: true

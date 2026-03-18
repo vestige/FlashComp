@@ -155,8 +155,13 @@ npm run dev -- --mode staging
   - `npm run db:seed`
   - `npm run db:seed:system`
   - `npm run db:backup -- --out backups/pre-op.json`
+  - `npm run db:backup:demo`（デモ用途）
   - `npm run db:backup:system`
+  - `npm run db:restore:dry-run -- --file <backup-json>`（事前見積もり）
   - `npm run db:restore -- --yes --file <backup-json>`
+  - `npm run db:restore -- --yes --file <backup-json> --scope-events event-spring-2026,event-live-now`
+  - `npm run db:restore -- --yes --file <backup-json> --scope-gym gym-shibuya`
+  - `npm run db:restore -- --yes --file <backup-json> --log backups/restore-logs/restore-session.jsonl`
 - `db:seed` / `db:seed:system` はローカル検証前のイベント再現に使う
 - `db:reset` を使う場合は `SCRIPT_AUTH_*` を設定してから実行する
 
@@ -173,6 +178,38 @@ npm run db:reset
 - `event-live-now`
 - `event-upcoming-2026`
 - `event-rookie-cup-2026`
+
+### 5) KAN-006 検証（db:restore 安全化）
+
+- **事前見積もり表示の確認（dry-run）**
+  ```bash
+  npm run db:restore:dry-run -- --file backups/demo/firestore-backup-demo-20260316-120000.json
+  ```
+  - `[target] docs to restore: ...` が表示される
+  - `[scope skip] ...` が表示される
+  - `Dry-run completed. No data written.` が表示される
+  - `Dry-run` のログが `backups/restore-logs/restore-*.jsonl` に1行追加される
+
+- **スコープ確認（実行前）**
+  ```bash
+  npm run db:restore:dry-run -- --file backups/<任意のbackup>.json --scope-events event-spring-2026 --scope-gym gym-shibuya
+  ```
+  - `[filter] events:`、`[filter] gyms:` が表示される
+  - `target events=` と `target gyms=` の一覧がログ対象に反映される
+
+- **実行ログ保存確認（適用）**
+  ```bash
+  npm run db:restore -- --yes --file backups/<任意のbackup>.json --scope-events event-spring-2026 --log backups/restore-logs/restore-session.jsonl
+  ```
+  - `Proceed with restore? (y/N):` が表示され、`y` で続行
+  - `Restore completed.` が表示される
+  - 指定 `--log` ファイルが追記される
+  - JSONL 1行に `mode`, `actor`, `targetDocs`, `restoredCount`, `startedAt/completedAt`, `requestedScope` が含まれる
+
+ログの想定キー（最終行1件）
+```json
+{"mode":"apply","actor":"...","targetDocs":123,"sourceDocs":130,"restoredCount":123,"startedAt":"...","completedAt":"...","requestedScope":{"events":["event-spring-2026"],"gyms":["gym-shibuya"]}}
+```
 
 ---
 

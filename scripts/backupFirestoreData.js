@@ -14,6 +14,17 @@ function readArgValue(flag) {
   return process.argv[index + 1] || "";
 }
 
+function normalizeEnvironmentTag(value) {
+  const raw = String(value || "").trim().toLowerCase();
+  if (!raw) return "manual";
+  if (["demo", "stg", "prod", "production", "staging", "manual"].includes(raw)) {
+    if (raw === "production") return "prod";
+    if (raw === "staging") return "stg";
+    return raw;
+  }
+  return `env-${raw.replace(/[^a-z0-9-_]/gi, "-")}`;
+}
+
 function formatFileTimestamp(date = new Date()) {
   const year = String(date.getFullYear());
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -128,7 +139,13 @@ async function run() {
 
   const includeSystem = process.argv.includes("--include-system");
   const requestedOutPath = readArgValue("--out");
-  const outputPath = requestedOutPath || path.join("backups", `firestore-backup-${formatFileTimestamp()}.json`);
+  const environmentTag = normalizeEnvironmentTag(readArgValue("--env") || process.env.BACKUP_ENV);
+  const outputPath = requestedOutPath
+    || path.join(
+      "backups",
+      environmentTag,
+      `firestore-backup-${environmentTag}-${formatFileTimestamp()}.json`
+    );
 
   const profileSnap = await getDoc(doc(db, "users", signedInUser.uid));
   const profileData = profileSnap.exists() ? profileSnap.data() : {};
@@ -172,7 +189,15 @@ async function run() {
   const payload = {
     exportedAt: new Date().toISOString(),
     sourceUser: signedInUser.email || signedInUser.uid,
+    sourceProject: process.env.FIREBASE_PROJECT_ID || process.env.VITE_FIREBASE_PROJECT_ID || "flashcompauth",
     includeSystem,
+    environment: environmentTag,
+    collectionCounts: docs.reduce((acc, row) => {
+      const collection = String(row.path || "").split("/")[0];
+      if (!collection) return acc;
+      acc[collection] = (acc[collection] || 0) + 1;
+      return acc;
+    }, {}),
     eventCount: manageableEvents.length,
     docCount: docs.length,
     docs,

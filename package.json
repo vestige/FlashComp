@@ -7,6 +7,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:prod": "vite build --mode prod",
+    "build:stg": "vite build --mode stg",
+    "build:demo": "vite build --mode demo",
     "lint": "eslint .",
     "test": "vitest",
     "test:run": "vitest run",
@@ -18,8 +21,12 @@
     "db:seed": "node scripts/seedFirestoreData.js",
     "db:seed:system": "node scripts/seedFirestoreData.js --include-system",
     "db:backup": "node scripts/backupFirestoreData.js",
+    "db:backup:demo": "node scripts/backupFirestoreData.js --env demo",
+    "db:backup:stg": "node scripts/backupFirestoreData.js --env stg",
+    "db:backup:prod": "node scripts/backupFirestoreData.js --env prod",
     "db:backup:system": "node scripts/backupFirestoreData.js --include-system",
     "db:restore": "node scripts/restoreFirestoreData.js",
+    "db:restore:dry-run": "node scripts/restoreFirestoreData.js --dry-run",
     "db:reset": "node scripts/purgeFirestoreData.js --yes && node scripts/seedFirestoreData.js",
     "verify:owner-access": "node scripts/verifyOwnerAccess.js"
   },

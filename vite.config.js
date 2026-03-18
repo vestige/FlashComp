@@ -3,8 +3,27 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from "@tailwindcss/vite";
 
-export default defineConfig({
-  base: '/FlashComp/',
+const BASE_PATH_BY_MODE = {
+  prod: "/FlashComp/",
+  demo: "/FlashComp/demo/",
+  stg: "/FlashComp/stg/",
+};
+
+function resolveDeploymentMode(mode) {
+  const normalized = String(mode || "").toLowerCase();
+  if (normalized === "production") return "prod";
+  if (normalized === "staging") return "stg";
+  if (normalized === "demo") return "demo";
+  if (["prod", "stg", "demo"].includes(normalized)) return normalized;
+  return "prod";
+}
+
+export default defineConfig(({ mode }) => {
+  const deployMode = resolveDeploymentMode(mode);
+  const base = process.env.VITE_BASE_PATH || BASE_PATH_BY_MODE[deployMode] || BASE_PATH_BY_MODE.prod;
+
+  return {
+    base,
   plugins: [react(), tailwindcss()],
   build: {
     rollupOptions: {
@@ -32,4 +51,5 @@ export default defineConfig({
     maxWorkers: 1,
     minWorkers: 1,
   },
+  };
 });
