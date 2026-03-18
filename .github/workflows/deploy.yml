@@ -40,14 +40,56 @@ jobs:
           else
             echo "env_name=prod" >> "$GITHUB_OUTPUT"
           fi
+      - name: Load Firebase config for target env
+        run: |
+          TARGET="${{ steps.target.outputs.env_name }}"
+
+          if [ "$TARGET" = "demo" ]; then
+            API_KEY="${{ secrets.VITE_FIREBASE_API_KEY_DEMO }}"
+            AUTH_DOMAIN="${{ secrets.VITE_FIREBASE_AUTH_DOMAIN_DEMO }}"
+            PROJECT_ID="${{ secrets.VITE_FIREBASE_PROJECT_ID_DEMO }}"
+            STORAGE_BUCKET="${{ secrets.VITE_FIREBASE_STORAGE_BUCKET_DEMO }}"
+            MESSAGING_SENDER_ID="${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID_DEMO }}"
+            APP_ID="${{ secrets.VITE_FIREBASE_APP_ID_DEMO }}"
+          elif [ "$TARGET" = "stg" ]; then
+            API_KEY="${{ secrets.VITE_FIREBASE_API_KEY_STG }}"
+            AUTH_DOMAIN="${{ secrets.VITE_FIREBASE_AUTH_DOMAIN_STG }}"
+            PROJECT_ID="${{ secrets.VITE_FIREBASE_PROJECT_ID_STG }}"
+            STORAGE_BUCKET="${{ secrets.VITE_FIREBASE_STORAGE_BUCKET_STG }}"
+            MESSAGING_SENDER_ID="${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID_STG }}"
+            APP_ID="${{ secrets.VITE_FIREBASE_APP_ID_STG }}"
+          else
+            API_KEY="${{ secrets.VITE_FIREBASE_API_KEY_PROD }}"
+            AUTH_DOMAIN="${{ secrets.VITE_FIREBASE_AUTH_DOMAIN_PROD }}"
+            PROJECT_ID="${{ secrets.VITE_FIREBASE_PROJECT_ID_PROD }}"
+            STORAGE_BUCKET="${{ secrets.VITE_FIREBASE_STORAGE_BUCKET_PROD }}"
+            MESSAGING_SENDER_ID="${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID_PROD }}"
+            APP_ID="${{ secrets.VITE_FIREBASE_APP_ID_PROD }}"
+
+            if [ -z "$API_KEY" ]; then
+              API_KEY="${{ secrets.VITE_FIREBASE_API_KEY }}"
+              AUTH_DOMAIN="${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}"
+              PROJECT_ID="${{ secrets.VITE_FIREBASE_PROJECT_ID }}"
+              STORAGE_BUCKET="${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}"
+              MESSAGING_SENDER_ID="${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}"
+              APP_ID="${{ secrets.VITE_FIREBASE_APP_ID }}"
+            fi
+          fi
+
+          if [ -z "${API_KEY}" ] || [ -z "${AUTH_DOMAIN}" ] || [ -z "${PROJECT_ID}" ] || [ -z "${STORAGE_BUCKET}" ] || [ -z "${MESSAGING_SENDER_ID}" ] || [ -z "${APP_ID}" ]; then
+            echo "::error::Missing Firebase env vars for target_env=$TARGET"
+            exit 1
+          fi
+
+          {
+            echo "VITE_FIREBASE_API_KEY=$API_KEY"
+            echo "VITE_FIREBASE_AUTH_DOMAIN=$AUTH_DOMAIN"
+            echo "VITE_FIREBASE_PROJECT_ID=$PROJECT_ID"
+            echo "VITE_FIREBASE_STORAGE_BUCKET=$STORAGE_BUCKET"
+            echo "VITE_FIREBASE_MESSAGING_SENDER_ID=$MESSAGING_SENDER_ID"
+            echo "VITE_FIREBASE_APP_ID=$APP_ID"
+          } >> "$GITHUB_ENV"
       - name: Build project
-        env:
-          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
-          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
-          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
-          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
-          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
-          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
         run: npm run build:${{ steps.target.outputs.env_name }}
       - name: Deploy to GitHub Pages (production)
         if: steps.target.outputs.env_name == 'prod'

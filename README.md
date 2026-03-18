@@ -1,22 +1,30 @@
 Flash用のコンペ登録サイトを作ってみる
 https://vestige.github.io/FlashComp/
-同一Firebase運用のデモは、以下で確認
+デモ運用は、以下で確認
 https://vestige.github.io/FlashComp/demo/
-※ステージングが必要な場合は `https://vestige.github.io/FlashComp/stg/` を利用
+※必要ならステージングを残し、`https://vestige.github.io/FlashComp/stg/` へ切り替える
 
 ## 環境と配信先
 
 - 本番: `https://vestige.github.io/FlashComp/`
 - デモ: `https://vestige.github.io/FlashComp/demo/`
 - ステージング: `https://vestige.github.io/FlashComp/stg/`
-- データは原則同一 Firebase を参照。データ分離が必要な場合は環境別Firebaseを用意して、`VITE_FIREBASE_*` を切り替える
+- データは環境別 Firebase を使う前提で運用します（本番データとデモデータを混在させない）
 
 ## ローカル起動
 
-- 本番想定パスで確認: `npm run dev -- --mode prod`
-- ステージング想定: `npm run dev -- --mode stg`
-- デモ想定: `npm run dev -- --mode demo`
+- 本番想定: `npm run dev -- --mode prod`（`.env.prod.local` を使用）
+- デモ想定: `npm run dev -- --mode demo`（`.env.demo.local` を使用）
+- ステージング想定: `npm run dev -- --mode stg`（`.env.stg.local` を使用）
 - `npm run build:prod / build:stg / build:demo` でそれぞれの配信時振る舞いを事前確認
+
+### Firebase 環境変数（GitHub Secrets）
+
+- 本番（prod）: `VITE_FIREBASE_API_KEY_PROD`, `VITE_FIREBASE_AUTH_DOMAIN_PROD`, `VITE_FIREBASE_PROJECT_ID_PROD`, `VITE_FIREBASE_STORAGE_BUCKET_PROD`, `VITE_FIREBASE_MESSAGING_SENDER_ID_PROD`, `VITE_FIREBASE_APP_ID_PROD`
+- デモ（demo）: `VITE_FIREBASE_API_KEY_DEMO`, `VITE_FIREBASE_AUTH_DOMAIN_DEMO`, `VITE_FIREBASE_PROJECT_ID_DEMO`, `VITE_FIREBASE_STORAGE_BUCKET_DEMO`, `VITE_FIREBASE_MESSAGING_SENDER_ID_DEMO`, `VITE_FIREBASE_APP_ID_DEMO`
+- ステージング（stg）: `VITE_FIREBASE_API_KEY_STG`, `VITE_FIREBASE_AUTH_DOMAIN_STG`, `VITE_FIREBASE_PROJECT_ID_STG`, `VITE_FIREBASE_STORAGE_BUCKET_STG`, `VITE_FIREBASE_MESSAGING_SENDER_ID_STG`, `VITE_FIREBASE_APP_ID_STG`
+- 値はダブルクォートなしで登録してください（末尾の改行や空白も含めない）
+- 互換として、本番は旧名 `VITE_FIREBASE_*` を `*_PROD` より優先して使わない運用を推奨。未登録時のみ fallback されます。
 
 ## Google認証（最小権限アカウント運用）
 
@@ -48,4 +56,4 @@ https://vestige.github.io/FlashComp/demo/
 - `build:stg` と `build:demo` は `vite.config.js` の `base` と連動して、GitHub Pages の配下ルーティングを自動的に合わせる
 
 ※CI/ローカルとも `VITE_FIREBASE_*` は必須です。未設定なら起動時に明示エラーで停止します。  
-ローカルは `.env.local` / `.env.staging.local` に、GitHub Actions は Secrets に必ず同等値を登録してください。
+ローカルは `.env.prod.local` / `.env.demo.local` / `.env.stg.local` へ、GitHub Actions は上記 Secrets に環境別値を登録してください。

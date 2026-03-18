@@ -10,8 +10,8 @@
 
 - ## 0-0. ローカル最短フロー
   1. `npm install`
-  2. `.env.staging.local` を作成し、`VITE_FIREBASE_*` を設定
-  3. `npm run dev -- --mode staging`
+  2. `.env.prod.local` または `.env.demo.local` を作成し、`VITE_FIREBASE_*` を設定
+  3. `npm run dev -- --mode demo`（デモ確認）または `npm run dev -- --mode prod`（本番相当確認）
   4. `http://localhost:5173/FlashComp/login` で Google サインイン
 
 - `src/firebase.js` が以下を環境変数から読む構成になっていることを確認
@@ -21,7 +21,7 @@
   - `VITE_FIREBASE_STORAGE_BUCKET`
   - `VITE_FIREBASE_MESSAGING_SENDER_ID`
   - `VITE_FIREBASE_APP_ID`
-- Firebase Console で対象環境（ステージング/本番）を確認
+  - Firebase Console で対象環境（デモ/prod）を確認
   - Authentication > Sign-in method: **Google有効**
   - Email/Password は運用上無効想定
   - Authentication > Settings > Authorized domains: 検証対象のドメイン登録済み
@@ -45,21 +45,24 @@ npm install
 - ローカル専用の `.env.staging.local` を作成してから値を埋める（ファイルは Git 未追跡）
 
 ```bash
-Copy-Item .env.example .env.staging.local   # Windows PowerShell
+Copy-Item .env.example .env.demo.local   # Windows PowerShell
 ```
 
-内容例（`VITE_FIREBASE_*`）:
+内容例（デモ環境）:
   - `VITE_FIREBASE_API_KEY=<stagingのAPIキー>`
   - `VITE_FIREBASE_AUTH_DOMAIN=<staging auth domain>`
-  - `VITE_FIREBASE_PROJECT_ID=<staging project id>`
-  - `VITE_FIREBASE_STORAGE_BUCKET=<staging bucket>`
-  - `VITE_FIREBASE_MESSAGING_SENDER_ID=<staging sender id>`
-  - `VITE_FIREBASE_APP_ID=<staging app id>`
+  - `VITE_FIREBASE_PROJECT_ID=<demo project id>`
+  - `VITE_FIREBASE_STORAGE_BUCKET=<demo bucket>`
+  - `VITE_FIREBASE_MESSAGING_SENDER_ID=<demo sender id>`
+  - `VITE_FIREBASE_APP_ID=<demo app id>`
 
 ```bash
-npm run dev -- --mode staging
+Copy-Item .env.example .env.prod.local   # Windows PowerShell
 ```
-  - `staging` は `vite.config.js` 上で `stg` と解釈されるため、`npm run dev -- --mode stg` でも同等
+
+```bash
+npm run dev -- --mode demo
+```
 
 ### 1-2. Googleログイン導線
 
@@ -126,7 +129,7 @@ npm run dev -- --mode staging
 
 ### 2-1. デプロイ前チェック
 
-- ステージング/本番ごとに Firebase 設定をデプロイ環境の `.env.*` へ反映
+- デモ/prodごとに Firebase 設定をデプロイ環境の `.env.*` へ反映
 - GitHub Actions / デプロイパイプラインに `VITE_FIREBASE_*` が反映されるか確認
 
 ### 2-2. GitHub Pages 手順
@@ -143,7 +146,7 @@ npm run dev -- --mode staging
 
 - Firebase Console 上で確認した「Authorized domains」が、GitHub Pages ドメイン（と必要ならカスタムドメイン）を含む
 - OAuth のリダイレクト許可がフロントURLに一致する
-- `users/{uid}` の設定が環境別に混在していない（本番とステージングUIDを取り違えない）
+- `users/{uid}` の設定が環境別に混在していない（本番とデモUIDを取り違えない）
 
 ### 2-4. デモ/ステージング配信確認（推奨フロー）
 
