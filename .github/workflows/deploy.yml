@@ -25,9 +25,9 @@ jobs:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: "24"
       - name: Install dependencies
@@ -51,13 +51,13 @@ jobs:
         run: npm run build:${{ steps.target.outputs.env_name }}
       - name: Deploy to GitHub Pages (production)
         if: steps.target.outputs.env_name == 'prod'
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
       - name: Deploy to GitHub Pages (staging)
         if: steps.target.outputs.env_name == 'stg'
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
@@ -65,7 +65,7 @@ jobs:
           keep_files: true
       - name: Deploy to GitHub Pages (demo)
         if: steps.target.outputs.env_name == 'demo'
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
