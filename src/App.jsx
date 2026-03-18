@@ -27,8 +27,14 @@ const RouteLoadingFallback = () => (
 );
 
 function App() {
+  const routerBasePath = (() => {
+    const baseUrl = String(import.meta.env.BASE_URL || "/");
+    const trimmed = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
+    return trimmed.length === 0 ? "/" : trimmed;
+  })();
+
   return (
-    <Router basename="/FlashComp">
+    <Router basename={routerBasePath}>
       <Suspense fallback={<RouteLoadingFallback />}>
         <Routes>
           <Route element={<AppShell />}>

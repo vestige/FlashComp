@@ -31,3 +31,6 @@ https://vestige.github.io/FlashComp/demo/
   - `prod`: 本番（`/FlashComp/`）
   - `stg`: `https://vestige.github.io/FlashComp/stg/`
   - `demo`: `https://vestige.github.io/FlashComp/demo/`
+
+※CI で Firebase の `VITE_FIREBASE_*` が未設定だと、起動時にデフォルト設定へフォールバックするため、ログに警告が出ます。  
+デモ・ステージングでも本番と同じ Firebase を使う場合は、同一値を GitHub Secrets に登録してください。
