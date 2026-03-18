@@ -1,1 +1,0 @@
-import{p as f}from"./dateInput-8hCj4VeV.js";const u=({name:r,gymId:o,startDate:t,endDate:n})=>{if(!r||!r.trim())return"イベント名を入力してください";if(!o)return"担当ジムを選択してください";if(!t||!n)return"開始日と終了日を入力してください";const e=f(t),i=f(n);return!e||!i?"日付の形式が不正です":e>i?"開始日は終了日以前にしてください":""};export{u as v};
