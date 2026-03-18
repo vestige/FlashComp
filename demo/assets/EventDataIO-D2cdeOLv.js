@@ -1,1 +1,0 @@
-import{e as t,j as s,N as a}from"./vendor-react-DIdrPhRE.js";import"./vendor-misc-DoYOR8z2.js";const n=()=>{const{eventId:e}=t();return s.jsx(a,{to:`/events/${e}/climbers`,replace:!0})};export{n as default};
