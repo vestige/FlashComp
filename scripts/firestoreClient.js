@@ -33,6 +33,10 @@ function resolveScriptEnv() {
   ];
 
   for (const candidate of fallbackCandidates) {
+    const normalizedPath = candidate.path.replace(/\/$/, "");
+    if (cwd === normalizedPath || cwd.endsWith(normalizedPath)) {
+      return candidate.env;
+    }
     if (cwd.includes(candidate.path)) {
       return candidate.env;
     }
