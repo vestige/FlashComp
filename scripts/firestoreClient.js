@@ -16,6 +16,7 @@ function resolveScriptEnv() {
 
   if (explicit === "prod" || explicit === "production") return "prod";
   if (explicit === "demo") return "demo";
+  if (explicit === "stg" || explicit === "staging") return "staging";
 
   return "";
 }
@@ -56,12 +57,26 @@ function loadEnvFile(filePath) {
 
 function loadScriptEnv(scriptEnv) {
   const envSuffix = scriptEnv ? scriptEnv.toLowerCase() : "";
+  const explicit = envSuffix;
   const candidates = [];
 
   if (envSuffix) {
     candidates.push(`.env.${envSuffix}.local`);
     candidates.push(`.env.${envSuffix}`);
+    candidates.push(`.env.${envSuffix.toUpperCase()}.local`);
+    candidates.push(`.env.${envSuffix.toUpperCase()}`);
+    if (envSuffix === "prod") {
+      candidates.push(".env.staging.local");
+      candidates.push(".env.staging");
+      candidates.push(".env.stg.local");
+      candidates.push(".env.stg");
+    }
+    if (envSuffix === "demo") {
+      candidates.push(".env.dev.local");
+      candidates.push(".env.dev");
+    }
   }
+
   candidates.push(".env.local");
   candidates.push(".env");
 
@@ -69,8 +84,20 @@ function loadScriptEnv(scriptEnv) {
     loadEnvFile(filePath);
   }
 
-  if (envSuffix) {
-    const suffixUpper = envSuffix.toUpperCase();
+  if (explicit) {
+    const suffixUpper = explicit.toUpperCase();
+    const legacySuffixGroups = {
+      PROD: ["PROD", "PRODUCTION", "STAGING", "STG"],
+      PRODUCTION: ["PROD", "PRODUCTION", "STAGING", "STG"],
+      STAGING: ["STAGING", "STG", "PROD", "PRODUCTION"],
+      STG: ["STG", "STAGING", "PROD", "PRODUCTION"],
+      DEMO: ["DEMO", "DEV"],
+      DEV: ["DEMO", "DEV"],
+    };
+    const candidateSuffixes = Array.from(
+      new Set(legacySuffixGroups[suffixUpper] || [suffixUpper])
+    );
+
     const aliasTargets = [
       ["FIREBASE_API_KEY", "VITE_FIREBASE_API_KEY"],
       ["FIREBASE_AUTH_DOMAIN", "VITE_FIREBASE_AUTH_DOMAIN"],
@@ -81,13 +108,15 @@ function loadScriptEnv(scriptEnv) {
     ];
 
     for (const [primary, fallback] of aliasTargets) {
-      const primaryEnv = `${primary}_${suffixUpper}`;
-      const fallbackEnv = `${fallback}_${suffixUpper}`;
-      if (!process.env[primary] && process.env[primaryEnv]) {
-        process.env[primary] = process.env[primaryEnv];
-      }
-      if (!process.env[fallback] && process.env[fallbackEnv]) {
-        process.env[fallback] = process.env[fallbackEnv];
+      for (const suffix of candidateSuffixes) {
+        const primaryEnv = `${primary}_${suffix}`;
+        const fallbackEnv = `${fallback}_${suffix}`;
+        if (!process.env[primary] && process.env[primaryEnv]) {
+          process.env[primary] = process.env[primaryEnv];
+        }
+        if (!process.env[fallback] && process.env[fallbackEnv]) {
+          process.env[fallback] = process.env[fallbackEnv];
+        }
       }
     }
   }
