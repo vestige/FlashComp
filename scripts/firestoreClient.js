@@ -20,6 +20,24 @@ function resolveScriptEnv() {
   if (explicit === "demo") return "demo";
   if (explicit === "stg" || explicit === "staging") return "staging";
 
+  const cwd = process.cwd().toLowerCase().replace(/\\/g, "/");
+  const fallbackCandidates = [
+    { path: "/backups/prod/", env: "prod" },
+    { path: "/prod/", env: "prod" },
+    { path: "/backups/demo/", env: "demo" },
+    { path: "/demo/", env: "demo" },
+    { path: "/backups/staging/", env: "staging" },
+    { path: "/staging/", env: "staging" },
+    { path: "/backups/stg/", env: "staging" },
+    { path: "/stg/", env: "staging" },
+  ];
+
+  for (const candidate of fallbackCandidates) {
+    if (cwd.includes(candidate.path)) {
+      return candidate.env;
+    }
+  }
+
   return "";
 }
 
