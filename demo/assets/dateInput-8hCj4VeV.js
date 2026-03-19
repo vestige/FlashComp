@@ -1,1 +1,0 @@
-const u=r=>{if(typeof r!="string")return null;const o=r.trim(),e=/^(\d{4})-(\d{2})-(\d{2})$/.exec(o);if(!e)return null;const n=Number(e[1]),s=Number(e[2]),a=Number(e[3]),t=new Date(n,s-1,a);return Number.isNaN(t.getTime())||t.getFullYear()!==n||t.getMonth()!==s-1||t.getDate()!==a?null:t};export{u as p};
