@@ -9,6 +9,10 @@ if (!requireYes) {
   process.exit(1);
 }
 
+function hasArg(name) {
+  return process.argv.includes(name);
+}
+
 async function deleteSnapshot(snapshot, label) {
   if (snapshot.empty) {
     console.log(`[skip] ${label}: 0 docs`);
@@ -122,11 +126,12 @@ async function run() {
     process.exit(1);
   }
 
-  const includeSystem = process.argv.includes("--include-system");
+  const includeSystem = hasArg("--include-system") || hasArg("--all");
 
   console.log("Start purging Firestore test data...");
   console.log(`[auth] signed in as: ${signedInUser.email || signedInUser.uid}`);
   console.log(`[mode] include system collections: ${includeSystem ? "yes" : "no"}`);
+  console.log(`[mode] clear all data: ${hasArg("--all") ? "yes" : "no"}`);
   const profileSnap = await getDoc(doc(db, "users", signedInUser.uid));
   const profileData = profileSnap.exists() ? profileSnap.data() : {};
   const allowedGymIds = normalizeGymIds(profileData.gymIds);

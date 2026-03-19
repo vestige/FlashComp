@@ -17,6 +17,8 @@
     "db:purge": "node scripts/purgeFirestoreData.js",
     "db:purge:yes": "node scripts/purgeFirestoreData.js --yes",
     "db:purge:yes:system": "node scripts/purgeFirestoreData.js --yes --include-system",
+    "db:clear": "node scripts/purgeFirestoreData.js --yes --all",
+    "db:format:demo": "node scripts/purgeFirestoreData.js --yes --include-system && node scripts/seedFirestoreData.js --include-system",
     "db:seed": "node scripts/seedFirestoreData.js",
     "db:seed:system": "node scripts/seedFirestoreData.js --include-system",
     "db:backup": "node scripts/backupFirestoreData.js",

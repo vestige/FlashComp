@@ -172,6 +172,8 @@ npm run dev -- --mode demo
   - `npm run db:purge`（安全モード）
   - `npm run db:purge:yes`（イベント関連データを破壊的に削除）
   - `npm run db:purge:yes:system`（`events`/`gyms`/`users` の上位削除も対象）
+  - `npm run db:clear`（`--all` 相当。デモ/本番問わず全コレクションをクリーン）
+  - `npm run db:format:demo`（`db:clear` + `db:seed:system`。Demoデータで実行再現用）
   - `npm run db:seed`
   - `npm run db:seed:system`
   - `npm run db:backup -- --out backups/pre-op.json`
@@ -184,14 +186,18 @@ npm run dev -- --mode demo
   - `npm run db:restore -- --yes --file <backup-json> --log backups/restore-logs/restore-session.jsonl`
 - `db:seed` / `db:seed:system` はローカル検証前のイベント再現に使う
 - `db:reset` を使う場合は `SCRIPT_AUTH_*` を設定してから実行する
+- `.env.demo.local` / `.env.prod.local` を流用する場合は `FIREBASE_*` または `VITE_FIREBASE_*` のどちらかで接続情報を渡す
 
 実行例（ローカル）
 
 ```bash
 $env:SCRIPT_AUTH_EMAIL='YOUR_ADMIN_ACCOUNT_EMAIL'
 $env:SCRIPT_AUTH_PASSWORD='YOUR_PASSWORD'
-npm run db:reset
+npm run db:format:demo
 ```
+
+- 補足: `Unitテスト` は Firebase 実接続を使わないモック実行が前提です。  
+  `Demo` での検証は、`db:format:demo` 後に `npm run dev -- --mode demo` で統合観点（UI/認証/権限）を回してください。
 
 ### validation用サンプルイベント（参考）
 - `event-spring-2026`

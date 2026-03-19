@@ -16,8 +16,7 @@
 - フロントエンドは同一リポジトリ・同一 Firebase を前提に 3 配置運用する
   - `prod`: `https://vestige.github.io/FlashComp/`
   - `demo`: `https://vestige.github.io/FlashComp/demo/`
-  - `stg`: `https://vestige.github.io/FlashComp/stg/`
-- `demo`/`stg` は CI の `target_env`（`build:demo` / `build:stg`）で生成される
+- `demo` は CI の `target_env`（`build:prod` / `build:demo`）で生成される
 - `routes` は互換レイヤーとして残し、運用上の主要参照は `tasks` + `categoryTaskMap` を優先
 - Firebase 設定は `VITE_FIREBASE_*` で注入し、将来は環境別 Project へ切り替え可能
 
