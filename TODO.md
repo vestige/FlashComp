@@ -43,6 +43,12 @@
   - [ ] GitHub Pagesデモ起動手順（ログイン〜権限別操作確認）を明文化
   - [ ] デモ後ロールバック手順（復元・再起動・最終確認）を追加
   - [ ] 実施結果の受け入れチェックリストを追加
+  - [ ] Unitテストと実環境検証を分離して記載
+    - [ ] Unitテスト: `npm run test:run`（`package.json` の scripts）
+    - [ ] Unit結果の基準: 既知失敗0件（許容条件のみ）
+    - [ ] 実機スモーク: `npm run dev -- --mode demo`（ローカルでのログイン/権限確認）
+    - [ ] 実運用確認: workflow_dispatch `target_env=demo` で GitHub Pages `/demo/` を検証
+    - [ ] `dashboard`, `/system-admin`, `/score-summary` の表示系・権限制御・エラー時の文言を確認
 
 ### Backlog
 - [ ] `KAN-007` `db:purge` 系スクリプトの安全化
