@@ -91,6 +91,7 @@ async function run() {
     console.error("Example: npm run db:restore -- --yes --file backups/firestore-backup-20260307-120000.json");
     process.exit(1);
   }
+  const resolvedFilePath = path.resolve(process.env.INIT_CWD || process.cwd(), filePath);
 
   const signedInUser = await signInForScripts();
   if (!signedInUser) {
@@ -117,7 +118,7 @@ async function run() {
     process.exit(1);
   }
 
-  const raw = await fs.readFile(filePath, "utf8");
+  const raw = await fs.readFile(resolvedFilePath, "utf8");
   const payload = JSON.parse(raw);
   const sourceDocs = Array.isArray(payload.docs) ? payload.docs : [];
 
@@ -201,6 +202,27 @@ async function run() {
     skippedByUnknownTopLevel += 1;
   }
 
+  const eventRootDocs = [];
+  const eventSubDocs = [];
+  const nonEventDocs = [];
+  for (const row of restorableDocs) {
+    const segments = splitDocPath(row.path);
+    if (segments.length === 2 && segments[0] === "events") {
+      eventRootDocs.push(row);
+      continue;
+    }
+    if (segments.length >= 3 && segments[0] === "events") {
+      eventSubDocs.push(row);
+      continue;
+    }
+    nonEventDocs.push(row);
+  }
+
+  const restorePhases = [
+    { name: "events", docs: eventRootDocs },
+    { name: "system", docs: nonEventDocs },
+    { name: "event-subdocs", docs: eventSubDocs },
+  ];
   let batch = writeBatch(db);
   let opCount = 0;
   let restoredCount = 0;
@@ -252,7 +274,7 @@ async function run() {
         completedAt: new Date().toISOString(),
         mode: "dry-run",
         actor: signedInUser.email || signedInUser.uid,
-        sourceFile: filePath,
+        sourceFile: resolvedFilePath,
         includeSystem,
         hasAllGymAccess,
         sourceProject: payload.sourceProject || undefined,
@@ -288,12 +310,15 @@ async function run() {
     console.log("No documents are eligible for restore.");
   }
 
-  for (const row of restorableDocs) {
-    await queueSet(row.path, row.data);
-    restoredCount += 1;
+  for (const phase of restorePhases) {
+    if (phase.docs.length === 0) continue;
+    console.log(`[restore] start phase: ${phase.name} (${phase.docs.length})`);
+    for (const row of phase.docs) {
+      await queueSet(row.path, row.data);
+      restoredCount += 1;
+    }
+    await flushBatch();
   }
-
-  await flushBatch();
 
   console.log(`Restore completed. restored=${restoredCount}`);
   console.log(`Skipped by gym scope: ${skippedByScope}`);
@@ -306,7 +331,7 @@ async function run() {
       completedAt: new Date().toISOString(),
       mode: "apply",
       actor: signedInUser.email || signedInUser.uid,
-      sourceFile: filePath,
+      sourceFile: resolvedFilePath,
       includeSystem,
       hasAllGymAccess,
       sourceProject: payload.sourceProject || undefined,

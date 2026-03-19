@@ -25,33 +25,6 @@
   - [x] `db:clear`（`--all` 相当）と `db:format:demo` をデモ整形の標準手順化
 
 ### Done
-- [x] `KAN-013` デモ Firebase 環境の構築（別プロジェクト化）
-  - [x] 本番側 Firebase 設定を確定
-  - [x] デモ用 Firebase プロジェクトの確認（既存データなし・新規作成）
-  - [x] デモ用 Firebase 構成値（`VITE_FIREBASE_*_DEMO`）を GitHub Secrets 登録
-  - [x] デモプロジェクトで Firestore を作成し、`firestore.rules` を適用
-  - [x] デモ Authentication の Google 有効化、`vestige.github.io` を承認済みドメイン追加
-  - [x] デモユーザーの `users/{uid}` を事前登録（viewer/admin/owner）
-  - [x] `workflow_dispatch` から `target_env=demo` デプロイして表示/ログイン/権限を確認
-  - [x] `prod` / `demo` の2環境運用へ明示し、README・TEST・workflow から `stg` 言及を整理
-  - 受入ログ: `2026-03-19` 本番/デモURLで表示・Google認証・権限系確認済み
-
-- [x] `KAN-006` `db:restore` 系スクリプトの安全化
-  - [x] `--dry-run` を追加して事前見積もり表示
-  - [x] 実行前の対象スコープ（gym/event）を表示し確認を強制
-  - [x] `db:restore` 実行ログを保存（実行者、件数、実行時刻）
-
-- [x] `KAN-004` デモ用運用フローを `TEST.md` と `SPEC.md` で確定
-  - [x] GitHub Pagesデモ起動手順（ログイン〜権限別操作確認）を明文化
-  - [x] デモ後ロールバック手順（復元・再起動・最終確認）を追加
-  - [x] 実施結果の受け入れチェックリストを追加
-  - [x] Unitテストと実環境検証を分離して記載
-  - [x] 実施記録（当日ログ）を追加
-    - [x] Unitテスト: `npm run test:run`
-    - [x] Unit結果の基準: 既知失敗0件
-    - [x] 実機スモーク: `npm run dev -- --mode demo`
-    - [x] 実運用確認: `workflow_dispatch target_env=demo` で `/demo/` 検証
-    - [x] `dashboard`, `/system-admin`, `/score-summary` の表示・権限制御・エラーメッセージを確認
 
 ### Ready
 

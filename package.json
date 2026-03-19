@@ -26,6 +26,8 @@
     "db:backup:prod": "node scripts/backupFirestoreData.js --env prod",
     "db:backup:system": "node scripts/backupFirestoreData.js --include-system",
     "db:restore": "node scripts/restoreFirestoreData.js",
+    "db:restore:prod": "node scripts/restoreFirestoreData.js --env prod",
+    "db:restore:demo": "node scripts/restoreFirestoreData.js --env demo",
     "db:restore:dry-run": "node scripts/restoreFirestoreData.js --dry-run",
     "db:reset": "node scripts/purgeFirestoreData.js --yes && node scripts/seedFirestoreData.js",
     "verify:owner-access": "node scripts/verifyOwnerAccess.js"

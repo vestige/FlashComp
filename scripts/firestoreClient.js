@@ -20,7 +20,8 @@ function resolveScriptEnv() {
   if (explicit === "demo") return "demo";
   if (explicit === "stg" || explicit === "staging") return "staging";
 
-  const cwd = process.cwd().toLowerCase().replace(/\\/g, "/");
+  const baseCwd = (process.env.INIT_CWD || process.cwd()).toLowerCase().replace(/\\/g, "/");
+  const cwd = baseCwd;
   const fallbackCandidates = [
     { path: "/backups/prod/", env: "prod" },
     { path: "/prod/", env: "prod" },
@@ -73,22 +74,48 @@ function loadEnvFile(filePath) {
     const key = matches[1];
     const value = normalizeEnvValue(matches[2]);
 
-    if (!Object.prototype.hasOwnProperty.call(process.env, key)) {
+    if (
+      !Object.prototype.hasOwnProperty.call(process.env, key) ||
+      String(process.env[key]).trim() === ""
+    ) {
       process.env[key] = value;
     }
   }
 }
 
-function loadScriptEnv(scriptEnv) {
+function collectCandidateProjectRoots() {
+  const candidateRoots = new Set();
   const scriptDir = path.dirname(fileURLToPath(import.meta.url));
-  const projectRoot = path.resolve(scriptDir, "..");
+  const resolvedScriptDir = path.resolve(scriptDir);
+  candidateRoots.add(resolvedScriptDir);
+  candidateRoots.add(path.resolve(resolvedScriptDir, ".."));
+
+  const npmPackageJson = process.env.npm_package_json;
+  if (typeof npmPackageJson === "string" && npmPackageJson.trim()) {
+    candidateRoots.add(path.resolve(path.dirname(npmPackageJson)));
+  }
+
+  let currentDir = path.resolve(process.env.INIT_CWD || process.cwd());
+  while (true) {
+    candidateRoots.add(currentDir);
+    const parentDir = path.dirname(currentDir);
+    if (parentDir === currentDir) break;
+    currentDir = parentDir;
+  }
+
+  return Array.from(candidateRoots);
+}
+
+function loadScriptEnv(scriptEnv) {
+  const projectRoots = collectCandidateProjectRoots();
   const envSuffix = scriptEnv ? scriptEnv.toLowerCase() : "";
   const explicit = envSuffix;
   const candidateFiles = [];
   const addCandidate = (candidateName) => {
     if (!candidateName) return;
-    candidateFiles.push(path.resolve(process.cwd(), candidateName));
-    candidateFiles.push(path.resolve(projectRoot, candidateName));
+    for (const root of projectRoots) {
+      candidateFiles.push(path.resolve(root, candidateName));
+    }
   };
 
   if (envSuffix) {
