@@ -231,7 +231,12 @@ export async function signInForScripts() {
     return credential.user;
   } catch (error) {
     const code = error?.code || "";
-    if (code === "auth/invalid-credential" || code === "auth/wrong-password" || code === "auth/user-not-found") {
+    if (code === "auth/operation-not-allowed") {
+      console.error(`Script auth failed for ${email}.`);
+      console.error("Email/Password sign-in is not enabled for the selected Firebase project.");
+      console.error("Enable: Firebase Console > Authentication > Sign-in method > Email/Password.");
+      console.error("If you prefer Google-only auth in this project, script-based operations will need another auth mechanism.");
+    } else if (code === "auth/invalid-credential" || code === "auth/wrong-password" || code === "auth/user-not-found") {
       console.error(`Script auth failed for ${email}.`);
       console.error("Check that this user exists as a Password Sign-In account in Firebase Console.");
       console.error("Ensure Email/Password sign-in method is enabled for the target project.");

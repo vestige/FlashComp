@@ -35,6 +35,10 @@
   Email/Password 有効な「運用専用アカウント」を使う
   - `SCRIPT_AUTH_EMAIL` / `SCRIPT_AUTH_PASSWORD` を使用
   - `users/{uid}` 側は `role: "admin"`, `gymIds: ["*"]` で登録済みであること
+  - `db:clear:demo` / `db:format:demo` を実行前に、`users/{uid}` が `role: "admin"` または `owner` + `["*"]` になっていることを必ず確認する  
+  - `--all` 実行時は `gymIds` が空だと即失敗します（`["*"]` 推奨）
+  - `db:set-user-role:demo -- --uid <uid> --role admin --gym-ids '*' --create` で事前に権限付与できる  
+- `SCRIPT_AUTH_*` で利用するアカウントがまだ admin でない場合、現在のルールでは自己昇格ができないため、まず Firebase Console（または既存 admin 経由）で `users/{uid}` を `role: "admin"`, `gymIds: ["*"]` に事前登録する
 
 ---
 
@@ -205,8 +209,8 @@ npm run dev -- --mode demo
 1. 本番は先にバックアップを残す（実施時のみ）
    - `npm run db:backup:prod -- --out backups/prod/pre-op-$(Get-Date -Format 'yyyyMMdd-HHmmss').json`
 2. デモ環境を完全リセット
-   - `npm run db:clear:demo`（イベント/ジム/ユーザーを含む全削除）
-   - `npm run db:format:demo`（デモ向け初期データを再投入）
+- `npm run db:clear:demo`（イベント/ジム/ユーザーを含む全削除）
+  - `npm run db:format:demo`（デモ向け初期データを再投入。`--all` 前提）
 3. 再現データの検証
    - `npm run dev -- --mode demo`
    - `admin / owner / viewer / 未許可` で保護系操作を確認
@@ -232,9 +236,10 @@ npm run dev -- --mode demo
   - `npm run db:purge:yes:system`（`events`/`gyms`/`users` の上位削除も対象）
   - `npm run db:clear:prod`（`--all` 相当。全コレクションをクリーン）
   - `npm run db:clear:demo`（`--all` 相当。全コレクションをクリーン）
-  - `npm run db:format:demo`（`db:clear:demo` + `db:seed:demo --include-system`。Demoデータで実行再現用）
+- `npm run db:format:demo`（`db:clear:demo --all` 相当 + `db:seed:demo --include-system`。Demoデータを初期化し直す用途）
   - `npm run db:seed:prod`
   - `npm run db:seed:demo`
+  - `npm run db:set-user-role:demo -- --uid <uid> --role admin --gym-ids '*' --create`
   - `npm run db:seed:system`
   - `npm run db:backup -- --out backups/pre-op.json`
   - `npm run db:backup:demo`（デモ用途）

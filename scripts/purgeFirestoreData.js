@@ -134,10 +134,27 @@ async function run() {
   console.log(`[mode] clear all data: ${hasArg("--all") ? "yes" : "no"}`);
   const profileSnap = await getDoc(doc(db, "users", signedInUser.uid));
   const profileData = profileSnap.exists() ? profileSnap.data() : {};
+  const userRole = typeof profileData.role === "string" ? profileData.role : "unset";
   const allowedGymIds = normalizeGymIds(profileData.gymIds);
-  const hasAllGymAccess = profileData.role === "admin" || allowedGymIds.includes("*");
+  const clearAll = hasArg("--all");
+  const hasAllGymAccess = userRole === "admin" || allowedGymIds.includes("*");
+  const isOwnerLike = userRole === "owner" || userRole === "admin";
 
-  if (!hasAllGymAccess && allowedGymIds.length === 0) {
+  console.log(`[profile] users/${signedInUser.uid} role=${userRole} gymIds=${JSON.stringify(allowedGymIds)} exists=${profileSnap.exists()}`);
+
+  if (!isOwnerLike) {
+    console.error(`Script user is not owner/admin. role=${userRole}`);
+    console.error("Set users/{uid} for SCRIPT_AUTH_UID as owner or admin before running destructive commands.");
+    process.exit(1);
+  }
+
+  if (clearAll && !hasAllGymAccess) {
+    console.error("--all requires users/{uid} with role admin or gymIds includes \"*\".");
+    console.error("For demo cleanup, set gymIds: [\"*\"] in users/{uid}.");
+    process.exit(1);
+  }
+
+  if (!clearAll && !hasAllGymAccess && allowedGymIds.length === 0) {
     console.error(`No gymIds found in users/${signedInUser.uid}. Cannot purge events.`);
     process.exit(1);
   }
