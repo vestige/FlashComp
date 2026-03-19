@@ -1,4 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
 import { deleteApp, initializeApp } from "firebase/app";
 import { getAuth, signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { getFirestore, terminate } from "firebase/firestore";
@@ -56,30 +58,38 @@ function loadEnvFile(filePath) {
 }
 
 function loadScriptEnv(scriptEnv) {
+  const scriptDir = path.dirname(fileURLToPath(import.meta.url));
+  const projectRoot = path.resolve(scriptDir, "..");
   const envSuffix = scriptEnv ? scriptEnv.toLowerCase() : "";
   const explicit = envSuffix;
-  const candidates = [];
+  const candidateFiles = [];
+  const addCandidate = (candidateName) => {
+    if (!candidateName) return;
+    candidateFiles.push(path.resolve(process.cwd(), candidateName));
+    candidateFiles.push(path.resolve(projectRoot, candidateName));
+  };
 
   if (envSuffix) {
-    candidates.push(`.env.${envSuffix}.local`);
-    candidates.push(`.env.${envSuffix}`);
-    candidates.push(`.env.${envSuffix.toUpperCase()}.local`);
-    candidates.push(`.env.${envSuffix.toUpperCase()}`);
+    addCandidate(`.env.${envSuffix}.local`);
+    addCandidate(`.env.${envSuffix}`);
+    addCandidate(`.env.${envSuffix.toUpperCase()}.local`);
+    addCandidate(`.env.${envSuffix.toUpperCase()}`);
     if (envSuffix === "prod") {
-      candidates.push(".env.staging.local");
-      candidates.push(".env.staging");
-      candidates.push(".env.stg.local");
-      candidates.push(".env.stg");
+      addCandidate(".env.staging.local");
+      addCandidate(".env.staging");
+      addCandidate(".env.stg.local");
+      addCandidate(".env.stg");
     }
     if (envSuffix === "demo") {
-      candidates.push(".env.dev.local");
-      candidates.push(".env.dev");
+      addCandidate(".env.dev.local");
+      addCandidate(".env.dev");
     }
   }
 
-  candidates.push(".env.local");
-  candidates.push(".env");
+  addCandidate(".env.local");
+  addCandidate(".env");
 
+  const candidates = Array.from(new Set(candidateFiles));
   for (const filePath of candidates) {
     loadEnvFile(filePath);
   }
