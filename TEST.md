@@ -42,15 +42,15 @@
 npm install
 ```
 
-- ローカル専用の `.env.staging.local` を作成してから値を埋める（ファイルは Git 未追跡）
+- ローカル専用の `.env.demo.local` / `.env.prod.local` を作成してから値を埋める（ファイルは Git 未追跡）
 
 ```bash
 Copy-Item .env.example .env.demo.local   # Windows PowerShell
 ```
 
 内容例（デモ環境）:
-  - `VITE_FIREBASE_API_KEY=<stagingのAPIキー>`
-  - `VITE_FIREBASE_AUTH_DOMAIN=<staging auth domain>`
+  - `VITE_FIREBASE_API_KEY=<demoのAPIキー>`
+  - `VITE_FIREBASE_AUTH_DOMAIN=<demo auth domain>`
   - `VITE_FIREBASE_PROJECT_ID=<demo project id>`
   - `VITE_FIREBASE_STORAGE_BUCKET=<demo bucket>`
   - `VITE_FIREBASE_MESSAGING_SENDER_ID=<demo sender id>`
@@ -148,12 +148,12 @@ npm run dev -- --mode demo
 - OAuth のリダイレクト許可がフロントURLに一致する
 - `users/{uid}` の設定が環境別に混在していない（本番とデモUIDを取り違えない）
 
-### 2-4. デモ/ステージング配信確認（推奨フロー）
+### 2-4. デモ/本番配信確認（推奨フロー）
 
 1. GitHub Actions → `Deploy to GitHub Pages` → `Run workflow`
 2. `target_env` を以下で順番に実行
    - `demo`: `https://vestige.github.io/FlashComp/demo/`
-   - `stg`: `https://vestige.github.io/FlashComp/stg/`
+   - `prod`: `https://vestige.github.io/FlashComp/`
 3. 各URLで以下を確認
    - 表示が空白でなく、CSS/JS が読み込まれている
    - `/login` が Google Sign-In のみで開ける
@@ -161,7 +161,7 @@ npm run dev -- --mode demo
    - `No routes matched` がコンソールに出ない
 
 補足:
-- 短時間で検証する場合、ローカルは UI 変更多発確認、stg/demo は毎回の運用リリース確認に使う。
+- 短時間で検証する場合、ローカルは UI 変更多発確認、デモ/本番は毎回の運用リリース確認に使う。
 - デモURLで動けば運用フローとしては「実環境通過」とみなせる。
 
 --- 

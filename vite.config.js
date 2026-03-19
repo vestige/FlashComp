@@ -6,15 +6,13 @@ import tailwindcss from "@tailwindcss/vite";
 const BASE_PATH_BY_MODE = {
   prod: "/FlashComp/",
   demo: "/FlashComp/demo/",
-  stg: "/FlashComp/stg/",
 };
 
 function resolveDeploymentMode(mode) {
   const normalized = String(mode || "").toLowerCase();
   if (normalized === "production") return "prod";
-  if (normalized === "staging") return "stg";
   if (normalized === "demo") return "demo";
-  if (["prod", "stg", "demo"].includes(normalized)) return normalized;
+  if (["prod", "demo"].includes(normalized)) return normalized;
   return "prod";
 }
 

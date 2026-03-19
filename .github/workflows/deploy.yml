@@ -11,12 +11,11 @@ on:
     inputs:
       target_env:
         description: "deploy target"
+        type: choice
         required: true
         default: "prod"
-        type: choice
         options:
           - prod
-          - stg
           - demo
 jobs:
   deploy:
@@ -51,13 +50,6 @@ jobs:
             STORAGE_BUCKET="${{ secrets.VITE_FIREBASE_STORAGE_BUCKET_DEMO }}"
             MESSAGING_SENDER_ID="${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID_DEMO }}"
             APP_ID="${{ secrets.VITE_FIREBASE_APP_ID_DEMO }}"
-          elif [ "$TARGET" = "stg" ]; then
-            API_KEY="${{ secrets.VITE_FIREBASE_API_KEY_STG }}"
-            AUTH_DOMAIN="${{ secrets.VITE_FIREBASE_AUTH_DOMAIN_STG }}"
-            PROJECT_ID="${{ secrets.VITE_FIREBASE_PROJECT_ID_STG }}"
-            STORAGE_BUCKET="${{ secrets.VITE_FIREBASE_STORAGE_BUCKET_STG }}"
-            MESSAGING_SENDER_ID="${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID_STG }}"
-            APP_ID="${{ secrets.VITE_FIREBASE_APP_ID_STG }}"
           else
             API_KEY="${{ secrets.VITE_FIREBASE_API_KEY_PROD }}"
             AUTH_DOMAIN="${{ secrets.VITE_FIREBASE_AUTH_DOMAIN_PROD }}"
@@ -97,14 +89,6 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
-      - name: Deploy to GitHub Pages (staging)
-        if: steps.target.outputs.env_name == 'stg'
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
-          destination_dir: stg
-          keep_files: true
       - name: Deploy to GitHub Pages (demo)
         if: steps.target.outputs.env_name == 'demo'
         uses: peaceiris/actions-gh-pages@v4

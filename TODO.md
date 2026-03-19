@@ -26,9 +26,10 @@
   - [ ] デモ Authentication の Google 有効化、`vestige.github.io` を承認済みドメイン追加
   - [ ] デモユーザーの `users/{uid}` を事前登録（viewer/admin/owner）
   - [ ] `workflow_dispatch` から `target_env=demo` デプロイして表示/ログイン/権限を確認
+  - [x] `prod` / `demo` の2環境運用へ明示し、README・TEST・workflow から `stg` 言及を整理
 
 - [ ] `KAN-005` `db:backup` 系スクリプトの運用化
-  - [x] `--out` 形式の命名規則を環境別（demo/stg/prod）に統一
+  - [x] `--out` 形式の命名規則を環境別（demo/prod）に統一
   - [x] backup manifest（`exportedAt`,`sourceUser`,`docCount`,`eventCount`）を標準化
   - [ ] `db:backup:demo` / `db:backup:system` コマンドの仕様確定
 
@@ -70,3 +71,6 @@
   - [ ] `npm run demo:reset`（必要ならテストデータ再構成）を追加
 - [ ] `KAN-011` 運用向けテスト追加
   - [ ] `scripts` の引数検証・dry-run・ログ出力を検証するテスト導線を追加
+
+## FB
+- [] Event Settings画面、シーズン作成のポップアップ画面にイベント全体の日付を表示する

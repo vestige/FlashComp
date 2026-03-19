@@ -17,9 +17,8 @@ function readArgValue(flag) {
 function normalizeEnvironmentTag(value) {
   const raw = String(value || "").trim().toLowerCase();
   if (!raw) return "manual";
-  if (["demo", "stg", "prod", "production", "staging", "manual"].includes(raw)) {
+  if (["demo", "prod", "production", "manual"].includes(raw)) {
     if (raw === "production") return "prod";
-    if (raw === "staging") return "stg";
     return raw;
   }
   return `env-${raw.replace(/[^a-z0-9-_]/gi, "-")}`;
