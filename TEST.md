@@ -181,7 +181,7 @@ npm run dev -- --mode demo
    - `https://vestige.github.io/FlashComp/demo/` で上記を再確認
 4. ロールバック
    - 受入しない場合は、バックアップを使って戻す
-   - `npm run db:restore -- --yes --file backups/demo/<file>.json`
+   - `npm run db:restore:demo -- --yes --file backups/demo/<file>.json`
    - `npm run dev -- --mode demo` 再起動して表示復旧を確認
 
 ### 2-6. 受け入れチェックリスト（デモ）
@@ -205,13 +205,13 @@ npm run dev -- --mode demo
 1. 本番は先にバックアップを残す（実施時のみ）
    - `npm run db:backup:prod -- --out backups/prod/pre-op-$(Get-Date -Format 'yyyyMMdd-HHmmss').json`
 2. デモ環境を完全リセット
-   - `npm run db:clear`（イベント/ジム/ユーザーを含む全削除）
+   - `npm run db:clear:demo`（イベント/ジム/ユーザーを含む全削除）
    - `npm run db:format:demo`（デモ向け初期データを再投入）
 3. 再現データの検証
    - `npm run dev -- --mode demo`
    - `admin / owner / viewer / 未許可` で保護系操作を確認
 4. 問題時は即ロールバック
-   - `npm run db:restore -- --yes --file backups/demo/<file>.json`
+   - `npm run db:restore:demo -- --yes --file backups/demo/<file>.json`
    - `npm run dev -- --mode demo` で復旧確認
    - 必要なら `workflow_dispatch` でデモ再配信
 
@@ -226,21 +226,26 @@ npm run dev -- --mode demo
 
 - 一覧
   - `npm run db:purge`（安全モード）
-  - `npm run db:purge:yes`（イベント関連データを破壊的に削除）
+  - `npm run db:purge:yes`（staging 相当のイベント関連データを破壊的に削除）
+  - `npm run db:purge:prod`（本番）
+  - `npm run db:purge:demo`（デモ）
   - `npm run db:purge:yes:system`（`events`/`gyms`/`users` の上位削除も対象）
-  - `npm run db:clear`（`--all` 相当。デモ/本番問わず全コレクションをクリーン）
-  - `npm run db:format:demo`（`db:clear` + `db:seed:system`。Demoデータで実行再現用）
-  - `npm run db:seed`
+  - `npm run db:clear:prod`（`--all` 相当。全コレクションをクリーン）
+  - `npm run db:clear:demo`（`--all` 相当。全コレクションをクリーン）
+  - `npm run db:format:demo`（`db:clear:demo` + `db:seed:demo --include-system`。Demoデータで実行再現用）
+  - `npm run db:seed:prod`
+  - `npm run db:seed:demo`
   - `npm run db:seed:system`
   - `npm run db:backup -- --out backups/pre-op.json`
   - `npm run db:backup:demo`（デモ用途）
   - `npm run db:backup:system`
   - `npm run db:restore:dry-run -- --file <backup-json>`（事前見積もり）
-  - `npm run db:restore -- --yes --file <backup-json>`
-  - `npm run db:restore -- --yes --file <backup-json> --scope-events event-spring-2026,event-live-now`
-  - `npm run db:restore -- --yes --file <backup-json> --scope-gym gym-shibuya`
-  - `npm run db:restore -- --yes --file <backup-json> --log backups/restore-logs/restore-session.jsonl`
-- `db:seed` / `db:seed:system` はローカル検証前のイベント再現に使う
+  - `npm run db:restore:prod -- --yes --file <backup-json>`
+  - `npm run db:restore:demo -- --yes --file <backup-json>`
+  - `npm run db:restore:demo -- --yes --file <backup-json> --scope-events event-spring-2026,event-live-now`
+  - `npm run db:restore:demo -- --yes --file <backup-json> --scope-gym gym-shibuya`
+  - `npm run db:restore:demo -- --yes --file <backup-json> --log backups/restore-logs/restore-session.jsonl`
+- `db:seed:prod` / `db:seed:demo` / `db:seed:system` は環境別のローカル検証前のイベント再現に使う
 - `db:reset` を使う場合は `SCRIPT_AUTH_*` を設定してから実行する
 - `.env.demo.local` / `.env.prod.local` を流用する場合は `FIREBASE_*` または `VITE_FIREBASE_*` のどちらかで接続情報を渡す
 
