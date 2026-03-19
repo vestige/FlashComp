@@ -31,6 +31,10 @@
   - `role: "owner"` / `gymIds: ["gym-xxx"]`（担当ジムのみ）
   - 未割り当て状態: `role: "viewer"` / `gymIds: []`（ログイン後はダッシュボード閲覧のみ）
   - 非許可テスト用: 対象アカウントの `users/{uid}` を未作成または `role` 未設定
+- スクリプト実行用（`db:*`）は、対象 Firebase プロジェクトに紐づく  
+  Email/Password 有効な「運用専用アカウント」を使う
+  - `SCRIPT_AUTH_EMAIL` / `SCRIPT_AUTH_PASSWORD` を使用
+  - `users/{uid}` 側は `role: "admin"`, `gymIds: ["*"]` で登録済みであること
 
 ---
 
