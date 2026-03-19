@@ -160,9 +160,61 @@ npm run dev -- --mode demo
    - `admin / owner / viewer / 未許可` それぞれの権限制御がローカル結果と一致
    - `No routes matched` がコンソールに出ない
 
+### 2-5. デモ用運用フロー（本番切替前）
+
+1. 事前バックアップ
+   - `npm run db:backup:demo -- --out backups/demo/pre-demo-$(Get-Date -Format 'yyyyMMdd-HHmmss').json`
+2. 事後確認の基準を固定
+   - `npm run dev -- --mode demo`
+   - `http://localhost:5173/FlashComp/login`
+   - admin / owner / viewer / 未許可アカウントで以下を確認
+     - `/dashboard` 表示
+     - `/system-admin` の可否
+     - `/events/<id>/scores` の可否
+     - `/score-summary` の公開表示
+3. GitHub Pages 反映
+   - GitHub Actions `workflow_dispatch` で `target_env=demo` 実行
+   - `https://vestige.github.io/FlashComp/demo/` で上記を再確認
+4. ロールバック
+   - 受入しない場合は、バックアップを使って戻す
+   - `npm run db:restore -- --yes --file backups/demo/<file>.json`
+   - `npm run dev -- --mode demo` 再起動して表示復旧を確認
+
+### 2-6. 受け入れチェックリスト（デモ）
+
+- Unitテスト
+  - `npm run test:run`
+  - 基準: 既知失敗を除き「失敗0件」
+- 実機スモーク（デモ）
+  - `npm run dev -- --mode demo`
+  - ログイン導線、管理画面遷移、権限制御文言を確認
+- 実運用確認（公開）
+  - GitHub Pages `demo` で、URL表示から `/dashboard` `/system-admin` `/score-summary` の表示を確認
+  - エラー時の文言が運用想定どおりか確認
+
 補足:
 - 短時間で検証する場合、ローカルは UI 変更多発確認、デモ/本番は毎回の運用リリース確認に使う。
 - デモURLで動けば運用フローとしては「実環境通過」とみなせる。
+
+### 2-7. 本番保護とデモ再構成（データ運用順）
+
+1. 本番は先にバックアップを残す（実施時のみ）
+   - `npm run db:backup:prod -- --out backups/prod/pre-op-$(Get-Date -Format 'yyyyMMdd-HHmmss').json`
+2. デモ環境を完全リセット
+   - `npm run db:clear`（イベント/ジム/ユーザーを含む全削除）
+   - `npm run db:format:demo`（デモ向け初期データを再投入）
+3. 再現データの検証
+   - `npm run dev -- --mode demo`
+   - `admin / owner / viewer / 未許可` で保護系操作を確認
+4. 問題時は即ロールバック
+   - `npm run db:restore -- --yes --file backups/demo/<file>.json`
+   - `npm run dev -- --mode demo` で復旧確認
+   - 必要なら `workflow_dispatch` でデモ再配信
+
+### 2-8. Unitテストの実行（デモ確認との切り分け）
+
+- `npm run test:run` は環境変数を必要としない前提のモック実行で、`demo/prod` の違いは基本的にありません。
+- デモ向けの確認は、`npm run dev -- --mode demo` でログインと権限制御を確認する運用にします。
 
 --- 
 

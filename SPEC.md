@@ -13,12 +13,29 @@
 
 ## 運用前提（GitHub Pages分離）
 
-- フロントエンドは同一リポジトリ・同一 Firebase を前提に 3 配置運用する
+- フロントエンドは同一リポジトリで、`prod` / `demo` は `Firebase` プロジェクトを分離して運用する
   - `prod`: `https://vestige.github.io/FlashComp/`
   - `demo`: `https://vestige.github.io/FlashComp/demo/`
 - `demo` は CI の `target_env`（`build:prod` / `build:demo`）で生成される
 - `routes` は互換レイヤーとして残し、運用上の主要参照は `tasks` + `categoryTaskMap` を優先
 - Firebase 設定は `VITE_FIREBASE_*` で注入し、将来は環境別 Project へ切り替え可能
+
+## デモ運用フロー（運用基盤）
+
+### 配信前
+- `npm run db:format:demo` でデモ初期データを整形（必要時のみ）
+- `npm run dev -- --mode demo` で起動し、認証・権限制御の目視確認を実施
+- 本番側を直接触る前提の場合、`npm run db:backup:prod -- --out backups/prod/pre-op-...` で保全
+- データ差し替え前のデモは、`npm run db:clear` 後に `npm run db:format:demo` で再構成
+
+### 配信後
+- `workflow_dispatch` の `target_env=demo` で配信
+- `https://vestige.github.io/FlashComp/demo/` で公開確認
+
+### ロールバック
+- 事前バックアップを取り直し、問題時は `db:restore` で戻す
+- 署名・ログイン・主要画面を再確認
+- ロールバック対象のバックアップは `backups/demo/` または `backups/prod/` を環境別に分けて保存
 
 ## 用語（呼び名）
 - `participants` = `climbers`（クライマー）

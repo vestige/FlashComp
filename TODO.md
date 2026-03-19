@@ -21,7 +21,8 @@
 - [ ] `KAN-005` `db:backup` 系スクリプトの運用化
   - [x] `--out` 形式の命名規則を環境別（demo/prod）に統一
   - [x] backup manifest（`exportedAt`,`sourceUser`,`docCount`,`eventCount`）を標準化
-  - [ ] `db:backup:demo` / `db:backup:system` コマンドの仕様確定
+  - [x] `db:backup:demo` / `db:backup:prod` / `db:backup:system` を運用確定
+  - [x] `db:clear`（`--all` 相当）と `db:format:demo` をデモ整形の標準手順化
 
 ### Done
 - [x] `KAN-013` デモ Firebase 環境の構築（別プロジェクト化）
@@ -40,17 +41,19 @@
   - [x] 実行前の対象スコープ（gym/event）を表示し確認を強制
   - [x] `db:restore` 実行ログを保存（実行者、件数、実行時刻）
 
+- [x] `KAN-004` デモ用運用フローを `TEST.md` と `SPEC.md` で確定
+  - [x] GitHub Pagesデモ起動手順（ログイン〜権限別操作確認）を明文化
+  - [x] デモ後ロールバック手順（復元・再起動・最終確認）を追加
+  - [x] 実施結果の受け入れチェックリストを追加
+  - [x] Unitテストと実環境検証を分離して記載
+  - [x] 実施記録（当日ログ）を追加
+    - [x] Unitテスト: `npm run test:run`
+    - [x] Unit結果の基準: 既知失敗0件
+    - [x] 実機スモーク: `npm run dev -- --mode demo`
+    - [x] 実運用確認: `workflow_dispatch target_env=demo` で `/demo/` 検証
+    - [x] `dashboard`, `/system-admin`, `/score-summary` の表示・権限制御・エラーメッセージを確認
+
 ### Ready
-- [ ] `KAN-004` デモ用運用フローを `TEST.md` と `SPEC.md` で確定
-  - [ ] GitHub Pagesデモ起動手順（ログイン〜権限別操作確認）を明文化
-  - [ ] デモ後ロールバック手順（復元・再起動・最終確認）を追加
-  - [ ] 実施結果の受け入れチェックリストを追加
-  - [ ] Unitテストと実環境検証を分離して記載
-    - [ ] Unitテスト: `npm run test:run`（`package.json` の scripts）
-    - [ ] Unit結果の基準: 既知失敗0件（許容条件のみ）
-    - [ ] 実機スモーク: `npm run dev -- --mode demo`（ローカルでのログイン/権限確認）
-    - [ ] 実運用確認: workflow_dispatch `target_env=demo` で GitHub Pages `/demo/` を検証
-    - [ ] `dashboard`, `/system-admin`, `/score-summary` の表示系・権限制御・エラー時の文言を確認
 
 ### Backlog
 - [ ] `KAN-007` `db:purge` 系スクリプトの安全化
