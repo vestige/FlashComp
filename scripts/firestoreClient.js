@@ -160,15 +160,26 @@ export const db = getFirestore(app);
 export const auth = getAuth(app);
 
 export async function signInForScripts() {
-  const email = process.env.SCRIPT_AUTH_EMAIL || process.env.OWNER_EMAIL || "";
-  const password = process.env.SCRIPT_AUTH_PASSWORD || process.env.OWNER_PASSWORD || "";
+  const email = String(process.env.SCRIPT_AUTH_EMAIL || process.env.OWNER_EMAIL || "").trim();
+  const password = String(process.env.SCRIPT_AUTH_PASSWORD || process.env.OWNER_PASSWORD || "").trim();
 
   if (!email || !password) {
     return null;
   }
 
-  const credential = await signInWithEmailAndPassword(auth, email, password);
-  return credential.user;
+  try {
+    const credential = await signInWithEmailAndPassword(auth, email, password);
+    return credential.user;
+  } catch (error) {
+    const code = error?.code || "";
+    if (code === "auth/invalid-credential" || code === "auth/wrong-password" || code === "auth/user-not-found") {
+      console.error(`Script auth failed for ${email}.`);
+      console.error("Check that this user exists as a Password Sign-In account in Firebase Console.");
+      console.error("Ensure Email/Password sign-in method is enabled for the target project.");
+      console.error("If only Google auth is configured for this project, scripts will fail here.");
+    }
+    throw error;
+  }
 }
 
 export async function cleanupScriptFirebase() {
