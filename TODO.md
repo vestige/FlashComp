@@ -18,22 +18,23 @@
 
 ## P0（最優先：運用基盤）
 ### In Progress
-- [ ] `KAN-013` デモ Firebase 環境の構築（別プロジェクト化）
-  - [x] 本番側 Firebase 設定を確定
-  - [ ] デモ用 Firebase プロジェクトの確認（既存データなし・新規作成）
-  - [ ] デモ用 Firebase 構成値（`VITE_FIREBASE_*_DEMO`）を GitHub Secrets 登録
-  - [ ] デモプロジェクトで Firestore を作成し、`firestore.rules` を適用
-  - [ ] デモ Authentication の Google 有効化、`vestige.github.io` を承認済みドメイン追加
-  - [ ] デモユーザーの `users/{uid}` を事前登録（viewer/admin/owner）
-  - [ ] `workflow_dispatch` から `target_env=demo` デプロイして表示/ログイン/権限を確認
-  - [x] `prod` / `demo` の2環境運用へ明示し、README・TEST・workflow から `stg` 言及を整理
-
 - [ ] `KAN-005` `db:backup` 系スクリプトの運用化
   - [x] `--out` 形式の命名規則を環境別（demo/prod）に統一
   - [x] backup manifest（`exportedAt`,`sourceUser`,`docCount`,`eventCount`）を標準化
   - [ ] `db:backup:demo` / `db:backup:system` コマンドの仕様確定
 
 ### Done
+- [x] `KAN-013` デモ Firebase 環境の構築（別プロジェクト化）
+  - [x] 本番側 Firebase 設定を確定
+  - [x] デモ用 Firebase プロジェクトの確認（既存データなし・新規作成）
+  - [x] デモ用 Firebase 構成値（`VITE_FIREBASE_*_DEMO`）を GitHub Secrets 登録
+  - [x] デモプロジェクトで Firestore を作成し、`firestore.rules` を適用
+  - [x] デモ Authentication の Google 有効化、`vestige.github.io` を承認済みドメイン追加
+  - [x] デモユーザーの `users/{uid}` を事前登録（viewer/admin/owner）
+  - [x] `workflow_dispatch` から `target_env=demo` デプロイして表示/ログイン/権限を確認
+  - [x] `prod` / `demo` の2環境運用へ明示し、README・TEST・workflow から `stg` 言及を整理
+  - 受入ログ: `2026-03-19` 本番/デモURLで表示・Google認証・権限系確認済み
+
 - [x] `KAN-006` `db:restore` 系スクリプトの安全化
   - [x] `--dry-run` を追加して事前見積もり表示
   - [x] 実行前の対象スコープ（gym/event）を表示し確認を強制
