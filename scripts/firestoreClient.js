@@ -1,6 +1,99 @@
+import { existsSync, readFileSync } from "node:fs";
 import { deleteApp, initializeApp } from "firebase/app";
 import { getAuth, signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { getFirestore, terminate } from "firebase/firestore";
+
+function readArgValue(flag) {
+  const index = process.argv.indexOf(flag);
+  if (index < 0 || index + 1 >= process.argv.length) return "";
+  return process.argv[index + 1] || "";
+}
+
+function resolveScriptEnv() {
+  const envArg = readArgValue("--env");
+  const modeArg = readArgValue("--mode");
+  const explicit = String(envArg || modeArg || "").trim().toLowerCase();
+
+  if (explicit === "prod" || explicit === "production") return "prod";
+  if (explicit === "demo") return "demo";
+
+  return "";
+}
+
+function normalizeEnvValue(rawValue) {
+  if (typeof rawValue !== "string") return "";
+  const value = rawValue.trim();
+  if (
+    (value.startsWith("\"") && value.endsWith("\"")) ||
+    (value.startsWith("'") && value.endsWith("'"))
+  ) {
+    return value.slice(1, -1).trim();
+  }
+  return value;
+}
+
+function loadEnvFile(filePath) {
+  if (!existsSync(filePath)) return;
+
+  const raw = readFileSync(filePath, "utf8");
+  const lines = raw.split(/\r?\n/);
+
+  for (const line of lines) {
+    const text = line.trim();
+    if (!text || text.startsWith("#")) continue;
+
+    const matches = text.match(/^([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/);
+    if (!matches) continue;
+
+    const key = matches[1];
+    const value = normalizeEnvValue(matches[2]);
+
+    if (!Object.prototype.hasOwnProperty.call(process.env, key)) {
+      process.env[key] = value;
+    }
+  }
+}
+
+function loadScriptEnv(scriptEnv) {
+  const envSuffix = scriptEnv ? scriptEnv.toLowerCase() : "";
+  const candidates = [];
+
+  if (envSuffix) {
+    candidates.push(`.env.${envSuffix}.local`);
+    candidates.push(`.env.${envSuffix}`);
+  }
+  candidates.push(".env.local");
+  candidates.push(".env");
+
+  for (const filePath of candidates) {
+    loadEnvFile(filePath);
+  }
+
+  if (envSuffix) {
+    const suffixUpper = envSuffix.toUpperCase();
+    const aliasTargets = [
+      ["FIREBASE_API_KEY", "VITE_FIREBASE_API_KEY"],
+      ["FIREBASE_AUTH_DOMAIN", "VITE_FIREBASE_AUTH_DOMAIN"],
+      ["FIREBASE_PROJECT_ID", "VITE_FIREBASE_PROJECT_ID"],
+      ["FIREBASE_STORAGE_BUCKET", "VITE_FIREBASE_STORAGE_BUCKET"],
+      ["FIREBASE_MESSAGING_SENDER_ID", "VITE_FIREBASE_MESSAGING_SENDER_ID"],
+      ["FIREBASE_APP_ID", "VITE_FIREBASE_APP_ID"],
+    ];
+
+    for (const [primary, fallback] of aliasTargets) {
+      const primaryEnv = `${primary}_${suffixUpper}`;
+      const fallbackEnv = `${fallback}_${suffixUpper}`;
+      if (!process.env[primary] && process.env[primaryEnv]) {
+        process.env[primary] = process.env[primaryEnv];
+      }
+      if (!process.env[fallback] && process.env[fallbackEnv]) {
+        process.env[fallback] = process.env[fallbackEnv];
+      }
+    }
+  }
+}
+
+loadScriptEnv(resolveScriptEnv());
 
 const firebaseConfig = {
   apiKey: process.env.FIREBASE_API_KEY || process.env.VITE_FIREBASE_API_KEY,
