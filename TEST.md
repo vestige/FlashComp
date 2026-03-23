@@ -281,6 +281,14 @@ npm run db:format:demo
 - `event-live-now`
 - `event-upcoming-2026`
 - `event-rookie-cup-2026`
+- `event-endurance-2026`（4シーズン / 中級+上級カテゴリ）
+- `event-edge-mixed-2026`（Beginner+Kids / 復元エッジケース同梱）
+
+### restoreエッジケース確認（参考）
+- `event-edge-mixed-2026/restoreEdgeCases/mixed-array`
+- `event-edge-mixed-2026/restoreEdgeCases/non-array-field`
+- `event-edge-mixed-2026/restoreEdgeCases/sparse-map`
+- `event-endurance-2026/restoreEdgeCases/nested-structure`
 
 ### 5) KAN-006 検証（db:restore 安全化）
 

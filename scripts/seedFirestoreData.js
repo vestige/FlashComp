@@ -80,6 +80,7 @@ const categoryTemplates = [
   { id: "cat-beginner", name: "Beginner", grades: ["8Q", "7Q", "6Q"], basePoints: 80, clearRate: 0.68 },
   { id: "cat-middle", name: "Middle", grades: ["6Q", "5Q", "4Q"], basePoints: 100, clearRate: 0.55 },
   { id: "cat-open", name: "Open", grades: ["3Q", "2Q", "1Q"], basePoints: 130, clearRate: 0.42 },
+  { id: "cat-kids", name: "Kids", grades: ["10Q", "9Q", "8Q"], basePoints: 60, clearRate: 0.74 },
 ];
 const categoryTemplateById = new Map(categoryTemplates.map((category) => [category.id, category]));
 
@@ -101,6 +102,11 @@ const participantsByCategory = {
     { id: "p202", name: "Hina Nishimura", memberNo: "M-1202", age: 28, gender: "female", grade: "1Q", skill: 0.03 },
     { id: "p203", name: "Sei Kobayashi", memberNo: "M-1203", age: 34, gender: "male", grade: "3Q", skill: -0.01 },
     { id: "p204", name: "Rin Nakajima", memberNo: "M-1204", age: 26, gender: "female", grade: "2Q", skill: 0.05 },
+  ],
+  "cat-kids": [
+    { id: "pk01", name: "Sena Aoki", memberNo: "K-2001", age: 10, gender: "female", grade: "9Q", skill: 0.05 },
+    { id: "pk02", name: "Taiga Ueno", memberNo: "K-2002", age: 11, gender: "male", grade: "8Q", skill: 0.01 },
+    { id: "pk03", name: "Yuna Hase", memberNo: "K-2003", age: 9, gender: "female", grade: "10Q", skill: -0.03 },
   ],
 };
 
@@ -220,6 +226,48 @@ const events = [
       "cat-beginner": ["p001", "p002", "p003"],
     },
   },
+  {
+    id: "event-endurance-2026",
+    name: "Endurance Challenge 2026",
+    gymId: "gym-yokohama",
+    startDate: "2026-06-01",
+    endDate: "2026-09-30",
+    seasons: [
+      { id: "season-01", name: "June Stage", startDate: "2026-06-01", endDate: "2026-06-30" },
+      { id: "season-02", name: "July Stage", startDate: "2026-07-01", endDate: "2026-07-31" },
+      { id: "season-03", name: "August Stage", startDate: "2026-08-01", endDate: "2026-08-31" },
+      { id: "season-04", name: "September Stage", startDate: "2026-09-01", endDate: "2026-09-30" },
+    ],
+    categoryIds: ["cat-middle", "cat-open"],
+    routesPerCategoryByCategory: {
+      "cat-middle": 11,
+      "cat-open": 14,
+    },
+    participantIdsByCategory: {
+      "cat-middle": ["p101", "p102", "p103"],
+      "cat-open": ["p201", "p202", "p204"],
+    },
+  },
+  {
+    id: "event-edge-mixed-2026",
+    name: "Edge Case Mixed Cup 2026",
+    gymId: "gym-shibuya",
+    startDate: "2025-12-01",
+    endDate: "2026-01-15",
+    seasons: [
+      { id: "season-01", name: "Trial Stage", startDate: "2025-12-01", endDate: "2025-12-20" },
+      { id: "season-02", name: "Mix Stage", startDate: "2025-12-21", endDate: "2026-01-15" },
+    ],
+    categoryIds: ["cat-beginner", "cat-kids"],
+    routesPerCategoryByCategory: {
+      "cat-beginner": 7,
+      "cat-kids": 5,
+    },
+    participantIdsByCategory: {
+      "cat-beginner": ["p001", "p002"],
+      "cat-kids": ["pk01", "pk02", "pk03"],
+    },
+  },
   buildLiveEvent(),
   buildUpcomingEvent(),
 ];
@@ -236,6 +284,60 @@ const seasonParticipationByEvent = {
     p104: ["season-02", "season-03"], // joins from Phase 2
     p203: ["season-01", "season-03"], // skips Phase 2
   },
+  "event-endurance-2026": {
+    p103: ["season-01", "season-02", "season-04"], // skips season-03
+    p204: ["season-02", "season-03", "season-04"], // joins from season-02
+  },
+  "event-edge-mixed-2026": {
+    p002: ["season-02"], // enters only mix stage
+    pk03: ["season-02"], // kids participant joins late
+  },
+};
+
+const restoreEdgeCasesByEvent = {
+  "event-edge-mixed-2026": [
+    {
+      id: "mixed-array",
+      data: {
+        kind: "mixed-array",
+        values: ["alpha", 1, true, null, { nested: "ok" }, ["beta", 2]],
+        notes: "Restore validation for mixed array element types.",
+      },
+    },
+    {
+      id: "non-array-field",
+      data: {
+        kind: "non-array-field",
+        participatingSeasonIds: "season-01",
+        gymIds: null,
+        metadata: { source: "seed", version: 2 },
+      },
+    },
+    {
+      id: "sparse-map",
+      data: {
+        kind: "sparse-map",
+        scores: { "No.01": true, "No.02": "1", "No.03": null, "No.04": 0 },
+        participants: ["p001", "pk01"],
+      },
+    },
+  ],
+  "event-endurance-2026": [
+    {
+      id: "nested-structure",
+      data: {
+        kind: "nested-structure",
+        checkpoints: [
+          { seasonId: "season-01", state: "ok" },
+          { seasonId: "season-02", state: "ok" },
+          { seasonId: "season-03", state: "warn" },
+          { seasonId: "season-04", state: "ok" },
+        ],
+        tags: ["ops", "restore", "backup"],
+        nullableValue: null,
+      },
+    },
+  ],
 };
 
 function resolveParticipatingSeasonIds(event, seasonIndexById, participantId) {
@@ -276,6 +378,13 @@ function resolveParticipantsForEventCategory(event, categoryId) {
   }
   const participantIdSet = new Set(participantIds);
   return defaults.filter((participant) => participantIdSet.has(participant.id));
+}
+
+function resolveRoutesPerCategory(event, categoryId) {
+  const byCategory = event.routesPerCategoryByCategory || {};
+  const raw = Number(byCategory[categoryId] ?? event.routesPerCategory ?? 10);
+  if (!Number.isFinite(raw)) return 10;
+  return Math.max(1, Math.trunc(raw));
 }
 
 async function seed() {
@@ -426,11 +535,12 @@ async function seed() {
     for (const season of event.seasons) {
       for (const category of eventCategories) {
         const routes = [];
+        const routeCount = resolveRoutesPerCategory(event, category.id);
 
-        for (let i = 1; i <= event.routesPerCategory; i += 1) {
+        for (let i = 1; i <= routeCount; i += 1) {
           const grade = category.grades[(i - 1) % category.grades.length];
           const isBonus = i % 6 === 0;
-          const points = category.basePoints + (event.routesPerCategory - i) * 5 + (isBonus ? 10 : 0);
+          const points = category.basePoints + (routeCount - i) * 5 + (isBonus ? 10 : 0);
           const name = routeName(i);
 
           routes.push({ name, points, isBonus });
@@ -467,6 +577,14 @@ async function seed() {
           );
         }
       }
+    }
+
+    const edgeCases = restoreEdgeCasesByEvent[event.id] || [];
+    for (const edge of edgeCases) {
+      await queueSet(["events", event.id, "restoreEdgeCases", edge.id], {
+        ...edge.data,
+        createdAt: Timestamp.now(),
+      });
     }
   }
 

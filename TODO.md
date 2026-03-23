@@ -26,6 +26,9 @@
   - [x] `dry-run` / ログ出力ペイロードの検証を追加
   - [x] `restore` / `backup` 系にも同観点のテストを横展開（`backupUtils.test.js` / `restoreUtils.test.js`）
   - [x] `npm run test:run` で回帰確認
+- [x] `KAN-008` テストデータバリエーションを運用向けに拡充
+  - [x] `seed` の複数イベント/カテゴリ/季節構成を追加
+  - [x] 未配列/混在データなど復元復旧のエッジケースを追加（`events/{eventId}/restoreEdgeCases/*`）
 - [x] `KAN-007` `db:purge` 系スクリプトの安全化
   - [x] `--dry-run` と `--scope=`（イベントID/ gym）を追加
   - [x] テストデータ削除とシステムデータ削除を明示分離
@@ -40,9 +43,6 @@
 ### Ready
 
 ### Backlog
-- [ ] `KAN-008` テストデータバリエーションを運用向けに拡充
-  - [ ] `seed` の複数イベント/カテゴリ/季節構成を追加
-  - [ ] 未配列/混在データなど復元復旧のエッジケースを追加
 
 ## P1（次点：デモ支援）
 ### Done
