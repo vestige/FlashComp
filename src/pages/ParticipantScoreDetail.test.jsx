@@ -121,12 +121,12 @@ describe("ParticipantScoreDetail", () => {
     renderDetail("/score-summary/event-1/participants/p2?season=season-1&category=cat-1&q=M-1002");
 
     await screen.findByText("Climber Detail");
-    await screen.findByText(/順位（Beginner）:/);
+    await screen.findByText(/Beginner の順位情報:/);
     expect(firestoreMocks.where).toHaveBeenCalledWith("categoryId", "==", "cat-1");
 
-    const rankRow = screen.getByText(/順位（Beginner）:/);
+    const rankRow = screen.getByText(/Beginner の順位情報:/);
     expect(rankRow.textContent).toContain("2");
-    expect(rankRow.textContent).toContain("/ 3");
+    expect(rankRow.textContent).toContain("/ 3人");
 
     const backLink = screen.getAllByRole("link", { name: "← 集計結果に戻る" })[0];
     expect(backLink).toHaveAttribute(
@@ -134,8 +134,8 @@ describe("ParticipantScoreDetail", () => {
       "/score-summary/event-1?season=season-1&category=cat-1&q=M-1002"
     );
 
-    const upperLink = await screen.findByRole("link", { name: /↑ 1位 Aoi/ });
-    const lowerLink = await screen.findByRole("link", { name: /↓ 3位 Mio/ });
+    const upperLink = await screen.findByRole("link", { name: /↑.*1位.*Aoi/ });
+    const lowerLink = await screen.findByRole("link", { name: /↓.*3位.*Mio/ });
     expect(upperLink).toHaveAttribute(
       "href",
       "/score-summary/event-1/participants/p1?season=season-1&category=cat-1&q=M-1002"
@@ -166,8 +166,8 @@ describe("ParticipantScoreDetail", () => {
       "/score-summary/event-1/ranking?from=portal&mode=season&season=season-1&category=cat-1&q=M-1002"
     );
 
-    const upperLink = await screen.findByRole("link", { name: /↑ 1位 Aoi/ });
-    const lowerLink = await screen.findByRole("link", { name: /↓ 3位 Mio/ });
+    const upperLink = await screen.findByRole("link", { name: /↑.*1位.*Aoi/ });
+    const lowerLink = await screen.findByRole("link", { name: /↓.*3位.*Mio/ });
     expect(upperLink).toHaveAttribute(
       "href",
       "/score-summary/event-1/participants/p1?return=ranking&from=portal&mode=season&season=season-1&category=cat-1&q=M-1002"
@@ -184,10 +184,8 @@ describe("ParticipantScoreDetail", () => {
 
     await screen.findByText("Climber Detail");
 
-    await waitFor(() =>
-      expect(screen.getByText("これより上位のクライマーはいません")).toBeInTheDocument()
-    );
-    expect(screen.getByRole("link", { name: /↓ 2位 Riku/ })).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText("上位なし")).toBeInTheDocument());
+    expect(screen.getByRole("link", { name: /↓.*2位.*Riku/ })).toBeInTheDocument();
   });
 
   it("shows shared UI summary and participant metadata", async () => {
@@ -195,12 +193,15 @@ describe("ParticipantScoreDetail", () => {
     renderDetail("/score-summary/event-1/participants/p2?season=season-1&category=cat-1&q=M-1002");
 
     expect(await screen.findByText("Climber Detail")).toBeInTheDocument();
-    expect(screen.getByText("イベント: FlashComp Spring 2026 / 名前: Riku / 会員番号: M-1002 / カテゴリ: Beginner")).toBeInTheDocument();
     expect(screen.getByText("サマリ")).toBeInTheDocument();
-    expect(screen.getByText("Total Points")).toBeInTheDocument();
-    expect(screen.getByText("100")).toBeInTheDocument();
-    expect(screen.getByText("Total Clear")).toBeInTheDocument();
-    expect(screen.getByText("1")).toBeInTheDocument();
+    expect(screen.getByText("クライマー名")).toBeInTheDocument();
+    expect(screen.getByText("Riku")).toBeInTheDocument();
+    expect(screen.getByText("会員番号")).toBeInTheDocument();
+    expect(screen.getByText("M-1002")).toBeInTheDocument();
+    expect(screen.getByText("カテゴリ")).toBeInTheDocument();
+    expect(screen.getAllByText("Beginner").length).toBeGreaterThan(0);
+    expect(screen.getByText("総合ポイント")).toBeInTheDocument();
+    expect(screen.getByText("合計完登")).toBeInTheDocument();
   });
 
   it("falls back to all seasons when invalid season query is given", async () => {

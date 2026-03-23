@@ -82,10 +82,10 @@ describe("ScoreSummary", () => {
     setupFirestore();
     renderSummary("/score-summary?q=Spring");
 
-    await screen.findByRole("heading", { name: "Climber Portal" });
-    expect(screen.getByRole("link", { name: "↑ Back to TOP" })).toHaveAttribute("href", "/");
+    await screen.findByRole("heading", { name: "クライマーポータル" });
+    expect(screen.getByRole("link", { name: "← TOPへ戻る" })).toHaveAttribute("href", "/");
     expect(screen.getByDisplayValue("Spring")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Live" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "開催中" })).toBeInTheDocument();
     expect(screen.getByText("表示 1 / 1 件")).toBeInTheDocument();
     expect(screen.getByText("Spring Flash")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "ランキングを見る" })).toHaveAttribute(
@@ -103,7 +103,7 @@ describe("ScoreSummary", () => {
     const user = userEvent.setup();
     renderSummary("/score-summary?view=past&q=Winter");
 
-    await screen.findByRole("heading", { name: "Climber Portal" });
+    await screen.findByRole("heading", { name: "クライマーポータル" });
     expect(screen.getByText("表示 1 / 1 件")).toBeInTheDocument();
     expect(screen.getByText("Winter Flash")).toBeInTheDocument();
 
@@ -124,8 +124,8 @@ describe("ScoreSummary", () => {
     const user = userEvent.setup();
     renderSummary("/score-summary");
 
-    await screen.findByRole("heading", { name: "Climber Portal" });
-    await user.click(screen.getByRole("button", { name: "Past" }));
+    await screen.findByRole("heading", { name: "クライマーポータル" });
+    await user.click(screen.getByRole("button", { name: "終了" }));
 
     await waitFor(() => {
       expect(screen.getByText("Winter Flash")).toBeInTheDocument();
@@ -138,7 +138,7 @@ describe("ScoreSummary", () => {
     setupFirestore();
     renderSummary("/score-summary?gym=gym-b");
 
-    await screen.findByRole("heading", { name: "Climber Portal" });
+    await screen.findByRole("heading", { name: "クライマーポータル" });
 
     expect(screen.getByLabelText(/ジム:/)).toHaveValue("gym-b");
     expect(screen.getByText("表示 0 / 0 件")).toBeInTheDocument();

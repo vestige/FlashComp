@@ -1,6 +1,14 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { collection, deleteDoc, doc, getDoc, getDocs } from "firebase/firestore";
+import {
+  createPurgeLogEntry,
+  formatTimestamp,
+  normalizeGymIds,
+  readArgValue,
+  readScopeFromArgv,
+  validateScopeOptions,
+} from "./lib/purgeUtils.js";
 import { cleanupScriptFirebase, db, signInForScripts } from "./firestoreClient.js";
 
 const requireYes = process.argv.includes("--yes");
@@ -19,59 +27,6 @@ function hasArg(name) {
 
 if (dryRun) {
   console.log("Dry-run mode: this command will show deletion preview only.");
-}
-
-function readArgValue(flag) {
-  const exactIndex = process.argv.indexOf(flag);
-  if (exactIndex >= 0 && exactIndex + 1 < process.argv.length) {
-    return process.argv[exactIndex + 1] || "";
-  }
-
-  const prefixed = process.argv.find((arg) => arg.startsWith(`${flag}=`));
-  if (!prefixed) return "";
-  return prefixed.slice(flag.length + 1);
-}
-
-function readScope() {
-  const raw = readArgValue("--scope");
-  if (!raw) return { events: new Set(), gyms: new Set(), invalid: [] };
-
-  const events = new Set();
-  const gyms = new Set();
-  const invalid = [];
-  const tokens = raw.split(",").map((item) => item.trim()).filter(Boolean);
-  for (const token of tokens) {
-    if (token.startsWith("event:")) {
-      const eventId = token.slice("event:".length).trim();
-      if (eventId) events.add(eventId);
-      else invalid.push(token);
-      continue;
-    }
-    if (token.startsWith("gym:")) {
-      const gymId = token.slice("gym:".length).trim();
-      if (gymId) gyms.add(gymId);
-      else invalid.push(token);
-      continue;
-    }
-    invalid.push(token);
-  }
-  return { events, gyms, invalid };
-}
-
-function normalizeGymIds(value) {
-  if (!Array.isArray(value)) return [];
-  return value.filter((id) => typeof id === "string" && id.trim().length > 0);
-}
-
-function formatTimestamp(dateIsoString) {
-  const date = new Date(dateIsoString);
-  const year = String(date.getFullYear());
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  const hour = String(date.getHours()).padStart(2, "0");
-  const minute = String(date.getMinutes()).padStart(2, "0");
-  const second = String(date.getSeconds()).padStart(2, "0");
-  return `${year}${month}${day}-${hour}${minute}${second}`;
 }
 
 async function deleteSnapshot(snapshot, label, options = {}) {
@@ -204,22 +159,18 @@ async function purgeEvent(eventDoc, options = {}) {
 async function run() {
   const startedAt = new Date().toISOString();
   const clearAll = hasArg("--all");
-  const scope = readScope();
+  const scope = readScopeFromArgv(process.argv);
   const scopeEvents = Array.from(scope.events);
   const scopeGyms = Array.from(scope.gyms);
-  const hasScope = scopeEvents.length > 0 || scopeGyms.length > 0;
+  const scopeValidation = validateScopeOptions({ clearAll, scope });
+  const hasScope = scopeValidation.hasScope;
   const logFilePath =
-    readArgValue("--log") || path.join("backups", "purge-logs", `purge-${formatTimestamp(startedAt)}.jsonl`);
+    readArgValue(process.argv, "--log") || path.join("backups", "purge-logs", `purge-${formatTimestamp(startedAt)}.jsonl`);
 
-  if (scope.invalid.length > 0) {
-    console.error(`Invalid --scope token(s): ${scope.invalid.join(", ")}`);
-    console.error("Use --scope event:<eventId>,gym:<gymId>");
-    process.exit(1);
-  }
-
-  if (clearAll && hasScope) {
-    console.error("--all cannot be combined with --scope.");
-    console.error("Use --all for full cleanup, or --scope for targeted cleanup.");
+  if (!scopeValidation.ok) {
+    for (const message of scopeValidation.messages) {
+      console.error(message);
+    }
     process.exit(1);
   }
 
@@ -349,30 +300,29 @@ async function run() {
   }
 
   await fs.mkdir(path.dirname(logFilePath), { recursive: true });
+  const logEntry = createPurgeLogEntry({
+    startedAt,
+    completedAt: new Date().toISOString(),
+    dryRun,
+    actor: signedInUser.email || signedInUser.uid,
+    includeSystem,
+    clearAll,
+    scopeEvents,
+    scopeGyms,
+    hasAllGymAccess,
+    role: userRole,
+    manageableEventCount: manageableEvents.length,
+    targetEventCount: scopedEvents.length,
+    processedEventCount: totalEvents,
+    deletedCount: totalDeleted,
+    wouldDeleteCount: totalWouldDelete,
+    skippedByPermission: totalPermissionSkipped,
+    skippedByScope: totalScopeSkipped,
+    logFile: logFilePath,
+  });
   await fs.appendFile(
     logFilePath,
-    `${JSON.stringify({
-      startedAt,
-      completedAt: new Date().toISOString(),
-      mode: dryRun ? "dry-run" : "apply",
-      actor: signedInUser.email || signedInUser.uid,
-      includeSystem,
-      clearAll,
-      requestedScope: {
-        events: scopeEvents,
-        gyms: scopeGyms,
-      },
-      hasAllGymAccess,
-      role: userRole,
-      manageableEventCount: manageableEvents.length,
-      targetEventCount: scopedEvents.length,
-      processedEventCount: totalEvents,
-      deletedCount: totalDeleted,
-      wouldDeleteCount: totalWouldDelete,
-      skippedByPermission: totalPermissionSkipped,
-      skippedByScope: totalScopeSkipped,
-      logFile: logFilePath,
-    })}\n`
+    `${JSON.stringify(logEntry)}\n`
   );
   console.log(`[log] purge log: ${logFilePath}`);
 }
