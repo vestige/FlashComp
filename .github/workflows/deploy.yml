@@ -89,6 +89,7 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
+          keep_files: true
       - name: Deploy to GitHub Pages (demo)
         if: steps.target.outputs.env_name == 'demo'
         uses: peaceiris/actions-gh-pages@v4
