@@ -19,13 +19,13 @@
 
 ## P0（最優先：運用基盤）
 ### In Progress
-- [ ] `KAN-007` `db:purge` 系スクリプトの安全化
+
+### Done
+- [x] `KAN-007` `db:purge` 系スクリプトの安全化
   - [x] `--dry-run` と `--scope=`（イベントID/ gym）を追加
   - [x] テストデータ削除とシステムデータ削除を明示分離
   - [x] 破壊系操作の実行履歴を保存
-  - [ ] `TEST.md` 手順に沿って `demo` で dry-run / apply を各1回確認
-
-### Done
+  - [x] `TEST.md` 手順に沿って `demo` で dry-run / apply を各1回確認
 - [x] `KAN-005` `db:backup` 系スクリプトの運用化
   - [x] `--out` 形式の命名規則を環境別（demo/prod）に統一
   - [x] backup manifest（`exportedAt`,`sourceUser`,`docCount`,`eventCount`）を標準化
