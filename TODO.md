@@ -47,6 +47,9 @@
 ## P1（次点：デモ支援）
 ### Done
 - [x] `KAN-013` GitHub Pages の `demo` / `prod` 同時運用を維持するため、`prod` デプロイでも `keep_files: true` を適用
+- [x] `KAN-014` GitHub Pages の `prod` デプロイで `demo/` が消える問題を恒久対策
+  - [x] `peaceiris/actions-gh-pages@v4` に `force_orphan: false` を適用
+  - [x] `prod` / `demo` どちらのデプロイでも `gh-pages` の既存ファイルを保持
 
 ### Backlog
 - [ ] `KAN-012` CI: GitHub Actions の Node24移行警告を抑えるため、公式デプロイ方式検討（将来対応）
