@@ -1,38 +1,14 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { Timestamp, collection, doc, getDoc, getDocs } from "firebase/firestore";
+import {
+  createBackupPayload,
+  formatFileTimestamp,
+  normalizeEnvironmentTag,
+  normalizeGymIds,
+  readArgValue,
+} from "./lib/backupUtils.js";
 import { cleanupScriptFirebase, db, signInForScripts } from "./firestoreClient.js";
-
-function normalizeGymIds(value) {
-  if (!Array.isArray(value)) return [];
-  return value.filter((id) => typeof id === "string" && id.trim().length > 0);
-}
-
-function readArgValue(flag) {
-  const index = process.argv.indexOf(flag);
-  if (index < 0 || index + 1 >= process.argv.length) return "";
-  return process.argv[index + 1] || "";
-}
-
-function normalizeEnvironmentTag(value) {
-  const raw = String(value || "").trim().toLowerCase();
-  if (!raw) return "manual";
-  if (["demo", "prod", "production", "manual"].includes(raw)) {
-    if (raw === "production") return "prod";
-    return raw;
-  }
-  return `env-${raw.replace(/[^a-z0-9-_]/gi, "-")}`;
-}
-
-function formatFileTimestamp(date = new Date()) {
-  const year = String(date.getFullYear());
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  const hour = String(date.getHours()).padStart(2, "0");
-  const minute = String(date.getMinutes()).padStart(2, "0");
-  const second = String(date.getSeconds()).padStart(2, "0");
-  return `${year}${month}${day}-${hour}${minute}${second}`;
-}
 
 function serializeValue(value) {
   if (value instanceof Timestamp) {
@@ -137,8 +113,10 @@ async function run() {
   }
 
   const includeSystem = process.argv.includes("--include-system");
-  const requestedOutPath = readArgValue("--out");
-  const environmentTag = normalizeEnvironmentTag(readArgValue("--env") || process.env.BACKUP_ENV);
+  const requestedOutPath = readArgValue(process.argv, "--out");
+  const environmentTag = normalizeEnvironmentTag(
+    readArgValue(process.argv, "--env") || process.env.BACKUP_ENV
+  );
   const outputPath = requestedOutPath
     || path.join(
       "backups",
@@ -185,22 +163,16 @@ async function run() {
 
   docs.sort((a, b) => a.path.localeCompare(b.path));
 
-  const payload = {
+  const payload = createBackupPayload({
     exportedAt: new Date().toISOString(),
     sourceUser: signedInUser.email || signedInUser.uid,
-    sourceProject: process.env.FIREBASE_PROJECT_ID || process.env.VITE_FIREBASE_PROJECT_ID || "flashcompauth",
+    sourceProject:
+      process.env.FIREBASE_PROJECT_ID || process.env.VITE_FIREBASE_PROJECT_ID || "flashcompauth",
     includeSystem,
     environment: environmentTag,
-    collectionCounts: docs.reduce((acc, row) => {
-      const collection = String(row.path || "").split("/")[0];
-      if (!collection) return acc;
-      acc[collection] = (acc[collection] || 0) + 1;
-      return acc;
-    }, {}),
     eventCount: manageableEvents.length,
-    docCount: docs.length,
     docs,
-  };
+  });
 
   await fs.mkdir(path.dirname(outputPath), { recursive: true });
   await fs.writeFile(outputPath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");

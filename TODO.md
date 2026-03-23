@@ -19,13 +19,13 @@
 
 ## P0（最優先：運用基盤）
 ### In Progress
-- [ ] `KAN-011` 運用向けテスト追加
-  - [x] `scripts/lib/purgeUtils.test.js` を追加（引数検証・scope解析）
-  - [x] `dry-run` / ログ出力ペイロードの検証を追加
-  - [x] `npm run test:run` で回帰確認
-  - [ ] `restore` / `backup` 系にも同観点のテストを横展開
 
 ### Done
+- [x] `KAN-011` 運用向けテスト追加
+  - [x] `scripts/lib/purgeUtils.test.js` を追加（引数検証・scope解析）
+  - [x] `dry-run` / ログ出力ペイロードの検証を追加
+  - [x] `restore` / `backup` 系にも同観点のテストを横展開（`backupUtils.test.js` / `restoreUtils.test.js`）
+  - [x] `npm run test:run` で回帰確認
 - [x] `KAN-007` `db:purge` 系スクリプトの安全化
   - [x] `--dry-run` と `--scope=`（イベントID/ gym）を追加
   - [x] テストデータ削除とシステムデータ削除を明示分離

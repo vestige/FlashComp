@@ -1,6 +1,13 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { Timestamp, doc, getDoc, writeBatch } from "firebase/firestore";
+import {
+  createRestoreLogEntry,
+  formatTimestamp,
+  normalizeGymIds,
+  readArgValue,
+  readList,
+} from "./lib/restoreUtils.js";
 import { cleanupScriptFirebase, db, signInForScripts } from "./firestoreClient.js";
 
 const requireYes = process.argv.includes("--yes");
@@ -15,26 +22,6 @@ if (!requireYes && !dryRun) {
 
 if (dryRun) {
   console.log("Dry-run mode: this command will show restore preview only.");
-}
-
-function normalizeGymIds(value) {
-  if (!Array.isArray(value)) return [];
-  return value.filter((id) => typeof id === "string" && id.trim().length > 0);
-}
-
-function readArgValue(flag) {
-  const index = process.argv.indexOf(flag);
-  if (index < 0 || index + 1 >= process.argv.length) return "";
-  return process.argv[index + 1] || "";
-}
-
-function readList(flag) {
-  const raw = readArgValue(flag);
-  if (!raw) return [];
-  return raw
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
 }
 
 function summarizeSet(items, label, limit = 12) {
@@ -85,7 +72,7 @@ function promptApproval(message) {
 
 async function run() {
   const startedAt = new Date().toISOString();
-  const filePath = readArgValue("--file");
+  const filePath = readArgValue(process.argv, "--file");
   if (!filePath) {
     console.error("Missing --file option.");
     console.error("Example: npm run db:restore -- --yes --file backups/firestore-backup-20260307-120000.json");
@@ -104,9 +91,11 @@ async function run() {
   }
 
   const includeSystem = process.argv.includes("--include-system");
-  const scopeEvents = readList("--scope-events");
-  const scopeGyms = readList("--scope-gym");
-  const logFilePath = readArgValue("--log") || path.join("backups", "restore-logs", `restore-${formatTimestamp(startedAt)}.jsonl`);
+  const scopeEvents = readList(process.argv, "--scope-events");
+  const scopeGyms = readList(process.argv, "--scope-gym");
+  const logFilePath =
+    readArgValue(process.argv, "--log")
+    || path.join("backups", "restore-logs", `restore-${formatTimestamp(startedAt)}.jsonl`);
 
   const profileSnap = await getDoc(doc(db, "users", signedInUser.uid));
   const profileData = profileSnap.exists() ? profileSnap.data() : {};
@@ -266,36 +255,34 @@ async function run() {
 
   if (dryRun) {
     console.log("Dry-run completed. No data written.");
+    const logEntry = createRestoreLogEntry({
+      mode: "dry-run",
+      startedAt,
+      completedAt: new Date().toISOString(),
+      actor: signedInUser.email || signedInUser.uid,
+      sourceFile: resolvedFilePath,
+      includeSystem,
+      hasAllGymAccess,
+      sourceProject: payload.sourceProject,
+      environment: payload.environment,
+      requestedScope: {
+        events: scopeEvents,
+        gyms: scopeGyms,
+      },
+      targetDocs: restorableDocs.length,
+      sourceDocs: sourceDocs.length,
+      skipped: {
+        byPermissionScope: skippedByScope,
+        bySystemFlag: skippedBySystemFlag,
+        byFilter: skippedByScopeFilter,
+        byUnknownTopLevel: skippedByUnknownTopLevel,
+      },
+      restoredCount: 0,
+      restoredEvents: Array.from(totalTargetEvents),
+      restoredGyms: Array.from(totalTargetGyms),
+    });
     await fs.mkdir(path.dirname(logFilePath), { recursive: true });
-    await fs.appendFile(
-      logFilePath,
-      `${JSON.stringify({
-        startedAt,
-        completedAt: new Date().toISOString(),
-        mode: "dry-run",
-        actor: signedInUser.email || signedInUser.uid,
-        sourceFile: resolvedFilePath,
-        includeSystem,
-        hasAllGymAccess,
-        sourceProject: payload.sourceProject || undefined,
-        environment: payload.environment || "manual",
-        requestedScope: {
-          events: scopeEvents,
-          gyms: scopeGyms,
-        },
-        targetDocs: restorableDocs.length,
-        sourceDocs: sourceDocs.length,
-        skipped: {
-          byPermissionScope: skippedByScope,
-          bySystemFlag: skippedBySystemFlag,
-          byFilter: skippedByScopeFilter,
-          byUnknownTopLevel: skippedByUnknownTopLevel,
-        },
-        restoredCount: 0,
-        restoredEvents: Array.from(totalTargetEvents),
-        restoredGyms: Array.from(totalTargetGyms),
-      })}\n`
-    );
+    await fs.appendFile(logFilePath, `${JSON.stringify(logEntry)}\n`);
     console.log(`[log] dry-run log: ${logFilePath}`);
     return;
   }
@@ -323,48 +310,35 @@ async function run() {
   console.log(`Restore completed. restored=${restoredCount}`);
   console.log(`Skipped by gym scope: ${skippedByScope}`);
   console.log(`Skipped by --include-system flag: ${skippedBySystemFlag}`);
+  const logEntry = createRestoreLogEntry({
+    mode: "apply",
+    startedAt,
+    completedAt: new Date().toISOString(),
+    actor: signedInUser.email || signedInUser.uid,
+    sourceFile: resolvedFilePath,
+    includeSystem,
+    hasAllGymAccess,
+    sourceProject: payload.sourceProject,
+    environment: payload.environment,
+    requestedScope: {
+      events: scopeEvents,
+      gyms: scopeGyms,
+    },
+    targetDocs: restorableDocs.length,
+    sourceDocs: sourceDocs.length,
+    skipped: {
+      byPermissionScope: skippedByScope,
+      bySystemFlag: skippedBySystemFlag,
+      byFilter: skippedByScopeFilter,
+      byUnknownTopLevel: skippedByUnknownTopLevel,
+    },
+    restoredCount,
+    restoredEvents: Array.from(totalTargetEvents),
+    restoredGyms: Array.from(totalTargetGyms),
+  });
   await fs.mkdir(path.dirname(logFilePath), { recursive: true });
-  await fs.appendFile(
-    logFilePath,
-    `${JSON.stringify({
-      startedAt,
-      completedAt: new Date().toISOString(),
-      mode: "apply",
-      actor: signedInUser.email || signedInUser.uid,
-      sourceFile: resolvedFilePath,
-      includeSystem,
-      hasAllGymAccess,
-      sourceProject: payload.sourceProject || undefined,
-      environment: payload.environment || "manual",
-      requestedScope: {
-        events: scopeEvents,
-        gyms: scopeGyms,
-      },
-      targetDocs: restorableDocs.length,
-      sourceDocs: sourceDocs.length,
-      skipped: {
-        byPermissionScope: skippedByScope,
-        bySystemFlag: skippedBySystemFlag,
-        byFilter: skippedByScopeFilter,
-        byUnknownTopLevel: skippedByUnknownTopLevel,
-      },
-      restoredCount,
-      restoredEvents: Array.from(totalTargetEvents),
-      restoredGyms: Array.from(totalTargetGyms),
-    })}\n`
-  );
+  await fs.appendFile(logFilePath, `${JSON.stringify(logEntry)}\n`);
   console.log(`[log] restore log: ${logFilePath}`);
-}
-
-function formatTimestamp(dateIsoString) {
-  const date = new Date(dateIsoString);
-  const year = String(date.getFullYear());
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  const hour = String(date.getHours()).padStart(2, "0");
-  const minute = String(date.getMinutes()).padStart(2, "0");
-  const second = String(date.getSeconds()).padStart(2, "0");
-  return `${year}${month}${day}-${hour}${minute}${second}`;
 }
 
 run()
