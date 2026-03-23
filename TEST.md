@@ -228,31 +228,45 @@ npm run dev -- --mode demo
 
 ## 4) Firestore test data scripts
 
-- 一覧
-  - `npm run db:purge`（安全モード）
-  - `npm run db:purge:yes`（staging 相当のイベント関連データを破壊的に削除）
-  - `npm run db:purge:prod`（本番）
-  - `npm run db:purge:demo`（デモ）
-  - `npm run db:purge:yes:system`（`events`/`gyms`/`users` の上位削除も対象）
-  - `npm run db:clear:prod`（`--all` 相当。全コレクションをクリーン）
-  - `npm run db:clear:demo`（`--all` 相当。全コレクションをクリーン）
-- `npm run db:format:demo`（`db:clear:demo --all` 相当 + `db:seed:demo --include-system`。Demoデータを初期化し直す用途）
-  - `npm run db:seed:prod`
-  - `npm run db:seed:demo`
+### 4-1) 通常運用（デモ準備・日常確認）
+
+- 前提
+  - `SCRIPT_AUTH_EMAIL` / `SCRIPT_AUTH_PASSWORD` を設定する
+  - 実行ユーザーの `users/{uid}` は `role: "admin"`, `gymIds: ["*"]` を推奨
+- 基本フロー（この順で実行）
+  - `npm run db:backup:demo -- --out backups/demo/pre-demo-$(Get-Date -Format 'yyyyMMdd-HHmmss').json`
+  - `npm run db:format:demo`
+  - `npm run dev -- --mode demo`
+- 権限不足で `db:format:demo` が失敗する場合
   - `npm run db:set-user-role:demo -- --uid <uid> --role admin --gym-ids '*' --create`
-  - `npm run db:seed:system`
-  - `npm run db:backup -- --out backups/pre-op.json`
-  - `npm run db:backup:demo`（デモ用途）
-  - `npm run db:backup:system`
+  - それでも失敗する場合は Firebase Console で `users/{uid}` を先に `admin` 登録する
+- 補足
+  - `Unitテスト` は Firebase 実接続を使わないため、`npm run test:run` は環境差分の影響を受けない
+
+### 4-2) 重大トラブル時（復旧・全消去）
+
+- 事前保全
+  - `npm run db:backup:prod -- --out backups/prod/pre-op-$(Get-Date -Format 'yyyyMMdd-HHmmss').json`
+- 復旧（推奨順）
   - `npm run db:restore:dry-run -- --file <backup-json>`（事前見積もり）
-  - `npm run db:restore:prod -- --yes --file <backup-json>`
   - `npm run db:restore:demo -- --yes --file <backup-json>`
-  - `npm run db:restore:demo -- --yes --file <backup-json> --scope-events event-spring-2026,event-live-now`
-  - `npm run db:restore:demo -- --yes --file <backup-json> --scope-gym gym-shibuya`
+  - `npm run db:restore:prod -- --yes --file <backup-json>`
+- 全消去（最終手段）
+  - `npm run db:clear:demo`（`--all` 相当）
+  - `npm run db:clear:prod`（`--all` 相当）
+- 上級者向け（対象限定削除。誤操作注意）
+  - `npm run db:purge`（確認モード）
+  - `npm run db:purge:dry-run`（staging を削除せずに見積もり）
+  - `npm run db:purge:dry-run:demo -- --scope event:event-spring-2026,gym:gym-shibuya`
+  - `npm run db:purge:dry-run:prod -- --scope gym:gym-shibuya --log backups/purge-logs/prod-scope-dryrun.jsonl`
+  - `npm run db:purge:yes` / `npm run db:purge:demo` / `npm run db:purge:prod`
+  - `npm run db:purge:yes:system`（`events`/`gyms`/`users` 上位も対象）
+- 関連コマンド
+  - `npm run db:seed:demo` / `npm run db:seed:prod` / `npm run db:seed:system`
+  - `npm run db:backup` / `npm run db:backup:system`
+  - `npm run db:restore:demo -- --yes --file <backup-json> --scope-events <event-id,...>`
+  - `npm run db:restore:demo -- --yes --file <backup-json> --scope-gym <gym-id>`
   - `npm run db:restore:demo -- --yes --file <backup-json> --log backups/restore-logs/restore-session.jsonl`
-- `db:seed:prod` / `db:seed:demo` / `db:seed:system` は環境別のローカル検証前のイベント再現に使う
-- `db:reset` を使う場合は `SCRIPT_AUTH_*` を設定してから実行する
-- `.env.demo.local` / `.env.prod.local` を流用する場合は `FIREBASE_*` または `VITE_FIREBASE_*` のどちらかで接続情報を渡す
 
 実行例（ローカル）
 
@@ -261,9 +275,6 @@ $env:SCRIPT_AUTH_EMAIL='YOUR_ADMIN_ACCOUNT_EMAIL'
 $env:SCRIPT_AUTH_PASSWORD='YOUR_PASSWORD'
 npm run db:format:demo
 ```
-
-- 補足: `Unitテスト` は Firebase 実接続を使わないモック実行が前提です。  
-  `Demo` での検証は、`db:format:demo` 後に `npm run dev -- --mode demo` で統合観点（UI/認証/権限）を回してください。
 
 ### validation用サンプルイベント（参考）
 - `event-spring-2026`
