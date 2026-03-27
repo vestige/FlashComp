@@ -9,36 +9,17 @@
 
 ## P0（最優先：認証基盤）
 ### Backlog
-
 ### Done
-- [x] 運用: データのバックアップ、リストア
-- [x] 運用: テストデータの消去、復元
-- [x] `KAN-001` [P0] 認証方式変更の目的（Googleアカウント固定運用 / テスト用途削減 / 切替工数削減）を合意し、`SPEC.md` に方針明文化
-- [x] `KAN-002` [P0] `admin` / `owner` / `viewer` の許可範囲（画面・API・公開領域）をマッピングして承認
-- [x] `KAN-003` [P0] 未登録Googleアカウントの扱い（即時拒否 / 申請導線）を仕様確定
+- [x] Event Settings画面、シーズン作成のポップアップ画面にイベント全体の日付を表示する
+- [x] Event Settings画面、シーズン作成のポップアップ画面の日付の初期値を設定する
+  - [x] 初回は Event 日付の開始〜終了を初期値にする
+  - [x] 2つ目以降は直近シーズン終了日の次の日〜イベント最終日を初期値にする
+  - [x] すでにイベント最終日まで埋まっている場合は Event 日付の開始〜終了を初期値に戻す
 
 ## P0（最優先：運用基盤）
 ### In Progress
 
 ### Done
-- [x] `KAN-011` 運用向けテスト追加
-  - [x] `scripts/lib/purgeUtils.test.js` を追加（引数検証・scope解析）
-  - [x] `dry-run` / ログ出力ペイロードの検証を追加
-  - [x] `restore` / `backup` 系にも同観点のテストを横展開（`backupUtils.test.js` / `restoreUtils.test.js`）
-  - [x] `npm run test:run` で回帰確認
-- [x] `KAN-008` テストデータバリエーションを運用向けに拡充
-  - [x] `seed` の複数イベント/カテゴリ/季節構成を追加
-  - [x] 未配列/混在データなど復元復旧のエッジケースを追加（`events/{eventId}/restoreEdgeCases/*`）
-- [x] `KAN-007` `db:purge` 系スクリプトの安全化
-  - [x] `--dry-run` と `--scope=`（イベントID/ gym）を追加
-  - [x] テストデータ削除とシステムデータ削除を明示分離
-  - [x] 破壊系操作の実行履歴を保存
-  - [x] `TEST.md` 手順に沿って `demo` で dry-run / apply を各1回確認
-- [x] `KAN-005` `db:backup` 系スクリプトの運用化
-  - [x] `--out` 形式の命名規則を環境別（demo/prod）に統一
-  - [x] backup manifest（`exportedAt`,`sourceUser`,`docCount`,`eventCount`）を標準化
-  - [x] `db:backup:demo` / `db:backup:prod` / `db:backup:system` を運用確定
-  - [x] `db:clear`（`--all` 相当）と `db:format:demo` をデモ整形の標準手順化
 
 ### Ready
 
@@ -46,10 +27,6 @@
 
 ## P1（次点：デモ支援）
 ### Done
-- [x] `KAN-013` GitHub Pages の `demo` / `prod` 同時運用を維持するため、`prod` デプロイでも `keep_files: true` を適用
-- [x] `KAN-014` GitHub Pages の `prod` デプロイで `demo/` が消える問題を恒久対策
-  - [x] `peaceiris/actions-gh-pages@v4` に `force_orphan: false` を適用
-  - [x] `prod` / `demo` どちらのデプロイでも `gh-pages` の既存ファイルを保持
 
 ### Backlog
 - [ ] `KAN-012` CI: GitHub Actions の Node24移行警告を抑えるため、公式デプロイ方式検討（将来対応）
@@ -61,6 +38,4 @@
   - [ ] `npm run demo:reset`（必要ならテストデータ再構成）を追加
 
 ## FB
-- [ ] Event Settings画面、シーズン作成のポップアップ画面にイベント全体の日付を表示する
 - [ ] データの保存、復元、削除についてのスクリプトからUserは外すべきか？検討する
-- [x] DemoモードとProdモード、両方一緒に動かすことはできるの？demoをためしてもらうときに、prodがとまるのやだな
