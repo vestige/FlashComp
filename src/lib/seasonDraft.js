@@ -16,6 +16,10 @@ export const validateSeasonDraft = ({ name, startDate, endDate }) => {
 
 const parseAsDay = (value) => {
   if (!value) return null;
+  if (value instanceof Date) {
+    if (Number.isNaN(value.getTime())) return null;
+    return new Date(value.getFullYear(), value.getMonth(), value.getDate());
+  }
   if (typeof value.toDate === "function") {
     const date = value.toDate();
     return new Date(date.getFullYear(), date.getMonth(), date.getDate());
@@ -24,6 +28,23 @@ const parseAsDay = (value) => {
   if (!parsed) return null;
   return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
 };
+
+const toInputDate = (value) => {
+  if (!value) return "";
+  const day = parseAsDay(value);
+  if (!day) return "";
+  const y = String(day.getFullYear());
+  const m = String(day.getMonth() + 1).padStart(2, "0");
+  const d = String(day.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+};
+
+const addDays = (base, days) => {
+  if (!base || !Number.isFinite(days)) return null;
+  return new Date(base.getFullYear(), base.getMonth(), base.getDate() + days);
+};
+
+const getSeasonEndTime = (season) => parseAsDay(season?.endDate)?.getTime() || 0;
 
 export const validateSeasonInEventRange = ({
   startDate,
@@ -41,6 +62,47 @@ export const validateSeasonInEventRange = ({
     return "シーズン期間はイベント期間の範囲内で設定してください";
   }
   return "";
+};
+
+export const getSeasonCreateDateDefaults = ({
+  seasons = [],
+  eventStartDate,
+  eventEndDate,
+}) => {
+  const eventStart = parseAsDay(eventStartDate);
+  const eventEnd = parseAsDay(eventEndDate);
+  if (!eventStart || !eventEnd) {
+    return { startDate: "", endDate: "" };
+  }
+
+  if (!Array.isArray(seasons) || seasons.length === 0) {
+    return {
+      startDate: toInputDate(eventStart),
+      endDate: toInputDate(eventEnd),
+    };
+  }
+
+  const latestSeason = [...seasons].sort((a, b) => getSeasonEndTime(b) - getSeasonEndTime(a))[0];
+  const latestSeasonEnd = parseAsDay(latestSeason?.endDate);
+  if (!latestSeasonEnd) {
+    return {
+      startDate: toInputDate(eventStart),
+      endDate: toInputDate(eventEnd),
+    };
+  }
+
+  const nextStart = addDays(latestSeasonEnd, 1);
+  if (!nextStart || nextStart > eventEnd) {
+    return {
+      startDate: toInputDate(eventStart),
+      endDate: toInputDate(eventEnd),
+    };
+  }
+
+  return {
+    startDate: toInputDate(nextStart),
+    endDate: toInputDate(eventEnd),
+  };
 };
 
 export const findSeasonsOutsideEventRange = ({

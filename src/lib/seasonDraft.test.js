@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   findSeasonsOutsideEventRange,
+  getSeasonCreateDateDefaults,
   validateEventRangeAgainstSeasons,
   validateSeasonDraft,
   validateSeasonInEventRange,
@@ -136,5 +137,66 @@ describe("validateEventRangeAgainstSeasons", () => {
         seasons: [{ id: "s1", name: "Season 1", startDate: "2026-03-01", endDate: "2026-03-31" }],
       })
     ).toBe("");
+  });
+});
+
+describe("getSeasonCreateDateDefaults", () => {
+  it("uses event range when no season exists", () => {
+    expect(
+      getSeasonCreateDateDefaults({
+        seasons: [],
+        eventStartDate: "2026-03-01",
+        eventEndDate: "2026-03-31",
+      })
+    ).toEqual({
+      startDate: "2026-03-01",
+      endDate: "2026-03-31",
+    });
+  });
+
+  it("uses next day of latest season end for second and later season", () => {
+    expect(
+      getSeasonCreateDateDefaults({
+        seasons: [
+          { id: "s3", startDate: "2026-03-21", endDate: "2026-03-24" },
+          { id: "s2", startDate: "2026-03-15", endDate: "2026-03-20" },
+          { id: "s1", startDate: "2026-03-01", endDate: "2026-03-10" },
+        ],
+        eventStartDate: "2026-03-01",
+        eventEndDate: "2026-03-31",
+      })
+    ).toEqual({
+      startDate: "2026-03-25",
+      endDate: "2026-03-31",
+    });
+  });
+
+  it("falls back to full event range when period is already filled to event end", () => {
+    expect(
+      getSeasonCreateDateDefaults({
+        seasons: [
+          { id: "s1", startDate: "2026-03-01", endDate: "2026-03-10" },
+          { id: "s2", startDate: "2026-03-11", endDate: "2026-03-31" },
+        ],
+        eventStartDate: "2026-03-01",
+        eventEndDate: "2026-03-31",
+      })
+    ).toEqual({
+      startDate: "2026-03-01",
+      endDate: "2026-03-31",
+    });
+  });
+
+  it("returns blank when event range is missing", () => {
+    expect(
+      getSeasonCreateDateDefaults({
+        seasons: [],
+        eventStartDate: "",
+        eventEndDate: "2026-03-31",
+      })
+    ).toEqual({
+      startDate: "",
+      endDate: "",
+    });
   });
 });

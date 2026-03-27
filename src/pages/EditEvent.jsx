@@ -22,6 +22,7 @@ import { useOwnerProfile } from "../hooks/useOwnerProfile";
 import { validateEventDraft } from "../lib/eventDraft";
 import { buildSettingsProgress } from "../lib/settingsProgress";
 import {
+  getSeasonCreateDateDefaults,
   validateEventRangeAgainstSeasons,
   validateSeasonDraft,
   validateSeasonInEventRange,
@@ -84,6 +85,7 @@ const EditEvent = () => {
   const [eventName, setEventName] = useState("");
 
   const [categories, setCategories] = useState([]);
+  const [seasons, setSeasons] = useState([]);
   const [seasonCount, setSeasonCount] = useState(0);
   const [taskCount, setTaskCount] = useState(0);
   const [seasonTaskSummary, setSeasonTaskSummary] = useState([]);
@@ -153,6 +155,7 @@ const EditEvent = () => {
       ...categoryDoc.data(),
     }));
     setCategories(categoryRows);
+    setSeasons(seasonRows);
     setSeasonCount(seasonSnap.size);
     setTaskCount(nextTaskCount);
     setSeasonTaskSummary(nextSeasonTaskSummary);
@@ -431,6 +434,7 @@ const EditEvent = () => {
     seasonTaskSummary.map((season) => [season.seasonId, season.taskCount])
   );
   const seasonsWithoutTasks = seasonTaskSummary.filter((season) => season.taskCount === 0);
+  const eventRangeText = `${formatDisplayDate(savedEventMeta.startDate)} - ${formatDisplayDate(savedEventMeta.endDate)}`;
 
   return (
     <div className={pageBackgroundClass}>
@@ -589,11 +593,20 @@ const EditEvent = () => {
 
         <section className="mt-6">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-2xl font-bold text-slate-900">📅Registered Seasons</h2>
+            <div>
+              <h2 className="text-2xl font-bold text-slate-900">📅Registered Seasons</h2>
+              <p className="mt-1 text-sm text-slate-600">Event期間: {eventRangeText}</p>
+            </div>
             <button
               type="button"
               onClick={() => {
                 setSeasonStatus("");
+                const defaults = getSeasonCreateDateDefaults({
+                  seasons,
+                  eventStartDate: savedEventMeta.startDate,
+                  eventEndDate: savedEventMeta.endDate,
+                });
+                setSeasonDraft({ name: "", startDate: defaults.startDate, endDate: defaults.endDate });
                 setIsSeasonModalOpen(true);
               }}
               className={seasonCreateButtonClass}
@@ -688,6 +701,7 @@ const EditEvent = () => {
                   <p className="mt-1 text-sm text-slate-600">
                     新しいシーズン名と開催期間を設定します。
                   </p>
+                  <p className="mt-1 text-sm text-slate-600">Event期間: {eventRangeText}</p>
                 </div>
                 <button
                   type="button"
